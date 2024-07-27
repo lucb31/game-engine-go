@@ -1,9 +1,5 @@
 package engine
 
-type GameWorld struct {
-	objects []GameObj
-}
-
 type GameObj struct {
 	asset           *GameAsset
 	activeAnimation string
