@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/jakecoffman/cp"
 )
 
 type Orientation uint8
@@ -16,19 +17,16 @@ const (
 )
 
 type Player struct {
-	posX        float64
-	posY        float64
 	world       *GameWorld
-	velX        float64
-	velY        float64
 	orientation Orientation
+	Shape       *cp.Shape
 
 	// Asset info
 	Animations map[string]GameAssetAnimation
 }
 
 const (
-	playerVelocity      = 1.5
+	playerVelocity      = 50
 	playerTileSize      = 48
 	animationFrameCount = 6
 	animationSpeed      = 6
@@ -36,11 +34,21 @@ const (
 )
 
 func NewPlayer(world *GameWorld) (*Player, error) {
+	// Init player body & shape
+	playerBody := cp.NewBody(1, cp.INFINITY)
+	playerBody.SetPosition(cp.Vector{X: 10, Y: 10})
+	playerShape := cp.NewBox(playerBody, 16, 16, 0)
+	playerShape.SetElasticity(0)
+	playerShape.SetFriction(0)
+	// TODO: Dynamic velocity func
+	// playerBody.SetVelocityUpdateFunc(calcPlayerVelocity)
+
+	// TODO: Separate player asset from player logic
 	animations := map[string]GameAssetAnimation{}
 	animations["walk_horizontal"] = GameAssetAnimation{FrameCount: 6, TileIdx: 24}
 	animations["walk_north"] = GameAssetAnimation{FrameCount: 6, TileIdx: 30}
 	animations["walk_south"] = GameAssetAnimation{FrameCount: 6, TileIdx: 18}
-	return &Player{posX: 10, posY: 10, world: world, Animations: animations}, nil
+	return &Player{world: world, Animations: animations, Shape: playerShape}, nil
 }
 
 func (p *Player) Draw(screen *ebiten.Image) {
@@ -70,7 +78,7 @@ func (p *Player) Draw(screen *ebiten.Image) {
 	op := ebiten.DrawImageOptions{}
 	// Offset size of player frame
 	op.GeoM.Translate(-playerTileSize/2, -playerTileSize/2)
-	op.GeoM.Translate(p.posX, p.posY)
+	op.GeoM.Translate(p.Shape.Body().Position().X, p.Shape.Body().Position().Y)
 	if flip {
 		screen.DrawImage(FlipHorizontal(subIm), &op)
 	} else {
@@ -89,28 +97,33 @@ func FlipHorizontal(source *ebiten.Image) *ebiten.Image {
 
 func (p *Player) Update() {
 	p.readMovementInputs()
-	// Keep player within bounds
-	p.posX = max(min(180, p.posX+p.velX), 10)
-	p.posY = max(min(105, p.posY+p.velY), 10)
 }
 
+//func calcPlayerVelocity(body *cp.Body, gravity cp.Vector, damping float64, dt float64) {
+//body.Velocity()
+//}
+
 func (p *Player) readMovementInputs() {
+	// Smoothen velocity
+	velocity := p.Shape.Body().Velocity()
 	if ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
-		p.velY = -playerVelocity
+		velocity.Y = max(-playerVelocity, velocity.Y-playerVelocity*0.1)
 		p.orientation = North
 	} else if ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
-		p.velY = playerVelocity
+		velocity.Y = min(playerVelocity, velocity.Y+playerVelocity*0.1)
 		p.orientation = South
 	} else {
-		p.velY = 0
+		velocity.Y = 0
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
-		p.velX = -playerVelocity
+		velocity.X = -playerVelocity
 		p.orientation = West
 	} else if ebiten.IsKeyPressed(ebiten.KeyArrowRight) {
-		p.velX = playerVelocity
+		velocity.X = playerVelocity
 		p.orientation = East
 	} else {
-		p.velX = 0
+		velocity.X = 0
 	}
+
+	p.Shape.Body().SetVelocityVector(velocity)
 }

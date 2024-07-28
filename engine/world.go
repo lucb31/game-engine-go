@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/jakecoffman/cp"
 )
 
 type Biome int
@@ -25,6 +26,7 @@ type GameWorld struct {
 	Height       int64
 	FrameCount   int64
 	AssetManager *AssetManager
+	space        *cp.Space
 }
 
 func (w *GameWorld) Draw(screen *ebiten.Image) {
@@ -38,9 +40,10 @@ func (w *GameWorld) Draw(screen *ebiten.Image) {
 
 func (w *GameWorld) Update() {
 	w.FrameCount++
-	for _, obj := range w.objects {
-		obj.Update()
-	}
+	w.space.Step(1.0 / 60.0)
+	//for _, obj := range w.objects {
+	//	obj.Update()
+	//}
 	w.player.Update()
 }
 
@@ -90,7 +93,7 @@ func createBiome(width, height int64) ([][]Biome, error) {
 	return biome, nil
 }
 
-func createFences(am *AssetManager) ([]GameEntity, error) {
+func createFences(am *AssetManager, space *cp.Space) ([]GameEntity, error) {
 	fenceData := [][]int{
 		{-1, -1, -1, -1, -1, -1, -1, -1},
 		{-1, -1, -1, -1, 1, 14, 14, 3},
@@ -106,7 +109,16 @@ func createFences(am *AssetManager) ([]GameEntity, error) {
 				if err != nil {
 					return nil, err
 				}
-				objects = append(objects, &StaticGameEntity{posX: float64(mapTileSize * col), posY: float64(mapTileSize * row), Image: im})
+				body := cp.NewStaticBody()
+				body.SetPosition(cp.Vector{X: float64(mapTileSize * col), Y: float64(mapTileSize * row)})
+				shape := cp.NewBox(body, 16, 16, 0)
+				//shape := cp.NewCircle(body, 8, cp.Vector{})
+
+				shape.SetFriction(1)
+				shape.SetElasticity(0)
+				space.AddBody(body)
+				space.AddShape(shape)
+				objects = append(objects, &StaticGameEntity{Shape: shape, Image: im})
 			}
 		}
 	}
@@ -116,8 +128,7 @@ func createFences(am *AssetManager) ([]GameEntity, error) {
 // Static prop in world. Collidable, but no movement, no animation
 type StaticGameEntity struct {
 	Image *ebiten.Image
-	posX  float64
-	posY  float64
+	Shape *cp.Shape
 }
 
 // Nothing to do since its static
@@ -125,7 +136,7 @@ func (p *StaticGameEntity) Update() {}
 
 func (p *StaticGameEntity) Draw(screen *ebiten.Image) {
 	op := ebiten.DrawImageOptions{}
-	op.GeoM.Translate(p.posX, p.posY)
+	op.GeoM.Translate(p.Shape.Body().Position().X, p.Shape.Body().Position().Y)
 	screen.DrawImage(p.Image, &op)
 }
 
@@ -140,18 +151,36 @@ func NewWorld(width int64, height int64) (*GameWorld, error) {
 	if err != nil {
 		return nil, err
 	}
+	// Initialize physics
+	space := cp.NewSpace()
+	// Initialize bounding box
+	offset := 2.5
+	walls := []cp.Vector{
+		{offset, offset}, {offset, 240},
+		{320, offset}, {320, 240},
+		{offset, offset}, {320, offset},
+		{offset, 240}, {320, 240},
+	}
+	for i := 0; i < len(walls)-1; i += 2 {
+		shape := space.AddShape(cp.NewSegment(space.StaticBody, walls[i], walls[i+1], 2))
+		shape.SetElasticity(1)
+		shape.SetFriction(1)
+	}
+
 	// Initialize some fences
-	objects, err := createFences(am)
+	objects, err := createFences(am, space)
 	if err != nil {
 		return nil, err
 	}
-	w := GameWorld{Biome: biome, Width: width, Height: height, AssetManager: am, objects: objects}
+	w := GameWorld{Biome: biome, Width: width, Height: height, AssetManager: am, objects: objects, space: space}
 
 	// Initialize player (after world has been initialized to reference it)
 	player, err := NewPlayer(&w)
 	if err != nil {
-		return &w, nil
+		return &w, err
 	}
 	w.player = player
+	space.AddBody(player.Shape.Body())
+	space.AddShape(player.Shape)
 	return &w, nil
 }
