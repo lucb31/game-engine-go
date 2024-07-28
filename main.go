@@ -28,9 +28,6 @@ func Init() (*Game, error) {
 
 func (g *Game) Update() error {
 	g.world.Update()
-	if ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
-		fmt.Println("go up")
-	}
 
 	return nil
 }

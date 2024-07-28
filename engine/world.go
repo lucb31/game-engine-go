@@ -19,7 +19,7 @@ const tileSize = 16
 
 type GameWorld struct {
 	objects      []*GameObj
-	player       *Player
+	player       GameEntity
 	Biome        [][]Biome
 	Width        int64
 	Height       int64
@@ -34,6 +34,7 @@ func (w *GameWorld) Draw(screen *ebiten.Image) {
 
 func (w *GameWorld) Update() {
 	w.FrameCount++
+	w.player.Update()
 }
 
 func (w *GameWorld) drawBiomes(screen *ebiten.Image) {

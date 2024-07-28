@@ -51,6 +51,7 @@ func ReadPngAsset(path string) (image.Image, error) {
 
 type GameEntity interface {
 	Draw(*ebiten.Image)
+	Update()
 }
 
 type GameObj struct {
@@ -70,7 +71,7 @@ type GameAsset struct {
 type GameAssetAnimation struct {
 	Name string
 	// Number of frames to play
-	frameCount int
-	// Vertical position in the TileMap (will be multiplied by frameHeight)
-	yPos int8
+	FrameCount int
+	// Starting position in the TileMap
+	TileIdx int
 }

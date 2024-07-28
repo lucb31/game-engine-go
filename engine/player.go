@@ -6,36 +6,115 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
+type Orientation uint8
+
+const (
+	East Orientation = iota
+	South
+	West
+	North
+)
+
 type Player struct {
-	posX  int
-	posY  int
-	world *GameWorld
+	posX        float64
+	posY        float64
+	world       *GameWorld
+	velX        float64
+	velY        float64
+	orientation Orientation
+
+	// Asset info
+	Animations map[string]GameAssetAnimation
 }
 
 const (
-	frameWidth          = 48
-	frameHeight         = 48
+	playerVelocity      = 1.5
+	playerTileSize      = 48
 	animationFrameCount = 6
+	animationSpeed      = 6
+	tilesPerRow         = 6
 )
 
 func NewPlayer(world *GameWorld) (*Player, error) {
-	return &Player{posX: 0, posY: 0, world: world}, nil
+	animations := map[string]GameAssetAnimation{}
+	animations["walk_horizontal"] = GameAssetAnimation{FrameCount: 6, TileIdx: 24}
+	animations["walk_north"] = GameAssetAnimation{FrameCount: 6, TileIdx: 30}
+	animations["walk_south"] = GameAssetAnimation{FrameCount: 6, TileIdx: 18}
+	return &Player{posX: 10, posY: 10, world: world, Animations: animations}, nil
 }
 
 func (p *Player) Draw(screen *ebiten.Image) {
-	// Position in the center of the screen
+	// Animation: Determine tile idx
+	var animationKey string
+	flip := false
+	switch p.orientation {
+	case North:
+		animationKey = "walk_north"
+	case South:
+		animationKey = "walk_south"
+	case East:
+		animationKey = "walk_horizontal"
+	case West:
+		animationKey = "walk_horizontal"
+		flip = true
+	}
+	animation := p.Animations[animationKey]
+	animationFrame := int(p.world.FrameCount/animationSpeed) % animation.FrameCount
+	tileIdx := p.Animations[animationKey].TileIdx + animationFrame
+	tileX := tileIdx % tilesPerRow
+	tileY := int(tileIdx / tilesPerRow)
+	// Selecting sub image based on tile information
+	subIm := p.world.AssetManager.PlayerTileset.SubImage(image.Rect(
+		tileX*playerTileSize,
+		tileY*playerTileSize,
+		(tileX+1)*playerTileSize,
+		(tileY+1)*playerTileSize,
+	)).(*ebiten.Image)
+
 	op := ebiten.DrawImageOptions{}
 	// Offset size of player frame
-	op.GeoM.Translate(-frameWidth/2, -frameHeight/2)
-	op.GeoM.Translate(16*6, 16*4)
+	op.GeoM.Translate(-playerTileSize/2, -playerTileSize/2)
+	op.GeoM.Translate(p.posX, p.posY)
+	if flip {
+		screen.DrawImage(FlipHorizontal(subIm), &op)
+	} else {
+		screen.DrawImage(subIm, &op)
+	}
+}
 
-	animationFrame := int(p.world.FrameCount/6) % animationFrameCount
-	tileRow := 4
-	subIm := p.world.AssetManager.PlayerTileset.SubImage(image.Rect(
-		animationFrame*frameWidth,
-		tileRow*frameHeight,
-		(animationFrame+1)*frameWidth,
-		(tileRow+1)*frameHeight,
-	)).(*ebiten.Image)
-	screen.DrawImage(subIm, &op)
+func FlipHorizontal(source *ebiten.Image) *ebiten.Image {
+	result := ebiten.NewImage(source.Bounds().Dx(), source.Bounds().Dy())
+	op := &ebiten.DrawImageOptions{}
+	op.GeoM.Scale(-1, 1)
+	op.GeoM.Translate(float64(source.Bounds().Dx()), 0)
+	result.DrawImage(source, op)
+	return result
+}
+
+func (p *Player) Update() {
+	p.readMovementInputs()
+	// Keep player within bounds
+	p.posX = max(min(180, p.posX+p.velX), 10)
+	p.posY = max(min(100, p.posY+p.velY), 10)
+}
+
+func (p *Player) readMovementInputs() {
+	if ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
+		p.velY = -playerVelocity
+		p.orientation = North
+	} else if ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
+		p.velY = playerVelocity
+		p.orientation = South
+	} else {
+		p.velY = 0
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
+		p.velX = -playerVelocity
+		p.orientation = West
+	} else if ebiten.IsKeyPressed(ebiten.KeyArrowRight) {
+		p.velX = playerVelocity
+		p.orientation = East
+	} else {
+		p.velX = 0
+	}
 }
