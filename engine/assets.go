@@ -19,6 +19,7 @@ type tileResource struct {
 var resources []tileResource = []tileResource{
 	{"player", "assets/player.png", 48},
 	{"plains", "assets/plains.png", 16},
+	{"fences", "assets/fences.png", 16},
 }
 
 type Tileset struct {
