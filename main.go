@@ -21,7 +21,7 @@ const (
 
 type Game struct {
 	frameCount   int64
-	world        engine.GameWorld
+	world        *engine.GameWorld
 	assetManager *engine.AssetManager
 }
 
@@ -30,7 +30,7 @@ func Init() (*Game, error) {
 	if err != nil {
 		return nil, err
 	}
-	world, err := engine.NewWorld(12, 8)
+	world, err := engine.NewWorld(screenWidth/tileSize, screenHeight/tileSize)
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +40,6 @@ func Init() (*Game, error) {
 func (g *Game) Update() error {
 	g.frameCount++
 	if ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
-		// if keyPressed(g.keys, "ArrowUp") {
 		fmt.Println("go up")
 	}
 
@@ -53,8 +52,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 }
 
 func (g *Game) drawBiomes(screen *ebiten.Image) {
-	// Todo this doesnt change per frame
-	// Todo Currently drawing WHOLE map. Should only draw visible map
+	// Currently drawing WHOLE map. This is ok because there is no camera movement right now
 	for row := range g.world.Height {
 		for col := range g.world.Width {
 			// Set tile position

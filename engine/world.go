@@ -1,12 +1,11 @@
 package engine
 
-import "fmt"
-
 type Biome int
 
 const (
-	Gras Biome = iota
-	Rock
+	Gras  Biome = 32
+	Rock  Biome = 42
+	Undef Biome = 71
 )
 
 type GameWorld struct {
@@ -17,8 +16,9 @@ type GameWorld struct {
 	Height  int64
 }
 
-func NewWorld(width int64, height int64) (GameWorld, error) {
-	biome := [][]Biome{
+func createBiome(width, height int64) ([][]Biome, error) {
+	// TODO: Should be coming from file / external source
+	mapData := [][]Biome{
 		{1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3},
 		{7, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 9},
 		{7, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 9},
@@ -28,9 +28,26 @@ func NewWorld(width int64, height int64) (GameWorld, error) {
 		{7, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 9},
 		{13, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 15},
 	}
-	if int64(len(biome)) != height || int64(len(biome[0])) != width {
-		return GameWorld{}, fmt.Errorf("Biome data not matching world size")
+	biome := make([][]Biome, height)
+	// Copy map data in & fill remaining cells with placeholder tile
+	for row := range height {
+		biome[row] = make([]Biome, width)
+		for col := range width {
+			if int64(len(mapData)) > row && int64(len(mapData[row])) > col {
+				biome[row][col] = mapData[row][col]
+			} else {
+				biome[row][col] = Undef
+			}
+		}
+	}
+	return biome, nil
+}
+
+func NewWorld(width int64, height int64) (*GameWorld, error) {
+	biome, err := createBiome(width, height)
+	if err != nil {
+		return nil, err
 	}
 	w := GameWorld{Biome: biome, Width: width, Height: height}
-	return w, nil
+	return &w, nil
 }
