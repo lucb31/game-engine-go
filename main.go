@@ -2,8 +2,6 @@ package main
 
 import (
 	"fmt"
-	"image"
-	_ "image/png"
 
 	"github.com/lucb31/animation-go/engine"
 
@@ -11,34 +9,25 @@ import (
 )
 
 const (
-	screenWidth         = 1024 / 2
-	screenHeight        = 768 / 2
-	frameWidth          = 48
-	frameHeight         = 48
-	animationFrameCount = 6
-	tileSize            = 16
+	screenWidth  = 1024 / 2
+	screenHeight = 768 / 2
+	tileSize     = 16
 )
 
 type Game struct {
-	frameCount   int64
-	world        *engine.GameWorld
-	assetManager *engine.AssetManager
+	world *engine.GameWorld
 }
 
 func Init() (*Game, error) {
-	am, err := engine.NewAssetManager()
-	if err != nil {
-		return nil, err
-	}
 	world, err := engine.NewWorld(screenWidth/tileSize, screenHeight/tileSize)
 	if err != nil {
 		return nil, err
 	}
-	return &Game{world: world, assetManager: am}, nil
+	return &Game{world: world}, nil
 }
 
 func (g *Game) Update() error {
-	g.frameCount++
+	g.world.Update()
 	if ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
 		fmt.Println("go up")
 	}
@@ -47,46 +36,7 @@ func (g *Game) Update() error {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	g.drawBiomes(screen)
-	g.drawPlayer(screen)
-}
-
-func (g *Game) drawBiomes(screen *ebiten.Image) {
-	// Currently drawing WHOLE map. This is ok because there is no camera movement right now
-	for row := range g.world.Height {
-		for col := range g.world.Width {
-			// Set tile position
-			op := ebiten.DrawImageOptions{}
-			op.GeoM.Translate(float64(col*tileSize), float64(row*tileSize))
-
-			// Select correct tile from tileset
-			tileIdx := int(g.world.Biome[row][col])
-			tileX := tileIdx % g.assetManager.TilesPerRow
-			tileY := int(tileIdx / g.assetManager.TilesPerRow)
-
-			subIm := g.assetManager.PlainsTileset.SubImage(image.Rect(tileSize*tileX, tileSize*tileY, tileSize*(tileX+1), tileSize*(tileY+1))).(*ebiten.Image)
-			screen.DrawImage(subIm, &op)
-
-		}
-	}
-}
-
-func (g *Game) drawPlayer(screen *ebiten.Image) {
-	// Position in the center of the screen
-	op := ebiten.DrawImageOptions{}
-	// Offset size of player frame
-	op.GeoM.Translate(-frameWidth/2, -frameHeight/2)
-	op.GeoM.Translate(tileSize*6, tileSize*4)
-
-	animationFrame := int(g.frameCount/6) % animationFrameCount
-	tilePosition := 4
-	subIm := g.assetManager.PlayerTileset.SubImage(image.Rect(
-		animationFrame*frameWidth,
-		tilePosition*frameHeight,
-		(animationFrame+1)*frameWidth,
-		(tilePosition+1)*frameHeight,
-	)).(*ebiten.Image)
-	screen.DrawImage(subIm, &op)
+	g.world.Draw(screen)
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {

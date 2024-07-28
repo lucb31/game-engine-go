@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"image"
+	_ "image/png"
 	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -46,6 +47,10 @@ func ReadPngAsset(path string) (image.Image, error) {
 		return nil, err
 	}
 	return im, nil
+}
+
+type GameEntity interface {
+	Draw(*ebiten.Image)
 }
 
 type GameObj struct {
