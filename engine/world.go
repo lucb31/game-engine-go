@@ -1,7 +1,7 @@
 package engine
 
 import (
-	"image"
+	"fmt"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -15,7 +15,7 @@ const (
 )
 
 // TODO: Should not repeat here
-const tileSize = 16
+const mapTileSize = 16
 
 type GameWorld struct {
 	objects      []*GameObj
@@ -38,19 +38,19 @@ func (w *GameWorld) Update() {
 }
 
 func (w *GameWorld) drawBiomes(screen *ebiten.Image) {
-	// Currently drawing WHOLE map. This is ok because there is no camera movement right now
+	// Drawing WHOLE map. This is ok because there is no camera movement right now
 	for row := range w.Height {
 		for col := range w.Width {
 			// Set tile position
 			op := ebiten.DrawImageOptions{}
-			op.GeoM.Translate(float64(col*tileSize), float64(row*tileSize))
+			op.GeoM.Translate(float64(col*mapTileSize), float64(row*mapTileSize))
 
 			// Select correct tile from tileset
-			tileIdx := int(w.Biome[row][col])
-			tileX := tileIdx % w.AssetManager.TilesPerRow
-			tileY := int(tileIdx / w.AssetManager.TilesPerRow)
-
-			subIm := w.AssetManager.PlainsTileset.SubImage(image.Rect(tileSize*tileX, tileSize*tileY, tileSize*(tileX+1), tileSize*(tileY+1))).(*ebiten.Image)
+			subIm, err := w.AssetManager.GetTile("plains", int(w.Biome[row][col]))
+			if err != nil {
+				fmt.Println("Unable to draw biome cell", err.Error())
+				return
+			}
 			screen.DrawImage(subIm, &op)
 		}
 	}

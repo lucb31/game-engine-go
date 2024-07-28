@@ -1,7 +1,7 @@
 package engine
 
 import (
-	"image"
+	"fmt"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -61,15 +61,11 @@ func (p *Player) Draw(screen *ebiten.Image) {
 	animation := p.Animations[animationKey]
 	animationFrame := int(p.world.FrameCount/animationSpeed) % animation.FrameCount
 	tileIdx := p.Animations[animationKey].TileIdx + animationFrame
-	tileX := tileIdx % tilesPerRow
-	tileY := int(tileIdx / tilesPerRow)
-	// Selecting sub image based on tile information
-	subIm := p.world.AssetManager.PlayerTileset.SubImage(image.Rect(
-		tileX*playerTileSize,
-		tileY*playerTileSize,
-		(tileX+1)*playerTileSize,
-		(tileY+1)*playerTileSize,
-	)).(*ebiten.Image)
+	subIm, err := p.world.AssetManager.GetTile("player", tileIdx)
+	if err != nil {
+		fmt.Println("Error drawing player", err.Error())
+		return
+	}
 
 	op := ebiten.DrawImageOptions{}
 	// Offset size of player frame
@@ -95,7 +91,7 @@ func (p *Player) Update() {
 	p.readMovementInputs()
 	// Keep player within bounds
 	p.posX = max(min(180, p.posX+p.velX), 10)
-	p.posY = max(min(100, p.posY+p.velY), 10)
+	p.posY = max(min(105, p.posY+p.velY), 10)
 }
 
 func (p *Player) readMovementInputs() {

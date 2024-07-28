@@ -10,34 +10,71 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
+type tileResource struct {
+	Key      string
+	Path     string
+	TileSize int
+}
+
+var resources []tileResource = []tileResource{
+	{"player", "assets/player.png", 48},
+	{"plains", "assets/plains.png", 16},
+}
+
+type Tileset struct {
+	Image       *ebiten.Image
+	TilesPerRow int
+	TileSize    int
+}
+
 type AssetManager struct {
-	PlainsTileset *ebiten.Image
-	PlayerTileset *ebiten.Image
-	TilesPerRow   int
-	TileSize      int
+	Tilesets map[string]Tileset
 }
 
 func NewAssetManager() (*AssetManager, error) {
-	// Load assets
-	var err error
-	im, err := ReadPngAsset("assets/player.png")
+	// Load all tilesets specified in 'resources' into tileset map
+	tiles := map[string]Tileset{}
+	for _, res := range resources {
+		tileset, err := loadTileset(res.Path, res.TileSize)
+		if err != nil {
+			return nil, err
+		}
+		tiles[res.Key] = *tileset
+	}
+
+	return &AssetManager{Tilesets: tiles}, nil
+}
+
+func (a *AssetManager) GetTile(tileSetKey string, tileIdx int) (*ebiten.Image, error) {
+	tileSet, ok := a.Tilesets[tileSetKey]
+	if !ok {
+		return nil, fmt.Errorf("Trying to access unknown tileset %v", tileSetKey)
+	}
+	tileX := tileIdx % tileSet.TilesPerRow
+	tileY := int(tileIdx / tileSet.TilesPerRow)
+	// Selecting sub image based on tile information
+	return tileSet.Image.SubImage(image.Rect(
+		tileX*tileSet.TileSize,
+		tileY*tileSet.TileSize,
+		(tileX+1)*tileSet.TileSize,
+		(tileY+1)*tileSet.TileSize,
+	)).(*ebiten.Image), nil
+}
+
+func loadTileset(path string, tileSize int) (*Tileset, error) {
+	im, err := readPngAsset(path)
 	if err != nil {
 		fmt.Println("Could not read assets!", err.Error())
 		return nil, err
 	}
-	playerImage := ebiten.NewImageFromImage(im)
-	im, err = ReadPngAsset("assets/plains.png")
-	if err != nil {
-		fmt.Println("Could not read plains asset!", err.Error())
-		return nil, err
-	}
-	plainsTileset := ebiten.NewImageFromImage(im)
-	tileSize := 16
-	tilesPerRow := int(plainsTileset.Bounds().Dx() / tileSize)
-	return &AssetManager{PlayerTileset: playerImage, PlainsTileset: plainsTileset, TilesPerRow: tilesPerRow, TileSize: tileSize}, nil
+	return &Tileset{
+		Image:       ebiten.NewImageFromImage(im),
+		TilesPerRow: int(im.Bounds().Dx() / tileSize),
+		TileSize:    tileSize,
+	}, nil
 }
 
-func ReadPngAsset(path string) (image.Image, error) {
+func readPngAsset(path string) (image.Image, error) {
 	dat, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
