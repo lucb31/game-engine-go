@@ -102,6 +102,8 @@ func createFences(am *AssetManager, space *cp.Space) ([]GameEntity, error) {
 		{-1, -1, -1, -1, 9, 14, 14, 10},
 	}
 	objects := []GameEntity{}
+	// Temporary disable fence
+	return objects, nil
 	for row, rowData := range fenceData {
 		for col, tileIdx := range rowData {
 			if tileIdx > -1 {
@@ -179,7 +181,7 @@ func NewWorld(width int64, height int64) (*GameWorld, error) {
 	if !ok {
 		return nil, fmt.Errorf("Could not find player asset")
 	}
-
+	asset.currentFrame = &w.FrameCount
 	player, err := NewPlayer(&w, &asset)
 	if err != nil {
 		return &w, err
@@ -187,5 +189,11 @@ func NewWorld(width int64, height int64) (*GameWorld, error) {
 	w.player = player
 	space.AddBody(player.Shape.Body())
 	space.AddShape(player.Shape)
+
+	// Initialize an npc
+	np, err := NewNpc(&asset)
+	space.AddBody(np.Shape.Body())
+	space.AddShape(np.Shape)
+	w.objects = append(w.objects, np)
 	return &w, nil
 }

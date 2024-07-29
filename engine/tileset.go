@@ -12,6 +12,7 @@ type Tileset struct {
 	TileSize    int
 }
 
+// NOTE: It might be more efficient to generate the subimages once and then just retrieve them
 func (t *Tileset) GetTile(tileIdx int) (*ebiten.Image, error) {
 	tileX := tileIdx % t.TilesPerRow
 	tileY := int(tileIdx / t.TilesPerRow)

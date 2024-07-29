@@ -79,9 +79,14 @@ var characterResources []characterResource = []characterResource{
 		"assets/player.png",
 		48,
 		map[string]GameAssetAnimation{
-			"walk_horizontal": {StartTile: 24, FrameCount: 6},
-			"walk_north":      {StartTile: 30, FrameCount: 6},
-			"walk_south":      {StartTile: 18, FrameCount: 6},
+			"walk_east":  {StartTile: 24, FrameCount: 6},
+			"walk_west":  {StartTile: 24, FrameCount: 6, Flip: true},
+			"walk_north": {StartTile: 30, FrameCount: 6},
+			"walk_south": {StartTile: 18, FrameCount: 6},
+			"idle_east":  {StartTile: 6, FrameCount: 6},
+			"idle_west":  {StartTile: 6, FrameCount: 6, Flip: true},
+			"idle_north": {StartTile: 12, FrameCount: 6},
+			"idle_south": {StartTile: 0, FrameCount: 6},
 		},
 	},
 }
