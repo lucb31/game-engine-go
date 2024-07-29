@@ -69,14 +69,14 @@ func (w *GameWorld) drawBiomes(screen *ebiten.Image) {
 func createBiome(width, height int64) ([][]Biome, error) {
 	// TODO: Should be coming from file / external source
 	mapData := [][]Biome{
-		{1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3},
-		{7, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 9},
-		{7, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 9},
-		{7, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 9},
-		{7, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 9},
-		{7, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 9},
-		{7, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 9},
-		{13, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 15},
+		{1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3},
+		{7, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 9},
+		{7, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 9},
+		{7, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 9},
+		{7, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 9},
+		{7, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 9},
+		{7, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 9},
+		{13, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 15},
 	}
 	biome := make([][]Biome, height)
 	// Copy map data in & fill remaining cells with placeholder tile
@@ -175,7 +175,12 @@ func NewWorld(width int64, height int64) (*GameWorld, error) {
 	w := GameWorld{Biome: biome, Width: width, Height: height, AssetManager: am, objects: objects, space: space}
 
 	// Initialize player (after world has been initialized to reference it)
-	player, err := NewPlayer(&w)
+	asset, ok := am.CharacterAssets["player"]
+	if !ok {
+		return nil, fmt.Errorf("Could not find player asset")
+	}
+
+	player, err := NewPlayer(&w, &asset)
 	if err != nil {
 		return &w, err
 	}

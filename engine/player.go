@@ -20,21 +20,16 @@ type Player struct {
 	world       *GameWorld
 	orientation Orientation
 	Shape       *cp.Shape
-
-	// Asset info
-	Animations map[string]GameAssetAnimation
+	asset       *CharacterAsset
 }
 
 const (
-	playerVelocity      = 50
-	playerTileSize      = 48
-	animationFrameCount = 6
-	animationSpeed      = 6
-	tilesPerRow         = 6
+	playerVelocity = 50
+	playerTileSize = 48
 )
 
-func NewPlayer(world *GameWorld) (*Player, error) {
-	// Init player body & shape
+func NewPlayer(world *GameWorld, asset *CharacterAsset) (*Player, error) {
+	// Init player physics
 	playerBody := cp.NewBody(1, cp.INFINITY)
 	playerBody.SetPosition(cp.Vector{X: 10, Y: 10})
 	playerShape := cp.NewBox(playerBody, 16, 16, 0)
@@ -43,38 +38,30 @@ func NewPlayer(world *GameWorld) (*Player, error) {
 	// TODO: Dynamic velocity func
 	// playerBody.SetVelocityUpdateFunc(calcPlayerVelocity)
 
-	// TODO: Separate player asset from player logic
-	animations := map[string]GameAssetAnimation{}
-	animations["walk_horizontal"] = GameAssetAnimation{FrameCount: 6, TileIdx: 24}
-	animations["walk_north"] = GameAssetAnimation{FrameCount: 6, TileIdx: 30}
-	animations["walk_south"] = GameAssetAnimation{FrameCount: 6, TileIdx: 18}
-	return &Player{world: world, Animations: animations, Shape: playerShape}, nil
+	return &Player{world: world, asset: asset, Shape: playerShape}, nil
 }
 
 func (p *Player) Draw(screen *ebiten.Image) {
 	// Animation: Determine tile idx
-	var animationKey string
+	var activeAnimation string
 	flip := false
 	switch p.orientation {
 	case North:
-		animationKey = "walk_north"
+		activeAnimation = "walk_north"
 	case South:
-		animationKey = "walk_south"
+		activeAnimation = "walk_south"
 	case East:
-		animationKey = "walk_horizontal"
+		activeAnimation = "walk_horizontal"
 	case West:
-		animationKey = "walk_horizontal"
+		activeAnimation = "walk_horizontal"
 		flip = true
 	}
-	animation := p.Animations[animationKey]
-	animationFrame := int(p.world.FrameCount/animationSpeed) % animation.FrameCount
-	tileIdx := p.Animations[animationKey].TileIdx + animationFrame
-	subIm, err := p.world.AssetManager.GetTile("player", tileIdx)
+
+	subIm, err := p.asset.GetTile(activeAnimation, p.world.FrameCount)
 	if err != nil {
-		fmt.Println("Error drawing player", err.Error())
+		fmt.Println("Error animating player", err.Error())
 		return
 	}
-
 	op := ebiten.DrawImageOptions{}
 	// Offset size of player frame
 	op.GeoM.Translate(-playerTileSize/2, -playerTileSize/2)

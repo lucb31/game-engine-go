@@ -10,40 +10,26 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
-type tileResource struct {
-	Key      string
-	Path     string
-	TileSize int
-}
-
-var resources []tileResource = []tileResource{
-	{"player", "assets/player.png", 48},
-	{"plains", "assets/plains.png", 16},
-	{"fences", "assets/fences.png", 16},
-}
-
-type Tileset struct {
-	Image       *ebiten.Image
-	TilesPerRow int
-	TileSize    int
-}
-
 type AssetManager struct {
-	Tilesets map[string]Tileset
+	Tilesets        map[string]Tileset
+	CharacterAssets map[string]CharacterAsset
 }
 
 func NewAssetManager() (*AssetManager, error) {
-	// Load all tilesets specified in 'resources' into tileset map
-	tiles := map[string]Tileset{}
-	for _, res := range resources {
-		tileset, err := loadTileset(res.Path, res.TileSize)
-		if err != nil {
-			return nil, err
-		}
-		tiles[res.Key] = *tileset
+	am := &AssetManager{}
+	var err error
+
+	am.Tilesets, err = loadEnvironmentTilesets()
+	if err != nil {
+		return nil, err
 	}
 
-	return &AssetManager{Tilesets: tiles}, nil
+	am.CharacterAssets, err = loadCharacterAssets()
+	if err != nil {
+		return nil, err
+	}
+
+	return am, nil
 }
 
 func (a *AssetManager) GetTile(tileSetKey string, tileIdx int) (*ebiten.Image, error) {
@@ -51,15 +37,71 @@ func (a *AssetManager) GetTile(tileSetKey string, tileIdx int) (*ebiten.Image, e
 	if !ok {
 		return nil, fmt.Errorf("Trying to access unknown tileset %v", tileSetKey)
 	}
-	tileX := tileIdx % tileSet.TilesPerRow
-	tileY := int(tileIdx / tileSet.TilesPerRow)
-	// Selecting sub image based on tile information
-	return tileSet.Image.SubImage(image.Rect(
-		tileX*tileSet.TileSize,
-		tileY*tileSet.TileSize,
-		(tileX+1)*tileSet.TileSize,
-		(tileY+1)*tileSet.TileSize,
-	)).(*ebiten.Image), nil
+	return tileSet.GetTile(tileIdx)
+}
+
+type tileResource struct {
+	Key      string
+	Path     string
+	TileSize int
+}
+
+// TODO: Load these from config file
+var tileResources []tileResource = []tileResource{
+	{"plains", "assets/plains.png", 16},
+	{"fences", "assets/fences.png", 16},
+}
+
+// Load tilesets for static resources
+func loadEnvironmentTilesets() (map[string]Tileset, error) {
+	tiles := map[string]Tileset{}
+	for _, res := range tileResources {
+		tileset, err := loadTileset(res.Path, res.TileSize)
+		if err != nil {
+			return nil, err
+		}
+		tiles[res.Key] = *tileset
+	}
+	return tiles, nil
+}
+
+type characterResource struct {
+	Key        string
+	Path       string
+	TileSize   int
+	Animations map[string]GameAssetAnimation
+}
+
+// TODO: Load these from config file
+var characterResources []characterResource = []characterResource{
+	{
+		"player",
+		"assets/player.png",
+		48,
+		map[string]GameAssetAnimation{
+			"walk_horizontal": {StartTile: 24, FrameCount: 6},
+			"walk_north":      {StartTile: 30, FrameCount: 6},
+			"walk_south":      {StartTile: 18, FrameCount: 6},
+		},
+	},
+}
+
+// Load characters
+func loadCharacterAssets() (map[string]CharacterAsset, error) {
+	characters := map[string]CharacterAsset{}
+	for _, res := range characterResources {
+		tileset, err := loadTileset(res.Path, res.TileSize)
+		if err != nil {
+			return nil, err
+		}
+		asset := CharacterAsset{
+			Tileset:        *tileset,
+			Animations:     res.Animations,
+			animationSpeed: 6,
+		}
+		characters[res.Key] = asset
+	}
+	return characters, nil
 }
 
 func loadTileset(path string, tileSize int) (*Tileset, error) {
@@ -85,31 +127,4 @@ func readPngAsset(path string) (image.Image, error) {
 		return nil, err
 	}
 	return im, nil
-}
-
-type GameEntity interface {
-	Draw(*ebiten.Image)
-	Update()
-}
-
-type GameObj struct {
-	asset           *GameAsset
-	activeAnimation string
-	posX            int
-	posY            int
-}
-
-type GameAsset struct {
-	Name        string
-	Animations  map[string]GameAssetAnimation
-	frameHeight int8
-	frameWidht  int8
-}
-
-type GameAssetAnimation struct {
-	Name string
-	// Number of frames to play
-	FrameCount int
-	// Starting position in the TileMap
-	TileIdx int
 }
