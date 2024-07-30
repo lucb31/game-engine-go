@@ -8,7 +8,9 @@ import (
 )
 
 type NpcEntity struct {
-	Shape          *cp.Shape
+	id             GameEntityId
+	world          *GameWorld
+	shape          *cp.Shape
 	wayPoints      []cp.Vector
 	currentWpIndex int
 	loopWaypoints  bool
@@ -16,15 +18,15 @@ type NpcEntity struct {
 	velocity       float64
 }
 
-func NewNpc(asset *CharacterAsset) (*NpcEntity, error) {
-	npc := &NpcEntity{}
+func NewNpc(id GameEntityId, world *GameWorld, asset *CharacterAsset) (*NpcEntity, error) {
+	npc := &NpcEntity{world: world, id: id}
 	// Init body & shape
 	body := cp.NewBody(1, cp.INFINITY)
 	body.SetPosition(cp.Vector{X: 50, Y: 50})
 	body.SetVelocityUpdateFunc(npc.calculateVelocity)
-	npc.Shape = cp.NewBox(body, 8, 8, 0)
-	npc.Shape.SetElasticity(0)
-	npc.Shape.SetFriction(1)
+	npc.shape = cp.NewBox(body, 8, 8, 0)
+	npc.shape.SetElasticity(0)
+	npc.shape.SetFriction(1)
 	npc.asset = asset
 	npc.wayPoints = []cp.Vector{
 		{X: 20, Y: 20},
@@ -38,7 +40,7 @@ func NewNpc(asset *CharacterAsset) (*NpcEntity, error) {
 }
 
 func (n *NpcEntity) calculateOrientation() Orientation {
-	vel := n.Shape.Body().Velocity()
+	vel := n.shape.Body().Velocity()
 	if vel.Y > 5 {
 		return South
 	} else if vel.Y < -5 {
@@ -54,7 +56,7 @@ func (n *NpcEntity) calculateOrientation() Orientation {
 
 func (n *NpcEntity) Draw(screen *ebiten.Image) {
 	op := ebiten.DrawImageOptions{}
-	op.GeoM.Translate(n.Shape.Body().Position().X, n.Shape.Body().Position().Y)
+	op.GeoM.Translate(n.shape.Body().Position().X, n.shape.Body().Position().Y)
 
 	// TODO: Refactor: Animation logic duplicated in player
 	var animation string
@@ -80,6 +82,13 @@ func (n *NpcEntity) Draw(screen *ebiten.Image) {
 }
 
 func (n *NpcEntity) Update() {}
+
+func (n *NpcEntity) Destroy() {
+	fmt.Println("ERROR: Missing implementation for npc destroy")
+}
+
+func (n *NpcEntity) Id() GameEntityId { return n.id }
+func (n *NpcEntity) Shape() *cp.Shape { return n.shape }
 
 // Calculate velocity based on simple pathfinding algorithm between waypoints
 func (n *NpcEntity) calculateVelocity(body *cp.Body, gravity cp.Vector, damping float64, dt float64) {

@@ -11,8 +11,9 @@ import (
 )
 
 type AssetManager struct {
-	Tilesets        map[string]Tileset
-	CharacterAssets map[string]CharacterAsset
+	Tilesets         map[string]Tileset
+	CharacterAssets  map[string]CharacterAsset
+	ProjectileAssets map[string]ProjectileAsset
 }
 
 func NewAssetManager() (*AssetManager, error) {
@@ -25,6 +26,11 @@ func NewAssetManager() (*AssetManager, error) {
 	}
 
 	am.CharacterAssets, err = loadCharacterAssets()
+	if err != nil {
+		return nil, err
+	}
+
+	am.ProjectileAssets, err = loadProjectileAssets()
 	if err != nil {
 		return nil, err
 	}
@@ -107,6 +113,27 @@ func loadCharacterAssets() (map[string]CharacterAsset, error) {
 		characters[res.Key] = asset
 	}
 	return characters, nil
+}
+
+func loadProjectileAssets() (map[string]ProjectileAsset, error) {
+	projectiles := map[string]ProjectileAsset{}
+	im, err := readPngAsset("assets/bone.png")
+	if err != nil {
+		return nil, err
+	}
+	// Scale image to target size 16x61
+	targetSize := 16
+	rawIm := ebiten.NewImageFromImage(im)
+	scaledIm := ebiten.NewImage(targetSize, targetSize)
+	op := &ebiten.DrawImageOptions{}
+	op.GeoM.Scale(float64(targetSize)/float64(rawIm.Bounds().Dx()), float64(targetSize)/float64(rawIm.Bounds().Dy()))
+	scaledIm.DrawImage(rawIm, op)
+	// Add to asset map
+	asset := ProjectileAsset{
+		Image: scaledIm,
+	}
+	projectiles["bone"] = asset
+	return projectiles, nil
 }
 
 func loadTileset(path string, tileSize int) (*Tileset, error) {

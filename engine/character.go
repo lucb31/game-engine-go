@@ -4,16 +4,15 @@ import (
 	"fmt"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/jakecoffman/cp"
 )
 
 type GameEntity interface {
+	Id() GameEntityId
+	Shape() *cp.Shape
 	Draw(*ebiten.Image)
+	Destroy()
 	Update()
-}
-
-type GameObj struct {
-	asset           *CharacterAsset
-	activeAnimation string
 }
 
 type GameAssetAnimation struct {

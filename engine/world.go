@@ -8,18 +8,17 @@ import (
 )
 
 type Biome int
+type GameEntityId int
 
 const (
-	Gras  Biome = 32
-	Rock  Biome = 42
-	Undef Biome = 71
+	Gras        Biome = 32
+	Rock        Biome = 42
+	Undef       Biome = 71
+	mapTileSize       = 16
 )
 
-// TODO: Should not repeat here
-const mapTileSize = 16
-
 type GameWorld struct {
-	objects      []GameEntity
+	objects      map[GameEntityId]GameEntity
 	player       GameEntity
 	Biome        [][]Biome
 	Width        int64
@@ -27,6 +26,7 @@ type GameWorld struct {
 	FrameCount   int64
 	AssetManager *AssetManager
 	space        *cp.Space
+	nextObjectId GameEntityId
 }
 
 func (w *GameWorld) Draw(screen *ebiten.Image) {
@@ -41,10 +41,29 @@ func (w *GameWorld) Draw(screen *ebiten.Image) {
 func (w *GameWorld) Update() {
 	w.FrameCount++
 	w.space.Step(1.0 / 60.0)
-	//for _, obj := range w.objects {
-	//	obj.Update()
-	//}
+	for _, obj := range w.objects {
+		obj.Update()
+	}
 	w.player.Update()
+}
+
+// Adds a game entity to the world by
+// - registering to physics space
+// - registering in object map to add / find / remove entities
+func (w *GameWorld) addObject(object GameEntity) {
+	fmt.Println("Adding object", object)
+	w.space.AddBody(object.Shape().Body())
+	w.space.AddShape(object.Shape())
+	w.objects[object.Id()] = object
+	w.nextObjectId++
+}
+
+// Remove a game entity from physics & object space
+func (w *GameWorld) removeObject(object GameEntity) {
+	fmt.Println("Removing object", object)
+	w.space.RemoveBody(object.Shape().Body())
+	w.space.RemoveShape(object.Shape())
+	delete(w.objects, object.Id())
 }
 
 func (w *GameWorld) drawBiomes(screen *ebiten.Image) {
@@ -120,26 +139,53 @@ func createFences(am *AssetManager, space *cp.Space) ([]GameEntity, error) {
 				shape.SetElasticity(0)
 				space.AddBody(body)
 				space.AddShape(shape)
-				objects = append(objects, &StaticGameEntity{Shape: shape, Image: im})
+				objects = append(objects, &StaticGameEntity{shape: shape, Image: im})
 			}
 		}
 	}
 	return objects, nil
 }
 
-// Static prop in world. Collidable, but no movement, no animation
-type StaticGameEntity struct {
-	Image *ebiten.Image
-	Shape *cp.Shape
+func NewPhysicsSpace() (*cp.Space, error) {
+	// Initialize physics
+	space := cp.NewSpace()
+	// Initialize bounding box
+	offset := -10.0
+	walls := []cp.Vector{
+		{offset, offset}, {offset, 240},
+		{320, offset}, {320, 240},
+		{offset, offset}, {320, offset},
+		{offset, 240}, {320, 240},
+	}
+	for i := 0; i < len(walls)-1; i += 2 {
+		shape := space.AddShape(cp.NewSegment(space.StaticBody, walls[i], walls[i+1], 2))
+		shape.SetElasticity(1)
+		shape.SetFriction(1)
+	}
+	// Register collision handlers
+	handler := space.NewCollisionHandler(cp.CollisionType(ProjectileCollision), cp.CollisionType(PlayerCollision))
+	handler.BeginFunc = beginProjectileCollision
+	return space, nil
 }
 
-// Nothing to do since its static
-func (p *StaticGameEntity) Update() {}
+func beginProjectileCollision(arb *cp.Arbiter, space *cp.Space, userData interface{}) bool {
+	// Validate correct collision partners & type assert
+	a, b := arb.Bodies()
+	projectile, ok := a.UserData.(*Projectile)
+	if !ok {
+		fmt.Println("Type assertion for projectile collision failed. Did not receive valid Projectile")
+		return false
+	}
+	player, ok := b.UserData.(*Player)
+	if !ok {
+		fmt.Println("Type assertion for projectile collision failed. Did not receive valid Player")
+		return false
+	}
+	fmt.Println("Collision with projectile", projectile, player)
+	// TODO: Remove projectile, animate player
+	projectile.Destroy()
 
-func (p *StaticGameEntity) Draw(screen *ebiten.Image) {
-	op := ebiten.DrawImageOptions{}
-	op.GeoM.Translate(p.Shape.Body().Position().X, p.Shape.Body().Position().Y)
-	screen.DrawImage(p.Image, &op)
+	return false
 }
 
 func NewWorld(width int64, height int64) (*GameWorld, error) {
@@ -154,46 +200,54 @@ func NewWorld(width int64, height int64) (*GameWorld, error) {
 		return nil, err
 	}
 	// Initialize physics
-	space := cp.NewSpace()
-	// Initialize bounding box
-	offset := 2.5
-	walls := []cp.Vector{
-		{offset, offset}, {offset, 240},
-		{320, offset}, {320, 240},
-		{offset, offset}, {320, offset},
-		{offset, 240}, {320, 240},
-	}
-	for i := 0; i < len(walls)-1; i += 2 {
-		shape := space.AddShape(cp.NewSegment(space.StaticBody, walls[i], walls[i+1], 2))
-		shape.SetElasticity(1)
-		shape.SetFriction(1)
-	}
-
-	// Initialize some fences
-	objects, err := createFences(am, space)
+	space, err := NewPhysicsSpace()
 	if err != nil {
 		return nil, err
 	}
-	w := GameWorld{Biome: biome, Width: width, Height: height, AssetManager: am, objects: objects, space: space}
+	// Initialize some fences
+	// objects, err := createFences(am, space)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	w := GameWorld{
+		Biome:        biome,
+		Width:        width,
+		Height:       height,
+		AssetManager: am,
+		space:        space,
+		objects:      map[GameEntityId]GameEntity{},
+	}
 
 	// Initialize player (after world has been initialized to reference it)
 	asset, ok := am.CharacterAssets["player"]
 	if !ok {
 		return nil, fmt.Errorf("Could not find player asset")
 	}
+	// TODO: Find a better / generic solution to give assets access to the current frame count
 	asset.currentFrame = &w.FrameCount
 	player, err := NewPlayer(&w, &asset)
 	if err != nil {
 		return &w, err
 	}
 	w.player = player
-	space.AddBody(player.Shape.Body())
-	space.AddShape(player.Shape)
+	// Explicitly NOT adding the player to the object space via addObject.
+	// Might want to revisit this later
+	space.AddBody(player.Shape().Body())
+	space.AddShape(player.Shape())
 
 	// Initialize an npc
-	np, err := NewNpc(&asset)
-	space.AddBody(np.Shape.Body())
-	space.AddShape(np.Shape)
-	w.objects = append(w.objects, np)
+	npc, err := NewNpc(w.nextObjectId, &w, &asset)
+	if err != nil {
+		return &w, err
+	}
+	w.addObject(npc)
+
+	// Initialize a projectile
+	projAsset := am.ProjectileAssets["bone"]
+	projectile, err := NewProjectile(w.nextObjectId, &w, &projAsset, player.shape.Body().Position())
+	if err != nil {
+		return &w, err
+	}
+	w.addObject(projectile)
 	return &w, nil
 }

@@ -17,9 +17,10 @@ const (
 )
 
 type Player struct {
+	id          GameEntityId
 	world       *GameWorld
 	orientation Orientation
-	Shape       *cp.Shape
+	shape       *cp.Shape
 	asset       *CharacterAsset
 }
 
@@ -29,20 +30,25 @@ const (
 )
 
 func NewPlayer(world *GameWorld, asset *CharacterAsset) (*Player, error) {
+	// Assigning static id -1 to player object
+	p := &Player{id: -1, world: world, asset: asset, orientation: South}
 	// Init player physics
 	playerBody := cp.NewBody(1, cp.INFINITY)
 	playerBody.SetPosition(cp.Vector{X: 10, Y: 10})
-	playerShape := cp.NewBox(playerBody, 16, 16, 0)
-	playerShape.SetElasticity(0)
-	playerShape.SetFriction(0)
+	playerBody.UserData = p
+	p.shape = cp.NewBox(playerBody, 16, 16, 0)
+	p.shape.SetElasticity(0)
+	p.shape.SetFriction(0)
+	p.shape.SetCollisionType(cp.CollisionType(PlayerCollision))
 
-	return &Player{world: world, asset: asset, Shape: playerShape, orientation: South}, nil
+	return p, nil
 }
 
 func (p *Player) Draw(screen *ebiten.Image) {
+	//fmt.Println("Drawing player at position", p.Shape.Body().Position())
 	// Determine active animation based on current velocity & orientation
 	activeAnimation := "idle_"
-	if p.Shape.Body().Velocity().Length() > 0.1 {
+	if p.shape.Body().Velocity().Length() > 0.1 {
 		activeAnimation = "walk_"
 	}
 	activeAnimation += string(p.orientation)
@@ -53,7 +59,7 @@ func (p *Player) Draw(screen *ebiten.Image) {
 		return
 	}
 	op := ebiten.DrawImageOptions{}
-	op.GeoM.Translate(p.Shape.Body().Position().X, p.Shape.Body().Position().Y)
+	op.GeoM.Translate(p.shape.Body().Position().X, p.shape.Body().Position().Y)
 	screen.DrawImage(subIm, &op)
 }
 
@@ -61,9 +67,16 @@ func (p *Player) Update() {
 	p.readMovementInputs()
 }
 
+func (p *Player) Destroy() {
+	fmt.Println("ERROR: Cannot destroy player")
+}
+
+func (p *Player) Id() GameEntityId { return p.id }
+func (p *Player) Shape() *cp.Shape { return p.shape }
+
 func (p *Player) readMovementInputs() {
 	// Smoothen velocity
-	velocity := p.Shape.Body().Velocity()
+	velocity := p.shape.Body().Velocity()
 	if ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
 		velocity.Y = max(-playerVelocity, velocity.Y-playerVelocity*0.1)
 		p.orientation = North
@@ -83,5 +96,5 @@ func (p *Player) readMovementInputs() {
 		velocity.X = 0
 	}
 
-	p.Shape.Body().SetVelocityVector(velocity)
+	p.shape.Body().SetVelocityVector(velocity)
 }
