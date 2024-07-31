@@ -17,6 +17,14 @@ const (
 	mapTileSize       = 16
 )
 
+type GameEntity interface {
+	Id() GameEntityId
+	SetId(GameEntityId)
+	Shape() *cp.Shape
+	Draw(*ebiten.Image)
+	Destroy()
+}
+
 type GameWorld struct {
 	objects      map[GameEntityId]GameEntity
 	player       GameEntity
@@ -147,7 +155,7 @@ func NewPhysicsSpace() (*cp.Space, error) {
 	// Initialize physics
 	space := cp.NewSpace()
 	// Initialize bounding box
-	offset := -10.0
+	offset := 0.0
 	walls := []cp.Vector{
 		{offset, offset}, {offset, 240},
 		{320, offset}, {320, 240},
@@ -160,7 +168,7 @@ func NewPhysicsSpace() (*cp.Space, error) {
 		shape.SetFriction(1)
 	}
 	// Register collision handlers
-	handler := space.NewCollisionHandler(cp.CollisionType(ProjectileCollision), cp.CollisionType(PlayerCollision))
+	handler := space.NewCollisionHandler(cp.CollisionType(ProjectileCollision), cp.CollisionType(NpcCollision))
 	handler.BeginFunc = beginProjectileCollision
 	return space, nil
 }
@@ -173,15 +181,15 @@ func beginProjectileCollision(arb *cp.Arbiter, space *cp.Space, userData interfa
 		fmt.Println("Type assertion for projectile collision failed. Did not receive valid Projectile")
 		return false
 	}
-	player, ok := b.UserData.(*Player)
+	npc, ok := b.UserData.(*NpcEntity)
 	if !ok {
-		fmt.Println("Type assertion for projectile collision failed. Did not receive valid Player")
+		fmt.Println("Type assertion for projectile collision failed. Did not receive valid Npc", b.UserData)
 		return false
 	}
-	fmt.Println("Collision with projectile", projectile, player)
-	// TODO: Remove projectile, animate player
+	fmt.Println("Collision with projectile", projectile, npc)
+	// Remove projectile
 	projectile.Destroy()
-
+	// TODO: Animate player / npc & apply damage
 	return false
 }
 
@@ -220,9 +228,13 @@ func NewWorld(width int64, height int64) (*GameWorld, error) {
 	if !ok {
 		return nil, fmt.Errorf("Could not find player asset")
 	}
+	projAsset, ok := am.ProjectileAssets["bone"]
+	if !ok {
+		return nil, fmt.Errorf("Could not find projectile asset")
+	}
 	// TODO: Find a better / generic solution to give assets access to the current frame count
 	asset.currentFrame = &w.FrameCount
-	player, err := NewPlayer(&w, &asset)
+	player, err := NewPlayer(&w, &asset, &projAsset)
 	if err != nil {
 		return &w, err
 	}
@@ -238,13 +250,5 @@ func NewWorld(width int64, height int64) (*GameWorld, error) {
 		return &w, err
 	}
 	w.addObject(npc)
-
-	// Initialize a projectile
-	projAsset := am.ProjectileAssets["bone"]
-	projectile, err := NewProjectile(&w, &projAsset, player.shape.Body().Position())
-	if err != nil {
-		return &w, err
-	}
-	w.addObject(projectile)
 	return &w, nil
 }

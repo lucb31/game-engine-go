@@ -76,6 +76,8 @@ type characterResource struct {
 	Path       string
 	TileSize   int
 	Animations map[string]GameAssetAnimation
+	OffsetX    int64
+	OffsetY    int64
 }
 
 // TODO: Load these from config file
@@ -94,6 +96,8 @@ var characterResources []characterResource = []characterResource{
 			"idle_north": {StartTile: 12, FrameCount: 6},
 			"idle_south": {StartTile: 0, FrameCount: 6},
 		},
+		-24,
+		-32,
 	},
 }
 
@@ -109,6 +113,8 @@ func loadCharacterAssets() (map[string]CharacterAsset, error) {
 			Tileset:        *tileset,
 			Animations:     res.Animations,
 			animationSpeed: 6,
+			offsetX:        float64(res.OffsetX),
+			offsetY:        float64(res.OffsetY),
 		}
 		characters[res.Key] = asset
 	}

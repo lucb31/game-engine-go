@@ -2,6 +2,7 @@ package engine
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/jakecoffman/cp"
@@ -17,21 +18,23 @@ const (
 )
 
 type Player struct {
-	id          GameEntityId
-	world       *GameWorld
-	orientation Orientation
-	shape       *cp.Shape
-	asset       *CharacterAsset
+	id                  GameEntityId
+	world               *GameWorld
+	orientation         Orientation
+	shape               *cp.Shape
+	asset               *CharacterAsset
+	projectileAsset     *ProjectileAsset
+	lastProjectileFired time.Time
 }
 
 const (
-	playerVelocity = 50
-	playerTileSize = 48
+	playerVelocity          = 50
+	playerFireRatePerSecond = float64(1.3)
 )
 
-func NewPlayer(world *GameWorld, asset *CharacterAsset) (*Player, error) {
+func NewPlayer(world *GameWorld, asset *CharacterAsset, projectileAsset *ProjectileAsset) (*Player, error) {
 	// Assigning static id -1 to player object
-	p := &Player{id: -1, world: world, asset: asset, orientation: South}
+	p := &Player{id: -1, world: world, asset: asset, orientation: South, projectileAsset: projectileAsset}
 	// Init player physics
 	playerBody := cp.NewBody(1, cp.INFINITY)
 	playerBody.SetPosition(cp.Vector{X: 10, Y: 10})
@@ -46,22 +49,42 @@ func NewPlayer(world *GameWorld, asset *CharacterAsset) (*Player, error) {
 }
 
 func (p *Player) Draw(screen *ebiten.Image) {
-	//fmt.Println("Drawing player at position", p.Shape.Body().Position())
 	// Determine active animation based on current velocity & orientation
 	activeAnimation := "idle_"
 	if p.shape.Body().Velocity().Length() > 0.1 {
 		activeAnimation = "walk_"
 	}
 	activeAnimation += string(p.orientation)
+	p.asset.Draw(screen, activeAnimation, p.shape.Body().Position())
+}
 
-	subIm, err := p.asset.GetTile(activeAnimation)
-	if err != nil {
-		fmt.Println("Error animating player", err.Error())
+func (p *Player) shoot() {
+	now := time.Now()
+	duration := float64(time.Second) / playerFireRatePerSecond
+	if now.Sub(p.lastProjectileFired) < time.Duration(duration) {
+		fmt.Println("Reloading...")
 		return
 	}
-	op := ebiten.DrawImageOptions{}
-	op.GeoM.Translate(p.shape.Body().Position().X, p.shape.Body().Position().Y)
-	screen.DrawImage(subIm, &op)
+	fmt.Println("Shooting!")
+	projectilePos := p.shape.Body().Position()
+	offset := 25.0
+	switch p.orientation {
+	case East:
+		projectilePos.Add(cp.Vector{offset, 0})
+	case West:
+		projectilePos.Add(cp.Vector{-offset, 0})
+	case North:
+		projectilePos.Add(cp.Vector{0, -offset})
+	case South:
+		projectilePos.Add(cp.Vector{0, offset})
+	}
+	proj, err := NewProjectile(p.world, p.projectileAsset, projectilePos, p.orientation)
+	if err != nil {
+		fmt.Println("Could not shoot projectile")
+		return
+	}
+	p.world.addObject(proj)
+	p.lastProjectileFired = time.Now()
 }
 
 func (p *Player) Destroy() {
@@ -74,8 +97,7 @@ func (p *Player) Shape() *cp.Shape      { return p.shape }
 
 func (p *Player) calculateVelocity(body *cp.Body, gravity cp.Vector, damping float64, dt float64) {
 	if ebiten.IsKeyPressed(ebiten.KeySpace) {
-		//proj := NewProjectile()
-		//p.world.addObject()
+		p.shoot()
 	}
 	// Smoothen velocity
 	velocity := body.Velocity()

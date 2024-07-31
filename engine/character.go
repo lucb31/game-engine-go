@@ -7,32 +7,27 @@ import (
 	"github.com/jakecoffman/cp"
 )
 
-type GameEntity interface {
-	Id() GameEntityId
-	SetId(GameEntityId)
-	Shape() *cp.Shape
-	Draw(*ebiten.Image)
-	Destroy()
-}
-
 type GameAssetAnimation struct {
 	StartTile  int
 	FrameCount int
 	Flip       bool
 }
+
 type CharacterAsset struct {
 	Animations     map[string]GameAssetAnimation
 	Tileset        Tileset
 	animationSpeed int
 	currentFrame   *int64
+	offsetX        float64
+	offsetY        float64
 }
 
 func (a *CharacterAsset) GetTile(activeAnimation string) (*ebiten.Image, error) {
+	// Get animation tile
 	animation, ok := a.Animations[activeAnimation]
 	if !ok {
 		return nil, fmt.Errorf("Unknown animation %s", activeAnimation)
 	}
-
 	animationFrame := int(*a.currentFrame/int64(a.animationSpeed)) % animation.FrameCount
 	tileIdx := animation.StartTile + animationFrame
 	subIm, err := a.Tileset.GetTile(tileIdx)
@@ -43,6 +38,19 @@ func (a *CharacterAsset) GetTile(activeAnimation string) (*ebiten.Image, error) 
 		return flipHorizontal(subIm), nil
 	}
 	return subIm, nil
+}
+
+func (a *CharacterAsset) Draw(screen *ebiten.Image, activeAnimation string, position cp.Vector) error {
+	subIm, err := a.GetTile(activeAnimation)
+	if err != nil {
+		return fmt.Errorf("Error animating player", err.Error())
+	}
+	op := ebiten.DrawImageOptions{}
+	// Offset to make sure asset is drawn centered on current position
+	op.GeoM.Translate(a.offsetX, a.offsetY)
+	op.GeoM.Translate(position.X, position.Y)
+	screen.DrawImage(subIm, &op)
+	return nil
 }
 
 func flipHorizontal(source *ebiten.Image) *ebiten.Image {

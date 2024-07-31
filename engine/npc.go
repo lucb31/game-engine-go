@@ -24,9 +24,11 @@ func NewNpc(world *GameWorld, asset *CharacterAsset) (*NpcEntity, error) {
 	body := cp.NewBody(1, cp.INFINITY)
 	body.SetPosition(cp.Vector{X: 50, Y: 50})
 	body.SetVelocityUpdateFunc(npc.calculateVelocity)
+	body.UserData = npc
 	npc.shape = cp.NewBox(body, 8, 8, 0)
 	npc.shape.SetElasticity(0)
 	npc.shape.SetFriction(1)
+	npc.shape.SetCollisionType(cp.CollisionType(NpcCollision))
 	npc.asset = asset
 	npc.wayPoints = []cp.Vector{
 		{X: 20, Y: 20},
@@ -55,9 +57,6 @@ func (n *NpcEntity) calculateOrientation() Orientation {
 }
 
 func (n *NpcEntity) Draw(screen *ebiten.Image) {
-	op := ebiten.DrawImageOptions{}
-	op.GeoM.Translate(n.shape.Body().Position().X, n.shape.Body().Position().Y)
-
 	// TODO: Refactor: Animation logic duplicated in player
 	var animation string
 	switch n.calculateOrientation() {
@@ -73,12 +72,7 @@ func (n *NpcEntity) Draw(screen *ebiten.Image) {
 		animation = "idle"
 	}
 
-	im, err := n.asset.GetTile(animation)
-	if err != nil {
-		fmt.Println("Could not draw npc", err.Error())
-		return
-	}
-	screen.DrawImage(im, &op)
+	n.asset.Draw(screen, animation, n.shape.Body().Position())
 }
 
 func (n *NpcEntity) Destroy() {

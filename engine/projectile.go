@@ -7,11 +7,12 @@ import (
 	"github.com/jakecoffman/cp"
 )
 
-type CustomCollisionType uintptr
+type CustomCollisionType cp.CollisionType
 
 const (
-	ProjectileCollision CustomCollisionType = iota
-	PlayerCollision
+	PlayerCollision CustomCollisionType = iota
+	ProjectileCollision
+	NpcCollision
 )
 
 type Projectile struct {
@@ -27,30 +28,50 @@ type ProjectileAsset struct {
 	Image *ebiten.Image
 }
 
-func NewProjectile(world *GameWorld, asset *ProjectileAsset, destination cp.Vector) (*Projectile, error) {
+func (pa *ProjectileAsset) Draw(screen *ebiten.Image, position cp.Vector) error {
+	op := ebiten.DrawImageOptions{}
+	// Offset by half asset size to center position
+	op.GeoM.Translate(-float64(pa.Image.Bounds().Dx())/2, -float64(pa.Image.Bounds().Dy())/2)
+	op.GeoM.Translate(position.X, position.Y)
+	screen.DrawImage(pa.Image, &op)
+	return nil
+}
+
+func NewProjectile(world *GameWorld, asset *ProjectileAsset, position cp.Vector, orientation Orientation) (*Projectile, error) {
 	if asset.Image == nil {
 		return nil, fmt.Errorf("Failed to instantiate projectile. No asset provided")
 	}
 	p := &Projectile{world: world}
 	body := cp.NewBody(1, cp.INFINITY)
-	body.SetPosition(cp.Vector{X: 200, Y: 200})
+	body.SetPosition(position)
 	body.SetVelocityUpdateFunc(p.calculateVelocity)
 	body.UserData = p
-	p.shape = cp.NewCircle(body, 8, cp.Vector{})
+	// TODO: Make kinematic body / collision without forces
+	p.shape = cp.NewBox(body, 16, 16, 0)
 	p.shape.SetElasticity(0)
 	p.shape.SetFriction(0)
 	p.shape.SetCollisionType(cp.CollisionType(ProjectileCollision))
-	p.Destination = destination
+	p.Destination = destinationFromOrientation(orientation)
 	p.velocity = 150
 	p.asset = asset
 	return p, nil
 }
 
+func destinationFromOrientation(orientation Orientation) cp.Vector {
+	switch orientation {
+	case North:
+		return cp.Vector{0, -1000}
+	case South:
+		return cp.Vector{0, 1000}
+	case East:
+		return cp.Vector{1000, 0}
+	default:
+		return cp.Vector{-1000, 0}
+	}
+}
+
 func (p *Projectile) Draw(screen *ebiten.Image) {
-	// fmt.Println("Drawing projectile at", p.Shape.Body().Position())
-	op := ebiten.DrawImageOptions{}
-	op.GeoM.Translate(p.shape.Body().Position().X, p.shape.Body().Position().Y)
-	screen.DrawImage(p.asset.Image, &op)
+	p.asset.Draw(screen, p.shape.Body().Position())
 }
 
 func (p *Projectile) Id() GameEntityId      { return p.id }
