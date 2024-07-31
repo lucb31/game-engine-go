@@ -36,6 +36,7 @@ func NewPlayer(world *GameWorld, asset *CharacterAsset) (*Player, error) {
 	playerBody := cp.NewBody(1, cp.INFINITY)
 	playerBody.SetPosition(cp.Vector{X: 10, Y: 10})
 	playerBody.UserData = p
+	playerBody.SetVelocityUpdateFunc(p.calculateVelocity)
 	p.shape = cp.NewBox(playerBody, 16, 16, 0)
 	p.shape.SetElasticity(0)
 	p.shape.SetFriction(0)
@@ -63,10 +64,6 @@ func (p *Player) Draw(screen *ebiten.Image) {
 	screen.DrawImage(subIm, &op)
 }
 
-func (p *Player) Update() {
-	p.readMovementInputs()
-}
-
 func (p *Player) Destroy() {
 	fmt.Println("ERROR: Cannot destroy player")
 }
@@ -74,9 +71,9 @@ func (p *Player) Destroy() {
 func (p *Player) Id() GameEntityId { return p.id }
 func (p *Player) Shape() *cp.Shape { return p.shape }
 
-func (p *Player) readMovementInputs() {
+func (p *Player) calculateVelocity(body *cp.Body, gravity cp.Vector, damping float64, dt float64) {
 	// Smoothen velocity
-	velocity := p.shape.Body().Velocity()
+	velocity := body.Velocity()
 	if ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
 		velocity.Y = max(-playerVelocity, velocity.Y-playerVelocity*0.1)
 		p.orientation = North
@@ -96,5 +93,5 @@ func (p *Player) readMovementInputs() {
 		velocity.X = 0
 	}
 
-	p.shape.Body().SetVelocityVector(velocity)
+	body.SetVelocityVector(velocity)
 }

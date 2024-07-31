@@ -55,7 +55,6 @@ func (p *Projectile) Draw(screen *ebiten.Image) {
 
 func (p *Projectile) Id() GameEntityId { return p.id }
 func (p *Projectile) Shape() *cp.Shape { return p.shape }
-func (p *Projectile) Update()          {}
 func (p *Projectile) Destroy() {
 	p.world.removeObject(p)
 }

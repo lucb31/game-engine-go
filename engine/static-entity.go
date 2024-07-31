@@ -14,9 +14,6 @@ type StaticGameEntity struct {
 	shape *cp.Shape
 }
 
-// Nothing to do since its static
-func (p *StaticGameEntity) Update() {}
-
 func (p *StaticGameEntity) Id() GameEntityId { return p.id }
 func (p *StaticGameEntity) Shape() *cp.Shape { return p.shape }
 

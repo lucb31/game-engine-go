@@ -41,10 +41,6 @@ func (w *GameWorld) Draw(screen *ebiten.Image) {
 func (w *GameWorld) Update() {
 	w.FrameCount++
 	w.space.Step(1.0 / 60.0)
-	for _, obj := range w.objects {
-		obj.Update()
-	}
-	w.player.Update()
 }
 
 // Adds a game entity to the world by

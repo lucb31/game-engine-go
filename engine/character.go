@@ -12,7 +12,6 @@ type GameEntity interface {
 	Shape() *cp.Shape
 	Draw(*ebiten.Image)
 	Destroy()
-	Update()
 }
 
 type GameAssetAnimation struct {

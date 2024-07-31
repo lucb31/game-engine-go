@@ -81,8 +81,6 @@ func (n *NpcEntity) Draw(screen *ebiten.Image) {
 	screen.DrawImage(im, &op)
 }
 
-func (n *NpcEntity) Update() {}
-
 func (n *NpcEntity) Destroy() {
 	fmt.Println("ERROR: Missing implementation for npc destroy")
 }
