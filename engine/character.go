@@ -9,6 +9,7 @@ import (
 
 type GameEntity interface {
 	Id() GameEntityId
+	SetId(GameEntityId)
 	Shape() *cp.Shape
 	Draw(*ebiten.Image)
 	Destroy()

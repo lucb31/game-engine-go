@@ -50,7 +50,8 @@ func (w *GameWorld) addObject(object GameEntity) {
 	fmt.Println("Adding object", object)
 	w.space.AddBody(object.Shape().Body())
 	w.space.AddShape(object.Shape())
-	w.objects[object.Id()] = object
+	w.objects[w.nextObjectId] = object
+	object.SetId(w.nextObjectId)
 	w.nextObjectId++
 }
 
@@ -232,7 +233,7 @@ func NewWorld(width int64, height int64) (*GameWorld, error) {
 	space.AddShape(player.Shape())
 
 	// Initialize an npc
-	npc, err := NewNpc(w.nextObjectId, &w, &asset)
+	npc, err := NewNpc(&w, &asset)
 	if err != nil {
 		return &w, err
 	}
@@ -240,7 +241,7 @@ func NewWorld(width int64, height int64) (*GameWorld, error) {
 
 	// Initialize a projectile
 	projAsset := am.ProjectileAssets["bone"]
-	projectile, err := NewProjectile(w.nextObjectId, &w, &projAsset, player.shape.Body().Position())
+	projectile, err := NewProjectile(&w, &projAsset, player.shape.Body().Position())
 	if err != nil {
 		return &w, err
 	}

@@ -18,8 +18,8 @@ type NpcEntity struct {
 	velocity       float64
 }
 
-func NewNpc(id GameEntityId, world *GameWorld, asset *CharacterAsset) (*NpcEntity, error) {
-	npc := &NpcEntity{world: world, id: id}
+func NewNpc(world *GameWorld, asset *CharacterAsset) (*NpcEntity, error) {
+	npc := &NpcEntity{world: world}
 	// Init body & shape
 	body := cp.NewBody(1, cp.INFINITY)
 	body.SetPosition(cp.Vector{X: 50, Y: 50})
@@ -85,8 +85,9 @@ func (n *NpcEntity) Destroy() {
 	fmt.Println("ERROR: Missing implementation for npc destroy")
 }
 
-func (n *NpcEntity) Id() GameEntityId { return n.id }
-func (n *NpcEntity) Shape() *cp.Shape { return n.shape }
+func (n *NpcEntity) Id() GameEntityId      { return n.id }
+func (n *NpcEntity) SetId(id GameEntityId) { n.id = id }
+func (n *NpcEntity) Shape() *cp.Shape      { return n.shape }
 
 // Calculate velocity based on simple pathfinding algorithm between waypoints
 func (n *NpcEntity) calculateVelocity(body *cp.Body, gravity cp.Vector, damping float64, dt float64) {

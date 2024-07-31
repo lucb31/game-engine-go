@@ -27,11 +27,11 @@ type ProjectileAsset struct {
 	Image *ebiten.Image
 }
 
-func NewProjectile(id GameEntityId, world *GameWorld, asset *ProjectileAsset, destination cp.Vector) (*Projectile, error) {
+func NewProjectile(world *GameWorld, asset *ProjectileAsset, destination cp.Vector) (*Projectile, error) {
 	if asset.Image == nil {
 		return nil, fmt.Errorf("Failed to instantiate projectile. No asset provided")
 	}
-	p := &Projectile{id: id, world: world}
+	p := &Projectile{world: world}
 	body := cp.NewBody(1, cp.INFINITY)
 	body.SetPosition(cp.Vector{X: 200, Y: 200})
 	body.SetVelocityUpdateFunc(p.calculateVelocity)
@@ -53,8 +53,9 @@ func (p *Projectile) Draw(screen *ebiten.Image) {
 	screen.DrawImage(p.asset.Image, &op)
 }
 
-func (p *Projectile) Id() GameEntityId { return p.id }
-func (p *Projectile) Shape() *cp.Shape { return p.shape }
+func (p *Projectile) Id() GameEntityId      { return p.id }
+func (p *Projectile) SetId(id GameEntityId) { p.id = id }
+func (p *Projectile) Shape() *cp.Shape      { return p.shape }
 func (p *Projectile) Destroy() {
 	p.world.removeObject(p)
 }

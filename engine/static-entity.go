@@ -14,8 +14,9 @@ type StaticGameEntity struct {
 	shape *cp.Shape
 }
 
-func (p *StaticGameEntity) Id() GameEntityId { return p.id }
-func (p *StaticGameEntity) Shape() *cp.Shape { return p.shape }
+func (p *StaticGameEntity) Id() GameEntityId      { return p.id }
+func (p *StaticGameEntity) SetId(id GameEntityId) { p.id = id }
+func (p *StaticGameEntity) Shape() *cp.Shape      { return p.shape }
 
 func (p *StaticGameEntity) Draw(screen *ebiten.Image) {
 	op := ebiten.DrawImageOptions{}

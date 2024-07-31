@@ -68,10 +68,15 @@ func (p *Player) Destroy() {
 	fmt.Println("ERROR: Cannot destroy player")
 }
 
-func (p *Player) Id() GameEntityId { return p.id }
-func (p *Player) Shape() *cp.Shape { return p.shape }
+func (p *Player) Id() GameEntityId      { return p.id }
+func (p *Player) SetId(id GameEntityId) { p.id = id }
+func (p *Player) Shape() *cp.Shape      { return p.shape }
 
 func (p *Player) calculateVelocity(body *cp.Body, gravity cp.Vector, damping float64, dt float64) {
+	if ebiten.IsKeyPressed(ebiten.KeySpace) {
+		//proj := NewProjectile()
+		//p.world.addObject()
+	}
 	// Smoothen velocity
 	velocity := body.Velocity()
 	if ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
