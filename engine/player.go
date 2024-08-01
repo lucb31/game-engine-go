@@ -57,10 +57,10 @@ func (p *Player) shoot() {
 	now := time.Now()
 	duration := float64(time.Second) / playerFireRatePerSecond
 	if now.Sub(p.lastProjectileFired) < time.Duration(duration) {
-		fmt.Println("Reloading...")
+		// Still reloading
 		return
 	}
-	fmt.Println("Shooting!")
+	// Spawn projectile at player position
 	projectilePos := p.shape.Body().Position()
 	offset := 25.0
 	switch p.orientation {

@@ -35,6 +35,9 @@ type GameWorld struct {
 	AssetManager *AssetManager
 	space        *cp.Space
 	nextObjectId GameEntityId
+
+	// Removing object from the world needs to be buffered towards the end of a timestep
+	objectIdsToDelete []GameEntityId
 }
 
 func (w *GameWorld) Draw(screen *ebiten.Image) {
@@ -49,6 +52,13 @@ func (w *GameWorld) Draw(screen *ebiten.Image) {
 func (w *GameWorld) Update() {
 	w.FrameCount++
 	w.space.Step(1.0 / 60.0)
+	// Delete objects scheduled for deletion
+	if len(w.objectIdsToDelete) > 0 {
+		for _, id := range w.objectIdsToDelete {
+			w.removeObject(id)
+		}
+		w.objectIdsToDelete = []GameEntityId{}
+	}
 }
 
 // Adds a game entity to the world by
@@ -63,12 +73,23 @@ func (w *GameWorld) addObject(object GameEntity) {
 	w.nextObjectId++
 }
 
-// Remove a game entity from physics & object space
-func (w *GameWorld) removeObject(object GameEntity) {
+// Removes an object from the world by scheduling for deletion
+func (w *GameWorld) DestroyObject(object GameEntity) {
+	fmt.Println("scheduling for deletion", object)
+	w.objectIdsToDelete = append(w.objectIdsToDelete, object.Id())
+}
+
+// Actually remove a game entity from physics & object space
+func (w *GameWorld) removeObject(id GameEntityId) {
+	object, ok := w.objects[id]
+	if !ok {
+		fmt.Println("Oops, tried to delete unknown object", id)
+		return
+	}
 	fmt.Println("Removing object", object)
-	w.space.RemoveBody(object.Shape().Body())
 	w.space.RemoveShape(object.Shape())
-	delete(w.objects, object.Id())
+	w.space.RemoveBody(object.Shape().Body())
+	delete(w.objects, id)
 }
 
 func (w *GameWorld) drawBiomes(screen *ebiten.Image) {
@@ -186,10 +207,10 @@ func beginProjectileCollision(arb *cp.Arbiter, space *cp.Space, userData interfa
 		fmt.Println("Type assertion for projectile collision failed. Did not receive valid Npc", b.UserData)
 		return false
 	}
-	fmt.Println("Collision with projectile", projectile, npc)
+	// Trigger projectile hit with COPY of projectile
+	npc.OnProjectileHit(*projectile)
 	// Remove projectile
 	projectile.Destroy()
-	// TODO: Animate player / npc & apply damage
 	return false
 }
 
