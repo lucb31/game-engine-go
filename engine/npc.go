@@ -16,10 +16,12 @@ type NpcEntity struct {
 	loopWaypoints  bool
 	asset          *CharacterAsset
 	velocity       float64
+	animation      string
+	orientation    Orientation
 }
 
 func NewNpc(world *GameWorld, asset *CharacterAsset) (*NpcEntity, error) {
-	npc := &NpcEntity{world: world}
+	npc := &NpcEntity{world: world, orientation: South}
 	// Init body & shape
 	body := cp.NewBody(1, cp.INFINITY)
 	body.SetPosition(cp.Vector{X: 50, Y: 50})
@@ -38,41 +40,12 @@ func NewNpc(world *GameWorld, asset *CharacterAsset) (*NpcEntity, error) {
 	}
 	npc.loopWaypoints = true
 	npc.velocity = 50.0
+	npc.animation = "idle_south"
 	return npc, nil
 }
 
-func (n *NpcEntity) calculateOrientation() Orientation {
-	vel := n.shape.Body().Velocity()
-	if vel.Y > 5 {
-		return South
-	} else if vel.Y < -5 {
-		return North
-	}
-	if vel.X > 5 {
-		return East
-	} else if vel.X < -5 {
-		return West
-	}
-	return East
-}
-
 func (n *NpcEntity) Draw(screen *ebiten.Image) {
-	// TODO: Refactor: Animation logic duplicated in player
-	var animation string
-	switch n.calculateOrientation() {
-	case North:
-		animation = "walk_north"
-	case South:
-		animation = "walk_south"
-	case East:
-		animation = "walk_east"
-	case West:
-		animation = "walk_west"
-	default:
-		animation = "idle"
-	}
-
-	n.asset.Draw(screen, animation, n.shape.Body().Position())
+	n.asset.Draw(screen, n.animation, n.shape.Body().Position())
 }
 
 func (n *NpcEntity) Destroy() {
@@ -111,4 +84,7 @@ func (n *NpcEntity) calculateVelocity(body *cp.Body, gravity cp.Vector, damping 
 	}
 	vel := diffNormalized.Mult(n.velocity)
 	body.SetVelocityVector(vel)
+	// Update active animation & orientation
+	n.orientation = calculateOrientation(vel)
+	n.animation = calculateWalkingAnimation(vel, n.orientation)
 }

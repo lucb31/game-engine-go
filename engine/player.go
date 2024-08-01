@@ -25,6 +25,7 @@ type Player struct {
 	asset               *CharacterAsset
 	projectileAsset     *ProjectileAsset
 	lastProjectileFired time.Time
+	animation           string
 }
 
 const (
@@ -49,13 +50,7 @@ func NewPlayer(world *GameWorld, asset *CharacterAsset, projectileAsset *Project
 }
 
 func (p *Player) Draw(screen *ebiten.Image) {
-	// Determine active animation based on current velocity & orientation
-	activeAnimation := "idle_"
-	if p.shape.Body().Velocity().Length() > 0.1 {
-		activeAnimation = "walk_"
-	}
-	activeAnimation += string(p.orientation)
-	p.asset.Draw(screen, activeAnimation, p.shape.Body().Position())
+	p.asset.Draw(screen, p.animation, p.shape.Body().Position())
 }
 
 func (p *Player) shoot() {
@@ -119,6 +114,11 @@ func (p *Player) calculateVelocity(body *cp.Body, gravity cp.Vector, damping flo
 	} else {
 		velocity.X = 0
 	}
-
+	// Update physics velocity
 	body.SetVelocityVector(velocity)
+	// Update animation
+	if velocity.Length() > 0.0 {
+		p.orientation = calculateOrientation(velocity)
+	}
+	p.animation = calculateWalkingAnimation(velocity, p.orientation)
 }
