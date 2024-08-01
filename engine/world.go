@@ -75,7 +75,6 @@ func (w *GameWorld) addObject(object GameEntity) {
 
 // Removes an object from the world by scheduling for deletion
 func (w *GameWorld) DestroyObject(object GameEntity) {
-	fmt.Println("scheduling for deletion", object)
 	w.objectIdsToDelete = append(w.objectIdsToDelete, object.Id())
 }
 
@@ -86,7 +85,6 @@ func (w *GameWorld) removeObject(id GameEntityId) {
 		fmt.Println("Oops, tried to delete unknown object", id)
 		return
 	}
-	fmt.Println("Removing object", object)
 	w.space.RemoveShape(object.Shape())
 	w.space.RemoveBody(object.Shape().Body())
 	delete(w.objects, id)
@@ -190,11 +188,23 @@ func NewPhysicsSpace() (*cp.Space, error) {
 	}
 	// Register collision handlers
 	handler := space.NewCollisionHandler(cp.CollisionType(ProjectileCollision), cp.CollisionType(NpcCollision))
-	handler.BeginFunc = beginProjectileCollision
+	handler.BeginFunc = npcProjectilecollisionHandler
+	space.NewWildcardCollisionHandler(cp.CollisionType(ProjectileCollision)).PostSolveFunc = removeProjectile
 	return space, nil
 }
 
-func beginProjectileCollision(arb *cp.Arbiter, space *cp.Space, userData interface{}) bool {
+func removeProjectile(arb *cp.Arbiter, space *cp.Space, userData interface{}) {
+	p, _ := arb.Bodies()
+
+	projectile, ok := p.UserData.(*Projectile)
+	if !ok {
+		fmt.Println("Type assertion for projectile collision failed. Did not receive valid Projectile")
+		return
+	}
+	projectile.Destroy()
+}
+
+func npcProjectilecollisionHandler(arb *cp.Arbiter, space *cp.Space, userData interface{}) bool {
 	// Validate correct collision partners & type assert
 	a, b := arb.Bodies()
 	projectile, ok := a.UserData.(*Projectile)

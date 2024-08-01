@@ -65,13 +65,13 @@ func (p *Player) shoot() {
 	offset := 25.0
 	switch p.orientation {
 	case East:
-		projectilePos.Add(cp.Vector{offset, 0})
+		projectilePos = projectilePos.Add(cp.Vector{X: offset, Y: 0})
 	case West:
-		projectilePos.Add(cp.Vector{-offset, 0})
+		projectilePos = projectilePos.Add(cp.Vector{X: -offset, Y: 0})
 	case North:
-		projectilePos.Add(cp.Vector{0, -offset})
+		projectilePos = projectilePos.Add(cp.Vector{X: 0, Y: -offset})
 	case South:
-		projectilePos.Add(cp.Vector{0, offset})
+		projectilePos = projectilePos.Add(cp.Vector{X: 0, Y: offset})
 	}
 	proj, err := NewProjectile(p.world, p.projectileAsset, projectilePos, p.orientation)
 	if err != nil {
