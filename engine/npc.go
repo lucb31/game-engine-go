@@ -9,21 +9,30 @@ import (
 )
 
 type NpcEntity struct {
-	id                GameEntityId
-	world             *GameWorld
-	shape             *cp.Shape
+	id    GameEntityId
+	world *GameWorld
+
+	// Logic
+	health float64
+
+	// Rendering
+	asset       *CharacterAsset
+	animation   string
+	orientation Orientation
+
+	// Physics
+	shape    *cp.Shape
+	velocity float64
+
+	// Movement AI
 	wayPoints         []cp.Vector
 	currentWpIndex    int
 	loopWaypoints     bool
-	asset             *CharacterAsset
-	velocity          float64
-	animation         string
-	orientation       Orientation
 	stopMovementUntil time.Time
 }
 
 func NewNpc(world *GameWorld, asset *CharacterAsset) (*NpcEntity, error) {
-	npc := &NpcEntity{world: world, orientation: South}
+	npc := &NpcEntity{world: world, orientation: South, health: 100.0}
 	// Init body & shape
 	body := cp.NewBody(1, cp.INFINITY)
 	body.SetPosition(cp.Vector{X: 50, Y: 50})
@@ -51,10 +60,16 @@ func (n *NpcEntity) Draw(screen *ebiten.Image) {
 }
 
 func (n *NpcEntity) Destroy() {
-	fmt.Println("ERROR: Missing implementation for npc destroy")
+	n.world.DestroyObject(n)
 }
+
 func (n *NpcEntity) OnProjectileHit(projectile Projectile) {
 	fmt.Println("OUCH!", n, projectile)
+	n.health -= 30.0
+	if n.health <= 0.0 {
+		n.Destroy()
+	}
+	fmt.Printf("Survived with %f health \n", n.health)
 	// Briefly stop movement
 	n.stopMovementUntil = time.Now().Add(time.Millisecond * 300)
 }
