@@ -11,7 +11,6 @@ import (
 const (
 	screenWidth  = 1024 / 2
 	screenHeight = 768 / 2
-	tileSize     = 16
 )
 
 type Game struct {
@@ -19,7 +18,7 @@ type Game struct {
 }
 
 func Init() (*Game, error) {
-	world, err := engine.NewWorld(screenWidth/tileSize, screenHeight/tileSize)
+	world, err := engine.NewWorld(screenWidth, screenHeight)
 	if err != nil {
 		return nil, err
 	}
