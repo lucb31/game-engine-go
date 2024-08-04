@@ -62,7 +62,7 @@ var tileResources []tileResource = []tileResource{
 func loadEnvironmentTilesets() (map[string]Tileset, error) {
 	tiles := map[string]Tileset{}
 	for _, res := range tileResources {
-		tileset, err := loadTileset(res.Path, res.TileSize)
+		tileset, err := loadTileset(res.Path, res.TileSize, 1.0)
 		if err != nil {
 			return nil, err
 		}
@@ -76,8 +76,9 @@ type characterResource struct {
 	Path       string
 	TileSize   int
 	Animations map[string]GameAssetAnimation
-	OffsetX    int64
-	OffsetY    int64
+	OffsetX    float64
+	OffsetY    float64
+	Scale      float64
 }
 
 // TODO: Load these from config file
@@ -98,6 +99,25 @@ var characterResources []characterResource = []characterResource{
 		},
 		-24,
 		-32,
+		1.0,
+	},
+	{
+		"npc-torch",
+		"assets/npc-torch.png",
+		192,
+		map[string]GameAssetAnimation{
+			"walk_east":  {StartTile: 6, FrameCount: 6},
+			"walk_west":  {StartTile: 6, FrameCount: 6, Flip: true},
+			"walk_north": {StartTile: 24, FrameCount: 6},
+			"walk_south": {StartTile: 18, FrameCount: 6},
+			"idle_east":  {StartTile: 0, FrameCount: 6},
+			"idle_west":  {StartTile: 0, FrameCount: 6, Flip: true},
+			"idle_north": {StartTile: 24, FrameCount: 6},
+			"idle_south": {StartTile: 18, FrameCount: 6},
+		},
+		-28.8,
+		-28.8,
+		0.3,
 	},
 }
 
@@ -105,7 +125,7 @@ var characterResources []characterResource = []characterResource{
 func loadCharacterAssets() (map[string]CharacterAsset, error) {
 	characters := map[string]CharacterAsset{}
 	for _, res := range characterResources {
-		tileset, err := loadTileset(res.Path, res.TileSize)
+		tileset, err := loadTileset(res.Path, res.TileSize, res.Scale)
 		if err != nil {
 			return nil, err
 		}
@@ -113,8 +133,8 @@ func loadCharacterAssets() (map[string]CharacterAsset, error) {
 			Tileset:        *tileset,
 			Animations:     res.Animations,
 			animationSpeed: 6,
-			offsetX:        float64(res.OffsetX),
-			offsetY:        float64(res.OffsetY),
+			offsetX:        res.OffsetX,
+			offsetY:        res.OffsetY,
 		}
 		characters[res.Key] = asset
 	}
@@ -142,17 +162,14 @@ func loadProjectileAssets() (map[string]ProjectileAsset, error) {
 	return projectiles, nil
 }
 
-func loadTileset(path string, tileSize int) (*Tileset, error) {
+func loadTileset(path string, tileSize int, scale float64) (*Tileset, error) {
 	im, err := readPngAsset(path)
 	if err != nil {
 		fmt.Println("Could not read assets!", err.Error())
 		return nil, err
 	}
-	return &Tileset{
-		Image:       ebiten.NewImageFromImage(im),
-		TilesPerRow: int(im.Bounds().Dx() / tileSize),
-		TileSize:    tileSize,
-	}, nil
+	ebitenImage := ebiten.NewImageFromImage(im)
+	return NewTileset(ebitenImage, int(im.Bounds().Dx()/tileSize), tileSize, scale)
 }
 
 func readPngAsset(path string) (image.Image, error) {

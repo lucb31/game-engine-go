@@ -264,7 +264,13 @@ func NewWorld(width int64, height int64) (*GameWorld, error) {
 	space.AddShape(player.Shape())
 
 	// Initialize an npc
-	npc, err := NewNpc(&w, &asset)
+	npcAsset, ok := am.CharacterAssets["npc-torch"]
+	// TODO: YUCK
+	npcAsset.currentFrame = &w.FrameCount
+	if !ok {
+		return nil, fmt.Errorf("Could not find npc asset")
+	}
+	npc, err := NewNpc(&w, &npcAsset)
 	if err != nil {
 		return &w, err
 	}
