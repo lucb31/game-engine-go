@@ -38,7 +38,7 @@ func NewPlayer(world *GameWorld, asset *CharacterAsset, projectileAsset *Project
 	p := &Player{id: -1, world: world, asset: asset, orientation: South, projectileAsset: projectileAsset}
 	// Init player physics
 	playerBody := cp.NewBody(1, cp.INFINITY)
-	playerBody.SetPosition(cp.Vector{X: 10, Y: 10})
+	playerBody.SetPosition(cp.Vector{X: 70, Y: 15})
 	playerBody.UserData = p
 	playerBody.SetVelocityUpdateFunc(p.calculateVelocity)
 	p.shape = cp.NewBox(playerBody, 16, 16, 0)

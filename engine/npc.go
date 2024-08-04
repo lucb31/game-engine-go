@@ -35,7 +35,7 @@ func NewNpc(world *GameWorld, asset *CharacterAsset) (*NpcEntity, error) {
 	npc := &NpcEntity{world: world, orientation: South, health: 100.0}
 	// Init body & shape
 	body := cp.NewBody(1, cp.INFINITY)
-	body.SetPosition(cp.Vector{X: 50, Y: 50})
+	body.SetPosition(cp.Vector{X: 10, Y: 10})
 	body.SetVelocityUpdateFunc(npc.calculateVelocity)
 	body.UserData = npc
 	npc.shape = cp.NewBox(body, 8, 8, 0)
@@ -44,12 +44,15 @@ func NewNpc(world *GameWorld, asset *CharacterAsset) (*NpcEntity, error) {
 	npc.shape.SetCollisionType(cp.CollisionType(NpcCollision))
 	npc.asset = asset
 	npc.wayPoints = []cp.Vector{
-		{X: 20, Y: 20},
-		{X: 100, Y: 20},
-		{X: 100, Y: 100},
-		{X: 20, Y: 100},
+		{X: 15, Y: 15},
+		{X: 10, Y: 150},
+		{X: 170, Y: 150},
+		{X: 170, Y: 15},
+		{X: 200, Y: 15},
+		{X: 200, Y: 150},
+		{X: 800, Y: 150},
 	}
-	npc.loopWaypoints = true
+	npc.loopWaypoints = false
 	npc.velocity = 50.0
 	npc.animation = "idle_south"
 	return npc, nil
