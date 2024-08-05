@@ -21,7 +21,7 @@ type Projectile struct {
 	Destination cp.Vector
 	velocity    float64
 	asset       *ProjectileAsset
-	world       *GameWorld
+	world       GameEntityManager
 }
 
 type ProjectileAsset struct {
@@ -37,7 +37,7 @@ func (pa *ProjectileAsset) Draw(screen *ebiten.Image, position cp.Vector) error 
 	return nil
 }
 
-func NewProjectile(world *GameWorld, asset *ProjectileAsset, position cp.Vector, orientation Orientation) (*Projectile, error) {
+func NewProjectile(world GameEntityManager, asset *ProjectileAsset, position cp.Vector, orientation Orientation) (*Projectile, error) {
 	if asset.Image == nil {
 		return nil, fmt.Errorf("Failed to instantiate projectile. No asset provided")
 	}
@@ -46,7 +46,6 @@ func NewProjectile(world *GameWorld, asset *ProjectileAsset, position cp.Vector,
 	body.SetPosition(position)
 	body.SetVelocityUpdateFunc(p.calculateVelocity)
 	body.UserData = p
-	// TODO: Make kinematic body / collision without forces
 	p.shape = cp.NewBox(body, 16, 16, 0)
 	p.shape.SetElasticity(0)
 	p.shape.SetFriction(0)
@@ -78,7 +77,7 @@ func (p *Projectile) Id() GameEntityId      { return p.id }
 func (p *Projectile) SetId(id GameEntityId) { p.id = id }
 func (p *Projectile) Shape() *cp.Shape      { return p.shape }
 func (p *Projectile) Destroy() {
-	p.world.DestroyObject(p)
+	p.world.RemoveEntity(p)
 }
 
 func (p *Projectile) calculateVelocity(body *cp.Body, gravity cp.Vector, damping float64, dt float64) {

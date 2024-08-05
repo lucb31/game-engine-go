@@ -19,7 +19,7 @@ const (
 
 type Player struct {
 	id                  GameEntityId
-	world               *GameWorld
+	world               GameEntityManager
 	orientation         Orientation
 	shape               *cp.Shape
 	asset               *CharacterAsset
@@ -33,7 +33,7 @@ const (
 	playerFireRatePerSecond = float64(1.3)
 )
 
-func NewPlayer(world *GameWorld, asset *CharacterAsset, projectileAsset *ProjectileAsset) (*Player, error) {
+func NewPlayer(world GameEntityManager, asset *CharacterAsset, projectileAsset *ProjectileAsset) (*Player, error) {
 	// Assigning static id -1 to player object
 	p := &Player{id: -1, world: world, asset: asset, orientation: South, projectileAsset: projectileAsset}
 	// Init player physics
@@ -78,7 +78,7 @@ func (p *Player) shoot() {
 		fmt.Println("Could not shoot projectile")
 		return
 	}
-	p.world.addObject(proj)
+	p.world.AddEntity(proj)
 	p.lastProjectileFired = time.Now()
 }
 

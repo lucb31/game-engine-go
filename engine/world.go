@@ -8,7 +8,6 @@ import (
 )
 
 type Biome int
-type GameEntityId int
 
 const (
 	Gras        Biome = 32
@@ -16,14 +15,6 @@ const (
 	Undef       Biome = 71
 	mapTileSize       = 16
 )
-
-type GameEntity interface {
-	Id() GameEntityId
-	SetId(GameEntityId)
-	Shape() *cp.Shape
-	Draw(*ebiten.Image)
-	Destroy()
-}
 
 type GameWorld struct {
 	objects      map[GameEntityId]GameEntity
@@ -34,8 +25,8 @@ type GameWorld struct {
 	FrameCount   int64
 	AssetManager *AssetManager
 	space        *cp.Space
-	nextObjectId GameEntityId
 
+	nextObjectId GameEntityId
 	// Removing object from the world needs to be buffered towards the end of a timestep
 	objectIdsToDelete []GameEntityId
 }
@@ -64,18 +55,20 @@ func (w *GameWorld) Update() {
 // Adds a game entity to the world by
 // - registering to physics space
 // - registering in object map to add / find / remove entities
-func (w *GameWorld) addObject(object GameEntity) {
+func (w *GameWorld) AddEntity(object GameEntity) error {
 	fmt.Println("Adding object", object)
 	w.space.AddBody(object.Shape().Body())
 	w.space.AddShape(object.Shape())
 	w.objects[w.nextObjectId] = object
 	object.SetId(w.nextObjectId)
 	w.nextObjectId++
+	return nil
 }
 
 // Removes an object from the world by scheduling for deletion
-func (w *GameWorld) DestroyObject(object GameEntity) {
+func (w *GameWorld) RemoveEntity(object GameEntity) error {
 	w.objectIdsToDelete = append(w.objectIdsToDelete, object.Id())
+	return nil
 }
 
 // Actually remove a game entity from physics & object space
@@ -268,6 +261,6 @@ func NewWorld(width int64, height int64) (*GameWorld, error) {
 	if err != nil {
 		return &w, err
 	}
-	w.addObject(npc)
+	w.AddEntity(npc)
 	return &w, nil
 }

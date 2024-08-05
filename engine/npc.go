@@ -10,7 +10,7 @@ import (
 
 type NpcEntity struct {
 	id    GameEntityId
-	world *GameWorld
+	world GameEntityManager
 
 	// Logic
 	health float64
@@ -31,7 +31,7 @@ type NpcEntity struct {
 	stopMovementUntil time.Time
 }
 
-func NewNpc(world *GameWorld, asset *CharacterAsset) (*NpcEntity, error) {
+func NewNpc(world GameEntityManager, asset *CharacterAsset) (*NpcEntity, error) {
 	npc := &NpcEntity{world: world, orientation: South, health: 100.0}
 	// Init body & shape
 	body := cp.NewBody(1, cp.INFINITY)
@@ -63,7 +63,7 @@ func (n *NpcEntity) Draw(screen *ebiten.Image) {
 }
 
 func (n *NpcEntity) Destroy() {
-	n.world.DestroyObject(n)
+	n.world.RemoveEntity(n)
 }
 
 func (n *NpcEntity) OnProjectileHit(projectile Projectile) {
