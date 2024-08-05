@@ -25,7 +25,8 @@ type Projectile struct {
 }
 
 type ProjectileAsset struct {
-	Image *ebiten.Image
+	Image        *ebiten.Image
+	currentFrame *int64
 }
 
 func (pa *ProjectileAsset) Draw(screen *ebiten.Image, position cp.Vector) error {

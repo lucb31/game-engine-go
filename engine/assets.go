@@ -16,7 +16,7 @@ type AssetManager struct {
 	ProjectileAssets map[string]ProjectileAsset
 }
 
-func NewAssetManager() (*AssetManager, error) {
+func NewAssetManager(frameCount *int64) (*AssetManager, error) {
 	am := &AssetManager{}
 	var err error
 
@@ -25,12 +25,12 @@ func NewAssetManager() (*AssetManager, error) {
 		return nil, err
 	}
 
-	am.CharacterAssets, err = loadCharacterAssets()
+	am.CharacterAssets, err = loadCharacterAssets(frameCount)
 	if err != nil {
 		return nil, err
 	}
 
-	am.ProjectileAssets, err = loadProjectileAssets()
+	am.ProjectileAssets, err = loadProjectileAssets(frameCount)
 	if err != nil {
 		return nil, err
 	}
@@ -122,7 +122,7 @@ var characterResources []characterResource = []characterResource{
 }
 
 // Load characters
-func loadCharacterAssets() (map[string]CharacterAsset, error) {
+func loadCharacterAssets(frameCount *int64) (map[string]CharacterAsset, error) {
 	characters := map[string]CharacterAsset{}
 	for _, res := range characterResources {
 		tileset, err := loadTileset(res.Path, res.TileSize, res.Scale)
@@ -135,13 +135,14 @@ func loadCharacterAssets() (map[string]CharacterAsset, error) {
 			animationSpeed: 6,
 			offsetX:        res.OffsetX,
 			offsetY:        res.OffsetY,
+			currentFrame:   frameCount,
 		}
 		characters[res.Key] = asset
 	}
 	return characters, nil
 }
 
-func loadProjectileAssets() (map[string]ProjectileAsset, error) {
+func loadProjectileAssets(frameCount *int64) (map[string]ProjectileAsset, error) {
 	projectiles := map[string]ProjectileAsset{}
 	im, err := readPngAsset("assets/bone.png")
 	if err != nil {
@@ -156,7 +157,8 @@ func loadProjectileAssets() (map[string]ProjectileAsset, error) {
 	scaledIm.DrawImage(rawIm, op)
 	// Add to asset map
 	asset := ProjectileAsset{
-		Image: scaledIm,
+		Image:        scaledIm,
+		currentFrame: frameCount,
 	}
 	projectiles["bone"] = asset
 	return projectiles, nil

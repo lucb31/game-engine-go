@@ -199,11 +199,6 @@ func initializeBoundingBox(space *cp.Space, width float64, height float64) {
 }
 
 func NewWorld(width int64, height int64) (*GameWorld, error) {
-	// Initialize assets
-	am, err := NewAssetManager()
-	if err != nil {
-		return nil, err
-	}
 	// Initialize map
 	biome, err := createBiome(width, height)
 	if err != nil {
@@ -215,19 +210,19 @@ func NewWorld(width int64, height int64) (*GameWorld, error) {
 		return nil, err
 	}
 	initializeBoundingBox(space, float64(width), float64(height))
-	// Initialize some fences
-	// objects, err := createFences(am, space)
-	// if err != nil {
-	// 	return nil, err
-	// }
 	w := GameWorld{
-		Biome:        biome,
-		Width:        width,
-		Height:       height,
-		AssetManager: am,
-		space:        space,
-		objects:      map[GameEntityId]GameEntity{},
+		Biome:   biome,
+		Width:   width,
+		Height:  height,
+		space:   space,
+		objects: map[GameEntityId]GameEntity{},
 	}
+	// Initialize assets
+	am, err := NewAssetManager(&w.FrameCount)
+	if err != nil {
+		return nil, err
+	}
+	w.AssetManager = am
 
 	// Initialize player (after world has been initialized to reference it)
 	asset, ok := am.CharacterAssets["player"]
@@ -238,8 +233,6 @@ func NewWorld(width int64, height int64) (*GameWorld, error) {
 	if !ok {
 		return nil, fmt.Errorf("Could not find projectile asset")
 	}
-	// TODO: Find a better / generic solution to give assets access to the current frame count
-	asset.currentFrame = &w.FrameCount
 	player, err := NewPlayer(&w, &asset, &projAsset)
 	if err != nil {
 		return &w, err
@@ -252,8 +245,6 @@ func NewWorld(width int64, height int64) (*GameWorld, error) {
 
 	// Initialize an npc
 	npcAsset, ok := am.CharacterAssets["npc-torch"]
-	// TODO: YUCK
-	npcAsset.currentFrame = &w.FrameCount
 	if !ok {
 		return nil, fmt.Errorf("Could not find npc asset")
 	}
