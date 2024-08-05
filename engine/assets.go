@@ -157,8 +157,9 @@ func loadProjectileAssets(frameCount *int64) (map[string]ProjectileAsset, error)
 	scaledIm.DrawImage(rawIm, op)
 	// Add to asset map
 	asset := ProjectileAsset{
-		Image:        scaledIm,
-		currentFrame: frameCount,
+		Image:          scaledIm,
+		currentFrame:   frameCount,
+		animationSpeed: 2,
 	}
 	projectiles["bone"] = asset
 	return projectiles, nil

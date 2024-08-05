@@ -2,6 +2,7 @@ package engine
 
 import (
 	"fmt"
+	"math"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/jakecoffman/cp"
@@ -25,16 +26,22 @@ type Projectile struct {
 }
 
 type ProjectileAsset struct {
-	Image        *ebiten.Image
-	currentFrame *int64
+	Image          *ebiten.Image
+	currentFrame   *int64
+	animationSpeed int
 }
 
-func (pa *ProjectileAsset) Draw(screen *ebiten.Image, position cp.Vector) error {
+func (a *ProjectileAsset) Draw(screen *ebiten.Image, position cp.Vector) error {
 	op := ebiten.DrawImageOptions{}
 	// Offset by half asset size to center position
-	op.GeoM.Translate(-float64(pa.Image.Bounds().Dx())/2, -float64(pa.Image.Bounds().Dy())/2)
+	op.GeoM.Translate(-float64(a.Image.Bounds().Dx())/2, -float64(a.Image.Bounds().Dy())/2)
+	// Add rotating animation
+	animationFrameCount := 16
+	animationFrame := int(*a.currentFrame/int64(a.animationSpeed)) % animationFrameCount
+	op.GeoM.Rotate(2 * math.Pi / float64(animationFrameCount) * float64(animationFrame))
+	// Translate to physical position
 	op.GeoM.Translate(position.X, position.Y)
-	screen.DrawImage(pa.Image, &op)
+	screen.DrawImage(a.Image, &op)
 	return nil
 }
 
