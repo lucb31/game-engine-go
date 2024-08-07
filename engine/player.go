@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/jakecoffman/cp"
 )
 
@@ -51,6 +52,8 @@ func NewPlayer(world GameEntityManager, asset *CharacterAsset, projectileAsset *
 
 func (p *Player) Draw(screen *ebiten.Image) {
 	p.asset.Draw(screen, p.animation, p.shape.Body().Position())
+
+	ebitenutil.DebugPrint(screen, fmt.Sprintf("Player pos: %f, %f", p.shape.Body().Position().X, p.shape.Body().Position().Y))
 }
 
 func (p *Player) shoot() {

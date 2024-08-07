@@ -1,4 +1,4 @@
-module github.com/lucb31/animation-go
+module github.com/lucb31/game-engine-go
 
 go 1.22.5
 

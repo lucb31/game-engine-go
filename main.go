@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/lucb31/animation-go/engine"
+	"github.com/lucb31/game-engine-go/engine"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
