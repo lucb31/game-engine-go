@@ -10,7 +10,7 @@ import (
 type GameWorld struct {
 	objects      map[GameEntityId]GameEntity
 	player       GameEntity
-	worldMap     *WorldMap
+	WorldMap     *WorldMap
 	Width        int64
 	Height       int64
 	FrameCount   int64
@@ -23,7 +23,7 @@ type GameWorld struct {
 }
 
 func (w *GameWorld) Draw(screen *ebiten.Image) {
-	w.worldMap.Draw(screen)
+	w.WorldMap.Draw(screen)
 	// TODO: Currently drawing ALL objects. Fine as long as there is no camera movement
 	for _, obj := range w.objects {
 		obj.Draw(screen)
@@ -143,12 +143,6 @@ func NewWorld(width int64, height int64) (*GameWorld, error) {
 	}
 	w.AssetManager = am
 
-	// Initialize map
-	w.worldMap, err = NewWorldMap(width, height, "assets/test_map.csv", am.Tilesets["plains"])
-	if err != nil {
-		return nil, err
-	}
-
 	// Initialize player (after world has been initialized to reference it)
 	asset, ok := am.CharacterAssets["player"]
 	if !ok {
@@ -168,15 +162,5 @@ func NewWorld(width int64, height int64) (*GameWorld, error) {
 	space.AddBody(player.Shape().Body())
 	space.AddShape(player.Shape())
 
-	// Initialize an npc
-	npcAsset, ok := am.CharacterAssets["npc-torch"]
-	if !ok {
-		return nil, fmt.Errorf("Could not find npc asset")
-	}
-	npc, err := NewNpc(&w, &npcAsset)
-	if err != nil {
-		return &w, err
-	}
-	w.AddEntity(npc)
 	return &w, nil
 }

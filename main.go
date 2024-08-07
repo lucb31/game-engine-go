@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/lucb31/game-engine-go/engine"
+	"github.com/lucb31/game-engine-go/td"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -18,7 +19,7 @@ type Game struct {
 }
 
 func Init() (*Game, error) {
-	world, err := engine.NewWorld(screenWidth, screenHeight)
+	world, err := td.NewTDWorld(screenWidth, screenHeight)
 	if err != nil {
 		return nil, err
 	}
