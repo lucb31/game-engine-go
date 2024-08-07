@@ -7,19 +7,10 @@ import (
 	"github.com/jakecoffman/cp"
 )
 
-type Biome int
-
-const (
-	Gras        Biome = 32
-	Rock        Biome = 42
-	Undef       Biome = 71
-	mapTileSize       = 16
-)
-
 type GameWorld struct {
 	objects      map[GameEntityId]GameEntity
 	player       GameEntity
-	Biome        [][]Biome
+	worldMap     *WorldMap
 	Width        int64
 	Height       int64
 	FrameCount   int64
@@ -32,7 +23,7 @@ type GameWorld struct {
 }
 
 func (w *GameWorld) Draw(screen *ebiten.Image) {
-	w.drawBiomes(screen)
+	w.worldMap.Draw(screen)
 	// TODO: Currently drawing ALL objects. Fine as long as there is no camera movement
 	for _, obj := range w.objects {
 		obj.Draw(screen)
@@ -81,72 +72,6 @@ func (w *GameWorld) removeObject(id GameEntityId) {
 	w.space.RemoveShape(object.Shape())
 	w.space.RemoveBody(object.Shape().Body())
 	delete(w.objects, id)
-}
-
-func (w *GameWorld) drawBiomes(screen *ebiten.Image) {
-	// Drawing WHOLE map. This is ok because there is no camera movement right now
-	for row := range w.Height / mapTileSize {
-		for col := range w.Width / mapTileSize {
-			// Set tile position
-			op := ebiten.DrawImageOptions{}
-			op.GeoM.Translate(float64(col*mapTileSize), float64(row*mapTileSize))
-
-			biome := w.Biome[row][col]
-			// If NOT undef tile, draw undef tile first to have it in the background
-			if biome != Undef {
-				subIm, err := w.AssetManager.GetTile("plains", int(Undef))
-				if err != nil {
-					fmt.Println("Unable to draw background cell", err.Error())
-					return
-				}
-				screen.DrawImage(subIm, &op)
-			}
-			// Select correct tile from tileset
-			subIm, err := w.AssetManager.GetTile("plains", int(biome))
-			if err != nil {
-				fmt.Println("Unable to draw biome cell", err.Error())
-				return
-			}
-			screen.DrawImage(subIm, &op)
-		}
-	}
-}
-
-func createBiome(width, height int64) ([][]Biome, error) {
-	// TODO: Should be coming from file / external source
-	mapData := [][]Biome{
-		{71, 71, 71, 25, 26, 26, 26, 26, 26, 27, 71, 71, 71, 25, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 27},
-		{71, 71, 71, 31, 32, 32, 32, 32, 32, 33, 71, 71, 71, 31, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 33},
-		{71, 71, 71, 31, 32, 32, 32, 32, 32, 33, 71, 71, 71, 31, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 33},
-		{71, 71, 71, 31, 32, 32, 32, 32, 32, 33, 71, 71, 71, 31, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 33},
-		{71, 71, 71, 31, 32, 32, 32, 32, 32, 33, 71, 71, 71, 31, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 33},
-		{71, 71, 71, 31, 32, 32, 32, 32, 32, 33, 71, 71, 71, 31, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 33},
-		{71, 71, 71, 31, 32, 32, 32, 32, 32, 33, 71, 71, 71, 31, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 33},
-		{71, 71, 71, 37, 38, 38, 38, 38, 38, 39, 71, 71, 71, 37, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 39},
-		{71, 71, 71, 71, 71, 71, 71, 71, 71, 71, 71, 71, 71, 71, 71, 71, 71, 71, 71, 71, 71, 71},
-		{71, 71, 71, 71, 71, 71, 71, 71, 71, 71, 71, 71, 71, 71, 71, 71, 71, 71, 71, 71, 71, 71},
-		{25, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 27},
-		{31, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 33},
-		{31, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 33},
-		{31, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 33},
-		{31, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 33},
-		{31, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 33},
-		{31, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 33},
-		{37, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 39},
-	}
-	biome := make([][]Biome, height)
-	// Copy map data in & fill remaining cells with placeholder tile
-	for row := range height {
-		biome[row] = make([]Biome, width)
-		for col := range width {
-			if int64(len(mapData)) > row && int64(len(mapData[row])) > col {
-				biome[row][col] = mapData[row][col]
-			} else {
-				biome[row][col] = Undef
-			}
-		}
-	}
-	return biome, nil
 }
 
 func createFences(am *AssetManager, space *cp.Space) ([]GameEntity, error) {
@@ -199,11 +124,6 @@ func initializeBoundingBox(space *cp.Space, width float64, height float64) {
 }
 
 func NewWorld(width int64, height int64) (*GameWorld, error) {
-	// Initialize map
-	biome, err := createBiome(width, height)
-	if err != nil {
-		return nil, err
-	}
 	// Initialize physics
 	space, err := NewPhysicsSpace()
 	if err != nil {
@@ -211,7 +131,6 @@ func NewWorld(width int64, height int64) (*GameWorld, error) {
 	}
 	initializeBoundingBox(space, float64(width), float64(height))
 	w := GameWorld{
-		Biome:   biome,
 		Width:   width,
 		Height:  height,
 		space:   space,
@@ -223,6 +142,12 @@ func NewWorld(width int64, height int64) (*GameWorld, error) {
 		return nil, err
 	}
 	w.AssetManager = am
+
+	// Initialize map
+	w.worldMap, err = NewWorldMap(width, height, "assets/test_map.csv", am.Tilesets["plains"])
+	if err != nil {
+		return nil, err
+	}
 
 	// Initialize player (after world has been initialized to reference it)
 	asset, ok := am.CharacterAssets["player"]
