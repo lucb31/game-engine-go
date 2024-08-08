@@ -41,7 +41,7 @@ jobs:
       run: bash bundle.sh
 
     - name: Build WASM
-      run: env GOOS=js GOARCH=wasm go build -o pages/td.wasm github.com/lucb31/game-engine-go
+      run: env GOOS=js GOARCH=wasm go build -o app/td.wasm github.com/lucb31/game-engine-go
       
     - name: Setup Pages
       uses: actions/configure-pages@v5
@@ -49,8 +49,8 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3
       with:
-        # Upload entire repository
-        path: './pages'
+        # Upload app folder with static assets
+        path: './app'
       
     - name: Deploy to GitHub Pages
       id: deployment
