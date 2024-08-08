@@ -2,6 +2,8 @@ package engine
 
 import (
 	"fmt"
+	"image"
+	"math"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/jakecoffman/cp"
@@ -50,6 +52,19 @@ func (a *CharacterAsset) Draw(screen *ebiten.Image, activeAnimation string, posi
 	op.GeoM.Translate(a.offsetX, a.offsetY)
 	op.GeoM.Translate(position.X, position.Y)
 	screen.DrawImage(subIm, &op)
+	return nil
+}
+
+// Draws quadratic bounding box around shape position
+// WARNING: Assumes widht = height
+func (a *CharacterAsset) DrawQuadraticBoundingBox(screen *ebiten.Image, shape *cp.Shape) error {
+	width := math.Sqrt(shape.BB().Area())
+	height := width
+	testImg := image.Rect(0, 0, int(width), int(height))
+	boundingBoxImg := ebiten.NewImageFromImage(testImg)
+	op := &ebiten.DrawImageOptions{}
+	op.GeoM.Translate(shape.Body().Position().X-width/2, shape.Body().Position().Y-height/2)
+	screen.DrawImage(boundingBoxImg, op)
 	return nil
 }
 

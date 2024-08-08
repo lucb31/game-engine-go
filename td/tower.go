@@ -24,15 +24,12 @@ func NewTower(world engine.GameEntityManager, asset *engine.CharacterAsset) (*To
 	body.SetPosition(cp.Vector{X: 70, Y: 70})
 	body.SetType(cp.BODY_STATIC)
 	body.UserData = tower
-	tower.shape = cp.NewBox(body, 16, 16, 0)
+	tower.shape = cp.NewBox(body, 32, 32, 0)
 	return tower, nil
 }
 
 func (t *TowerEntity) Draw(screen *ebiten.Image) {
 	t.asset.Draw(screen, t.animation, t.shape.Body().Position())
-	// TODO: left off: Draw small rect at collision box to verify body is drawn correctly
-	// testImg := image.Rect(int(t.shape.Body().Position().X))
-	// screen.DrawImage()
 }
 
 func (t *TowerEntity) Destroy() {
