@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/lucb31/game-engine-go/assets"
 )
 
 type AssetManager struct {
@@ -47,22 +48,22 @@ func (a *AssetManager) GetTile(tileSetKey string, tileIdx int) (*ebiten.Image, e
 }
 
 type tileResource struct {
-	Key      string
-	Path     string
-	TileSize int
+	Key       string
+	ImageData []byte
+	TileSize  int
 }
 
 // TODO: Load these from config file
 var tileResources []tileResource = []tileResource{
-	{"plains", "assets/plains.png", 16},
-	{"fences", "assets/fences.png", 16},
+	{"plains", assets.Plains, 16},
+	{"fences", assets.Fences, 16},
 }
 
 // Load tilesets for static resources
 func loadEnvironmentTilesets() (map[string]Tileset, error) {
 	tiles := map[string]Tileset{}
 	for _, res := range tileResources {
-		tileset, err := loadTileset(res.Path, res.TileSize, 1.0)
+		tileset, err := loadTileset(res.ImageData, res.TileSize, 1.0)
 		if err != nil {
 			return nil, err
 		}
@@ -73,7 +74,7 @@ func loadEnvironmentTilesets() (map[string]Tileset, error) {
 
 type characterResource struct {
 	Key        string
-	Path       string
+	ImageData  []byte
 	TileSize   int
 	Animations map[string]GameAssetAnimation
 	OffsetX    float64
@@ -85,7 +86,7 @@ type characterResource struct {
 var characterResources []characterResource = []characterResource{
 	{
 		"player",
-		"assets/player.png",
+		assets.Player,
 		48,
 		map[string]GameAssetAnimation{
 			"walk_east":  {StartTile: 24, FrameCount: 6},
@@ -103,7 +104,7 @@ var characterResources []characterResource = []characterResource{
 	},
 	{
 		"npc-torch",
-		"assets/npc-torch.png",
+		assets.NpcTorch,
 		192,
 		map[string]GameAssetAnimation{
 			"walk_east":  {StartTile: 6, FrameCount: 6},
@@ -119,13 +120,24 @@ var characterResources []characterResource = []characterResource{
 		-28.8,
 		0.3,
 	},
+	{
+		"tower-blue",
+		assets.TowerBlue,
+		256,
+		map[string]GameAssetAnimation{
+			"idle": {StartTile: 0, FrameCount: 4},
+		},
+		-14.4,
+		-14.4,
+		0.15,
+	},
 }
 
 // Load characters
 func loadCharacterAssets(frameCount *int64) (map[string]CharacterAsset, error) {
 	characters := map[string]CharacterAsset{}
 	for _, res := range characterResources {
-		tileset, err := loadTileset(res.Path, res.TileSize, res.Scale)
+		tileset, err := loadTileset(res.ImageData, res.TileSize, res.Scale)
 		if err != nil {
 			return nil, err
 		}
@@ -144,7 +156,7 @@ func loadCharacterAssets(frameCount *int64) (map[string]CharacterAsset, error) {
 
 func loadProjectileAssets(frameCount *int64) (map[string]ProjectileAsset, error) {
 	projectiles := map[string]ProjectileAsset{}
-	im, err := readPngAsset("assets/bone.png")
+	im, err := loadImageFromBinaryPng(assets.Bone)
 	if err != nil {
 		return nil, err
 	}
@@ -165,8 +177,8 @@ func loadProjectileAssets(frameCount *int64) (map[string]ProjectileAsset, error)
 	return projectiles, nil
 }
 
-func loadTileset(path string, tileSize int, scale float64) (*Tileset, error) {
-	im, err := readPngAsset(path)
+func loadTileset(data []byte, tileSize int, scale float64) (*Tileset, error) {
+	im, err := loadImageFromBinaryPng(data)
 	if err != nil {
 		fmt.Println("Could not read assets!", err.Error())
 		return nil, err
@@ -175,14 +187,18 @@ func loadTileset(path string, tileSize int, scale float64) (*Tileset, error) {
 	return NewTileset(ebitenImage, int(im.Bounds().Dx()/tileSize), tileSize, scale)
 }
 
-func readPngAsset(path string) (image.Image, error) {
-	dat, err := os.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
+func loadImageFromBinaryPng(dat []byte) (image.Image, error) {
 	im, _, err := image.Decode(bytes.NewReader(dat))
 	if err != nil {
 		return nil, err
 	}
 	return im, nil
+}
+
+func readPngAsset(path string) (image.Image, error) {
+	dat, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	return loadImageFromBinaryPng(dat)
 }

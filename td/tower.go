@@ -19,13 +19,20 @@ type TowerEntity struct {
 }
 
 func NewTower(world engine.GameEntityManager, asset *engine.CharacterAsset) (*TowerEntity, error) {
+	tower := &TowerEntity{world: world, asset: asset, animation: "idle"}
 	body := cp.NewBody(1, cp.INFINITY)
-	body.SetPosition(cp.Vector{X: 25, Y: 10})
-	return &TowerEntity{world: world, asset: asset, animation: "idle"}, nil
+	body.SetPosition(cp.Vector{X: 70, Y: 70})
+	body.SetType(cp.BODY_STATIC)
+	body.UserData = tower
+	tower.shape = cp.NewBox(body, 16, 16, 0)
+	return tower, nil
 }
 
 func (t *TowerEntity) Draw(screen *ebiten.Image) {
 	t.asset.Draw(screen, t.animation, t.shape.Body().Position())
+	// TODO: left off: Draw small rect at collision box to verify body is drawn correctly
+	// testImg := image.Rect(int(t.shape.Body().Position().X))
+	// screen.DrawImage()
 }
 
 func (t *TowerEntity) Destroy() {
