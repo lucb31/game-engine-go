@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/jakecoffman/cp"
 	"github.com/lucb31/game-engine-go/engine"
 )
@@ -41,6 +42,7 @@ func NewCastle(world engine.GameEntityManager, asset *engine.CharacterAsset) (*C
 
 func (t *CastleEntity) Draw(screen *ebiten.Image) {
 	t.asset.Draw(screen, t.animation, t.shape.Body().Position())
+	ebitenutil.DebugPrint(screen, fmt.Sprintf("Castle health: %f", t.health))
 }
 
 func (e *CastleEntity) OnNpcHit(npc *engine.NpcEntity) {

@@ -20,8 +20,3 @@
 ### Feat
 - Display current health
 
-## Game loop
-### Feat
-- Castle health
-- Game over
-
