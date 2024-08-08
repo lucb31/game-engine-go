@@ -22,8 +22,9 @@ type Projectile struct {
 	velocity float64
 
 	// Logic
-	owner       GameEntity
-	Destination cp.Vector
+	owner     GameEntity
+	target    GameEntity
+	direction cp.Vector
 
 	// Rendering
 	asset *ProjectileAsset
@@ -49,13 +50,22 @@ func (a *ProjectileAsset) Draw(screen *ebiten.Image, position cp.Vector) error {
 	return nil
 }
 
-func NewProjectileWithDestination(owner GameEntity, world GameEntityManager, asset *ProjectileAsset, startPosition cp.Vector, endPosition cp.Vector) (*Projectile, error) {
+func NewProjectileWithTarget(owner GameEntity, target GameEntity, world GameEntityManager, asset *ProjectileAsset) (*Projectile, error) {
+	p, err := newProjectile(owner, world, asset)
+	if err != nil {
+		return nil, err
+	}
+	p.target = target
+	return p, nil
+}
+
+func newProjectile(owner GameEntity, world GameEntityManager, asset *ProjectileAsset) (*Projectile, error) {
 	if asset.Image == nil {
 		return nil, fmt.Errorf("Failed to instantiate projectile. No asset provided")
 	}
-	p := &Projectile{world: world}
+	p := &Projectile{world: world, asset: asset}
 	body := cp.NewBody(1, cp.INFINITY)
-	body.SetPosition(startPosition)
+	body.SetPosition(owner.Shape().Body().Position())
 	body.SetVelocityUpdateFunc(p.calculateVelocity)
 	body.UserData = p
 	p.shape = cp.NewBox(body, 16, 16, 0)
@@ -64,18 +74,25 @@ func NewProjectileWithDestination(owner GameEntity, world GameEntityManager, ass
 	p.shape.SetCollisionType(cp.CollisionType(ProjectileCollision))
 	p.shape.SetFilter(ProjectileCollisionFilter())
 	p.velocity = 300
-	p.asset = asset
-	p.Destination = endPosition
 	p.owner = owner
 	return p, nil
 }
 
-func NewProjectileWithOrientation(owner GameEntity, world GameEntityManager, asset *ProjectileAsset, position cp.Vector, orientation Orientation) (*Projectile, error) {
-	destination := destinationFromOrientation(orientation)
-	return NewProjectileWithDestination(owner, world, asset, position, destination)
+func NewProjectileWithDirection(owner GameEntity, world GameEntityManager, asset *ProjectileAsset, endPosition cp.Vector) (*Projectile, error) {
+	p, err := newProjectile(owner, world, asset)
+	if err != nil {
+		return nil, err
+	}
+	p.direction = endPosition
+	return p, nil
 }
 
-func destinationFromOrientation(orientation Orientation) cp.Vector {
+func NewProjectileWithOrientation(owner GameEntity, world GameEntityManager, asset *ProjectileAsset, position cp.Vector, orientation Orientation) (*Projectile, error) {
+	destination := directionFromOrientation(orientation)
+	return NewProjectileWithDirection(owner, world, asset, destination)
+}
+
+func directionFromOrientation(orientation Orientation) cp.Vector {
 	switch orientation {
 	case North:
 		return cp.Vector{0, -1000}
@@ -100,13 +117,12 @@ func (p *Projectile) Destroy() {
 }
 
 func (p *Projectile) calculateVelocity(body *cp.Body, gravity cp.Vector, damping float64, dt float64) {
-	position := body.Position()
-	diff := p.Destination.Sub(position)
-	// Remove projectile if destination reached
-	if diff.Length() < 5 {
-		p.Destroy()
-		return
+	direction := p.direction
+	if p.target != nil {
+		direction = p.target.Shape().Body().Position()
 	}
+	position := body.Position()
+	diff := direction.Sub(position)
 	diffNormalized := diff.Normalize()
 	vel := diffNormalized.Mult(p.velocity)
 	body.SetVelocityVector(vel)

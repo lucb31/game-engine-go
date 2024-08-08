@@ -63,9 +63,8 @@ func (t *TowerEntity) shoot(target engine.GameEntity) {
 		return
 	}
 
-	// Spawn projectile at tower position
-	projectilePos := t.shape.Body().Position()
-	proj, err := engine.NewProjectileWithDestination(t, t.world, t.projectileAsset, projectilePos, target.Shape().Body().Position())
+	// Spawn projectile
+	proj, err := engine.NewProjectileWithTarget(t, target, t.world, t.projectileAsset)
 	if err != nil {
 		fmt.Println("Could not shoot projectile")
 		return
