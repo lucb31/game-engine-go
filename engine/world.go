@@ -124,7 +124,12 @@ func initializeBoundingBox(space *cp.Space, width float64, height float64) {
 		shape := space.AddShape(cp.NewSegment(space.StaticBody, walls[i], walls[i+1], 2))
 		shape.SetElasticity(1)
 		shape.SetFriction(1)
+		shape.SetFilter(BoundingBoxFilter())
 	}
+}
+
+func BoundingBoxFilter() cp.ShapeFilter {
+	return cp.NewShapeFilter(0, uint(OuterWallsCategory), uint(PlayerCategory|NpcCategory|TowerCategory|ProjectileCategory))
 }
 
 func NewWorld(width int64, height int64) (*GameWorld, error) {

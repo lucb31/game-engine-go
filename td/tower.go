@@ -36,6 +36,7 @@ func NewTower(world engine.GameEntityManager, asset *engine.CharacterAsset, proj
 	body.SetPositionUpdateFunc(tower.Update)
 	body.UserData = tower
 	tower.shape = cp.NewBox(body, 32, 32, 0)
+	tower.shape.SetFilter(engine.TowerCollisionFilter())
 	return tower, nil
 }
 

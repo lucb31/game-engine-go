@@ -42,12 +42,18 @@ func NewPlayer(world GameEntityManager, asset *CharacterAsset, projectileAsset *
 	playerBody.SetPosition(cp.Vector{X: 70, Y: 15})
 	playerBody.UserData = p
 	playerBody.SetVelocityUpdateFunc(p.calculateVelocity)
+
+	// Collision model
 	p.shape = cp.NewBox(playerBody, 16, 16, 0)
 	p.shape.SetElasticity(0)
 	p.shape.SetFriction(0)
 	p.shape.SetCollisionType(cp.CollisionType(PlayerCollision))
-
+	p.shape.SetFilter(PlayerCollisionFilter())
 	return p, nil
+}
+
+func PlayerCollisionFilter() cp.ShapeFilter {
+	return cp.NewShapeFilter(0, uint(PlayerCategory), uint(PlayerCategory|NpcCategory|OuterWallsCategory|TowerCategory))
 }
 
 func (p *Player) Draw(screen *ebiten.Image) {

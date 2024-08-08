@@ -12,13 +12,14 @@
 ## Projectiles
 ### Fix
 - Fix drift of projectiles
+- Put upper limit to nr of projectiles. Might cause problems otherwise
 
 ### Feat
 - Add guided projectiles
 
 ## Towers
 ### Feat
-- Base implementation
+- Add maximum range
 
 ## Creeps
 ### Feat

@@ -16,6 +16,21 @@ const (
 	NpcCollision
 )
 
+type CollisionCategory uint
+
+const (
+	PlayerCategory CollisionCategory = iota + 1
+	NpcCategory
+	OuterWallsCategory
+	InnerWallsCategory
+	TowerCategory
+	ProjectileCategory
+)
+
+func ProjectileCollisionFilter() cp.ShapeFilter {
+	return cp.NewShapeFilter(0, uint(ProjectileCategory), uint(NpcCategory|OuterWallsCategory&^PlayerCategory))
+}
+
 type Projectile struct {
 	// Entity management
 	id    GameEntityId
@@ -66,6 +81,7 @@ func NewProjectileWithDestination(owner GameEntity, world GameEntityManager, ass
 	p.shape.SetElasticity(0)
 	p.shape.SetFriction(0)
 	p.shape.SetCollisionType(cp.CollisionType(ProjectileCollision))
+	p.shape.SetFilter(ProjectileCollisionFilter())
 	p.velocity = 300
 	p.asset = asset
 	p.Destination = endPosition

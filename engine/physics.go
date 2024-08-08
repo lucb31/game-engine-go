@@ -16,6 +16,10 @@ func NewPhysicsSpace() (*cp.Space, error) {
 	return space, nil
 }
 
+func TowerCollisionFilter() cp.ShapeFilter {
+	return cp.NewShapeFilter(0, uint(TowerCategory), uint(PlayerCategory|NpcCategory|OuterWallsCategory|InnerWallsCategory))
+}
+
 func removeProjectile(arb *cp.Arbiter, space *cp.Space, userData interface{}) {
 	a, b := arb.Bodies()
 

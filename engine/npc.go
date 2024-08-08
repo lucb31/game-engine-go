@@ -31,17 +31,25 @@ type NpcEntity struct {
 	stopMovementUntil time.Time
 }
 
+func NpcCollisionFilter() cp.ShapeFilter {
+	return cp.NewShapeFilter(0, uint(NpcCategory), uint(PlayerCategory|OuterWallsCategory|InnerWallsCategory|TowerCategory|ProjectileCategory))
+}
+
 func NewNpc(world GameEntityManager, asset *CharacterAsset) (*NpcEntity, error) {
 	npc := &NpcEntity{world: world, orientation: South, health: 100.0}
-	// Init body & shape
+	// Physics model
 	body := cp.NewBody(1, cp.INFINITY)
-	body.SetPosition(cp.Vector{X: 25, Y: 10})
+	body.SetPosition(cp.Vector{X: 250, Y: 250})
 	body.SetVelocityUpdateFunc(npc.calculateVelocity)
 	body.UserData = npc
+
+	// Collision model
 	npc.shape = cp.NewBox(body, 8, 8, 0)
 	npc.shape.SetElasticity(0)
 	npc.shape.SetFriction(1)
 	npc.shape.SetCollisionType(cp.CollisionType(NpcCollision))
+	npc.shape.SetFilter(NpcCollisionFilter())
+
 	npc.asset = asset
 	npc.wayPoints = []cp.Vector{
 		{X: 15, Y: 15},
