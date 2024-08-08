@@ -2,7 +2,6 @@ package td
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/lucb31/game-engine-go/assets"
@@ -12,11 +11,12 @@ import (
 type TDGame struct {
 	world                     *engine.GameWorld
 	screenWidth, screenHeight int
-	lastCreepSpawned          time.Time
+	creepManager              *CreepManager
 }
 
 func (g *TDGame) Update() error {
 	g.world.Update()
+	g.creepManager.Update()
 
 	return nil
 }
@@ -44,17 +44,6 @@ func NewTDGame(screenWidth, screenHeight int) (*TDGame, error) {
 		return nil, err
 	}
 
-	// Initialize an npc
-	npcAsset, ok := am.CharacterAssets["npc-torch"]
-	if !ok {
-		return nil, fmt.Errorf("Could not find npc asset")
-	}
-	npc, err := engine.NewNpc(w, &npcAsset)
-	if err != nil {
-		return nil, err
-	}
-	w.AddEntity(npc)
-
 	// Initialize a tower
 	towerAsset, ok := am.CharacterAssets["tower-blue"]
 	if !ok {
@@ -69,5 +58,16 @@ func NewTDGame(screenWidth, screenHeight int) (*TDGame, error) {
 		return nil, err
 	}
 	w.AddEntity(tower)
-	return &TDGame{world: w, screenWidth: screenWidth, screenHeight: screenHeight}, nil
+
+	// Setup creep management
+	npcAsset, ok := w.AssetManager.CharacterAssets["npc-torch"]
+	if !ok {
+		return nil, fmt.Errorf("Cannot initialize creep management: Could not find npc asset")
+	}
+	cm, err := NewCreepManager(w, &npcAsset)
+	if err != nil {
+		return nil, err
+	}
+
+	return &TDGame{world: w, screenWidth: screenWidth, screenHeight: screenHeight, creepManager: cm}, nil
 }
