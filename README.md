@@ -3,28 +3,19 @@
 
 # Todo
 
-## Physics
-- Add collision layers
-    - Projectiles should only collide with Bounds and NPCs, not with Player or tower
-    - Player should collide with everything
-    - NPCs should not collide with anything (to not block each other)
-
 ## Projectiles
 ### Fix
 - Fix drift of projectiles
 - Put upper limit to nr of projectiles. Might cause problems otherwise
 
-### Feat
-- Add guided projectiles
-
 ## Towers
 ### Feat
 - Add maximum range
+- Add option to add towers
 
 ## Creeps
 ### Feat
-- Auto spawn
-- Damage model
+- Display current health
 
 ## Game loop
 ### Feat
