@@ -3,6 +3,7 @@ package td
 import (
 	"fmt"
 
+	"github.com/lucb31/game-engine-go/assets"
 	"github.com/lucb31/game-engine-go/engine"
 )
 
@@ -13,7 +14,7 @@ func NewTDWorld(width int64, height int64) (*engine.GameWorld, error) {
 	}
 	am := w.AssetManager
 	// Initialize map
-	w.WorldMap, err = engine.NewWorldMap(width, height, "assets/test_map.csv", am.Tilesets["plains"])
+	w.WorldMap, err = engine.NewWorldMap(width, height, assets.TestMapCSV, am.Tilesets["plains"])
 	if err != nil {
 		return nil, err
 	}
@@ -28,5 +29,16 @@ func NewTDWorld(width int64, height int64) (*engine.GameWorld, error) {
 		return w, err
 	}
 	w.AddEntity(npc)
+
+	// Initialize a tower
+	towerAsset, ok := am.CharacterAssets["tower-blue"]
+	if !ok {
+		return nil, fmt.Errorf("Could not find tower asset")
+	}
+	tower, err := NewTower(w, &towerAsset)
+	if err != nil {
+		return w, err
+	}
+	w.AddEntity(tower)
 	return w, nil
 }

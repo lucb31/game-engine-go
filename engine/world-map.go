@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"bytes"
 	"encoding/csv"
 	"fmt"
 	"io"
@@ -60,9 +61,9 @@ func (b *WorldMap) Draw(screen *ebiten.Image) {
 }
 
 // Generate new world map for widht & height dimensions IN PX
-func NewWorldMap(width, height int64, path string, tileset Tileset) (*WorldMap, error) {
+func NewWorldMap(width, height int64, mapCsv []byte, tileset Tileset) (*WorldMap, error) {
 	// Read map data from provided path
-	csvMapData, err := readCsvMap(path)
+	csvMapData, err := readCsvFromBinary(mapCsv)
 	if err != nil {
 		return nil, err
 	}
@@ -81,14 +82,23 @@ func NewWorldMap(width, height int64, path string, tileset Tileset) (*WorldMap, 
 	return &WorldMap{tileData: mapData, tileset: tileset}, nil
 }
 
-func readCsvMap(path string) ([][]MapTile, error) {
+func readCsvFromBinary(data []byte) ([][]MapTile, error) {
+	reader := bytes.NewReader(data)
+	return readCsv(reader)
+}
+
+func readCsvFromFile(path string) ([][]MapTile, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}
 	defer f.Close()
 
-	csvReader := csv.NewReader(f)
+	return readCsv(f)
+}
+
+func readCsv(r io.Reader) ([][]MapTile, error) {
+	csvReader := csv.NewReader(r)
 	mapData := [][]MapTile{}
 	for row := 0; ; row++ {
 		rec, err := csvReader.Read()
