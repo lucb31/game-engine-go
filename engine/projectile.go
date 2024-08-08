@@ -8,25 +8,6 @@ import (
 	"github.com/jakecoffman/cp"
 )
 
-type CustomCollisionType cp.CollisionType
-
-const (
-	PlayerCollision CustomCollisionType = iota
-	ProjectileCollision
-	NpcCollision
-)
-
-type CollisionCategory uint
-
-const (
-	PlayerCategory CollisionCategory = iota + 1
-	NpcCategory
-	OuterWallsCategory
-	InnerWallsCategory
-	TowerCategory
-	ProjectileCategory
-)
-
 func ProjectileCollisionFilter() cp.ShapeFilter {
 	return cp.NewShapeFilter(0, uint(ProjectileCategory), uint(NpcCategory|OuterWallsCategory&^PlayerCategory))
 }
