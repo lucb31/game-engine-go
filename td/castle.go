@@ -8,7 +8,7 @@ import (
 	"github.com/lucb31/game-engine-go/engine"
 )
 
-const startingHealth = float64(200)
+const startingHealth = float64(20.0)
 const CastleCollision = cp.CollisionType(200)
 
 type CastleEntity struct {
@@ -27,7 +27,7 @@ type CastleEntity struct {
 }
 
 func NewCastle(world engine.GameEntityManager, asset *engine.CharacterAsset) (*CastleEntity, error) {
-	c := &CastleEntity{world: world, asset: asset, health: 200}
+	c := &CastleEntity{world: world, asset: asset, health: startingHealth}
 	c.animation = "idle"
 	body := cp.NewBody(1, cp.INFINITY)
 	body.SetPosition(cp.Vector{X: 450, Y: 25})
@@ -47,11 +47,14 @@ func (e *CastleEntity) OnNpcHit(npc *engine.NpcEntity) {
 	e.health -= 20
 	fmt.Printf("Castle has hit by npc %d. New health %f \n", npc.Id(), e.health)
 	npc.Destroy()
+	if e.health <= 0 {
+		e.Destroy()
+	}
 }
 
 func (e *CastleEntity) Destroy() {
-	// TODO: Game over
 	e.world.RemoveEntity(e)
+	e.world.EndGame()
 }
 func (e *CastleEntity) Id() engine.GameEntityId      { return e.id }
 func (e *CastleEntity) SetId(id engine.GameEntityId) { e.id = id }

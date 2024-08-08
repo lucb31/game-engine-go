@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/jakecoffman/cp"
 )
 
@@ -23,10 +24,16 @@ type GameWorld struct {
 	nextObjectId GameEntityId
 	// Removing object from the world needs to be buffered towards the end of a timestep
 	objectIdsToDelete []GameEntityId
+
+	gameOver bool
 }
 
 func (w *GameWorld) Draw(screen *ebiten.Image) {
 	w.WorldMap.Draw(screen)
+	if w.gameOver {
+		ebitenutil.DebugPrintAt(screen, "GAME OVER!", int(w.Width)/2, int(w.Height)/2)
+		return
+	}
 	// TODO: Currently drawing ALL objects. Fine as long as there is no camera movement
 	for _, obj := range w.objects {
 		obj.Draw(screen)
@@ -35,6 +42,10 @@ func (w *GameWorld) Draw(screen *ebiten.Image) {
 }
 
 func (w *GameWorld) Update() {
+	// Stop updating if game over
+	if w.gameOver {
+		return
+	}
 	w.FrameCount++
 	w.Space.Step(1.0 / 60.0 * gameSpeed)
 	// Delete objects scheduled for deletion
@@ -66,6 +77,11 @@ func (w *GameWorld) RemoveEntity(object GameEntity) error {
 
 func (w *GameWorld) GetEntities() *map[GameEntityId]GameEntity {
 	return &w.objects
+}
+
+func (w *GameWorld) EndGame() {
+	w.gameOver = true
+	fmt.Println("GAME OVER!!")
 }
 
 // Actually remove a game entity from physics & object space
