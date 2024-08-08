@@ -25,7 +25,7 @@ type TowerEntity struct {
 }
 
 const (
-	towerFireRatePerSecond = float64(1.3)
+	towerFireRatePerSecond = float64(1)
 )
 
 func NewTower(world engine.GameEntityManager, asset *engine.CharacterAsset, projectile *engine.ProjectileAsset) (*TowerEntity, error) {

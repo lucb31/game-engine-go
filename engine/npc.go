@@ -39,7 +39,7 @@ func NewNpc(world GameEntityManager, asset *CharacterAsset) (*NpcEntity, error) 
 	npc := &NpcEntity{world: world, orientation: South, health: 100.0}
 	// Physics model
 	body := cp.NewBody(1, cp.INFINITY)
-	body.SetPosition(cp.Vector{X: 250, Y: 250})
+	body.SetPosition(cp.Vector{X: 10, Y: 10})
 	body.SetVelocityUpdateFunc(npc.calculateVelocity)
 	body.UserData = npc
 
