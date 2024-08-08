@@ -76,12 +76,11 @@ func (n *NpcEntity) Destroy() {
 }
 
 func (n *NpcEntity) OnProjectileHit(projectile Projectile) {
-	fmt.Println("OUCH!", n, projectile)
 	n.health -= 30.0
+	fmt.Printf("Npc [%d] hit by projectile [%d]. New health [%f] \n", n.Id(), projectile.Id(), n.health)
 	if n.health <= 0.0 {
 		n.Destroy()
 	}
-	fmt.Printf("Survived with %f health \n", n.health)
 	// Briefly stop movement
 	n.stopMovementUntil = time.Now().Add(time.Millisecond * 300)
 }

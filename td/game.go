@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/jakecoffman/cp"
 	"github.com/lucb31/game-engine-go/assets"
 	"github.com/lucb31/game-engine-go/engine"
 )
@@ -43,6 +44,34 @@ func NewTDGame(screenWidth, screenHeight int) (*TDGame, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// Add collision handler for castle
+	// TODO: Should be registered within castle
+	handler := w.Space.NewCollisionHandler(cp.CollisionType(engine.NpcCollision), CastleCollision)
+	handler.BeginFunc = func(arb *cp.Arbiter, space *cp.Space, userData interface{}) bool {
+		a, b := arb.Bodies()
+		npc, ok := a.UserData.(*engine.NpcEntity)
+		if !ok {
+			return false
+		}
+		castle, ok := b.UserData.(*CastleEntity)
+		if !ok {
+			return false
+		}
+		castle.OnNpcHit(npc)
+		return false
+	}
+
+	// Initialize castle
+	castleAsset, ok := am.CharacterAssets["castle"]
+	if !ok {
+		return nil, fmt.Errorf("Could not find castle asset")
+	}
+	castle, err := NewCastle(w, &castleAsset)
+	if err != nil {
+		return nil, err
+	}
+	w.AddEntity(castle)
 
 	// Initialize a tower
 	towerAsset, ok := am.CharacterAssets["tower-blue"]

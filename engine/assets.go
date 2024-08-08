@@ -131,6 +131,17 @@ var characterResources []characterResource = []characterResource{
 		-20,
 		0.22,
 	},
+	{
+		"castle",
+		assets.Castle,
+		192,
+		map[string]GameAssetAnimation{
+			"idle": {StartTile: 0, FrameCount: 1},
+		},
+		-22,
+		-14,
+		0.22,
+	},
 }
 
 // Load characters

@@ -7,6 +7,9 @@ import (
 	"github.com/jakecoffman/cp"
 )
 
+// TODO: Add debug util to increase this via keybinds
+const gameSpeed = float64(1.0)
+
 type GameWorld struct {
 	objects      map[GameEntityId]GameEntity
 	player       GameEntity
@@ -15,7 +18,7 @@ type GameWorld struct {
 	Height       int64
 	FrameCount   int64
 	AssetManager *AssetManager
-	space        *cp.Space
+	Space        *cp.Space
 
 	nextObjectId GameEntityId
 	// Removing object from the world needs to be buffered towards the end of a timestep
@@ -33,7 +36,7 @@ func (w *GameWorld) Draw(screen *ebiten.Image) {
 
 func (w *GameWorld) Update() {
 	w.FrameCount++
-	w.space.Step(1.0 / 60.0)
+	w.Space.Step(1.0 / 60.0 * gameSpeed)
 	// Delete objects scheduled for deletion
 	if len(w.objectIdsToDelete) > 0 {
 		for _, id := range w.objectIdsToDelete {
@@ -47,9 +50,8 @@ func (w *GameWorld) Update() {
 // - registering to physics space
 // - registering in object map to add / find / remove entities
 func (w *GameWorld) AddEntity(object GameEntity) error {
-	fmt.Println("Adding object", object)
-	w.space.AddBody(object.Shape().Body())
-	w.space.AddShape(object.Shape())
+	w.Space.AddBody(object.Shape().Body())
+	w.Space.AddShape(object.Shape())
 	w.objects[w.nextObjectId] = object
 	object.SetId(w.nextObjectId)
 	w.nextObjectId++
@@ -73,8 +75,8 @@ func (w *GameWorld) removeObject(id GameEntityId) {
 		fmt.Println("Oops, tried to delete unknown object", id)
 		return
 	}
-	w.space.RemoveShape(object.Shape())
-	w.space.RemoveBody(object.Shape().Body())
+	w.Space.RemoveShape(object.Shape())
+	w.Space.RemoveBody(object.Shape().Body())
 	delete(w.objects, id)
 }
 
@@ -142,7 +144,7 @@ func NewWorld(width int64, height int64) (*GameWorld, error) {
 	w := GameWorld{
 		Width:   width,
 		Height:  height,
-		space:   space,
+		Space:   space,
 		objects: map[GameEntityId]GameEntity{},
 	}
 	// Initialize assets

@@ -7,6 +7,7 @@ import (
 	"github.com/lucb31/game-engine-go/engine"
 )
 
+// TODO: Does not scale correctly with game speed
 type CreepManager struct {
 	entityManager           engine.GameEntityManager
 	asset                   *engine.CharacterAsset
