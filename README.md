@@ -1,10 +1,8 @@
 # LIVE
-[Try it out](https://lucb31.github.io/game-engine-go/app)
+[Try it out](https://lucb31.github.io/game-engine-go/)
 
 # Todo
 
-## Deployment
-- CI pipeline
 
 ## Projectiles
 ### Fix
