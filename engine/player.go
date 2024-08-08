@@ -76,7 +76,7 @@ func (p *Player) shoot() {
 	case South:
 		projectilePos = projectilePos.Add(cp.Vector{X: 0, Y: offset})
 	}
-	proj, err := NewProjectile(p.world, p.projectileAsset, projectilePos, p.orientation)
+	proj, err := NewProjectileWithOrientation(p, p.world, p.projectileAsset, projectilePos, p.orientation)
 	if err != nil {
 		fmt.Println("Could not shoot projectile")
 		return

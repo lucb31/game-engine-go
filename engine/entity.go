@@ -17,4 +17,5 @@ type GameEntity interface {
 type GameEntityManager interface {
 	AddEntity(object GameEntity) error
 	RemoveEntity(object GameEntity) error
+	GetEntities() *map[GameEntityId](GameEntity)
 }

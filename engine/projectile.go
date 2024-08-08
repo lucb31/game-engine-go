@@ -17,12 +17,20 @@ const (
 )
 
 type Projectile struct {
-	id          GameEntityId
-	shape       *cp.Shape
+	// Entity management
+	id    GameEntityId
+	world GameEntityManager
+
+	// Physics
+	shape    *cp.Shape
+	velocity float64
+
+	// Logic
+	owner       GameEntity
 	Destination cp.Vector
-	velocity    float64
-	asset       *ProjectileAsset
-	world       GameEntityManager
+
+	// Rendering
+	asset *ProjectileAsset
 }
 
 type ProjectileAsset struct {
@@ -45,23 +53,29 @@ func (a *ProjectileAsset) Draw(screen *ebiten.Image, position cp.Vector) error {
 	return nil
 }
 
-func NewProjectile(world GameEntityManager, asset *ProjectileAsset, position cp.Vector, orientation Orientation) (*Projectile, error) {
+func NewProjectileWithDestination(owner GameEntity, world GameEntityManager, asset *ProjectileAsset, startPosition cp.Vector, endPosition cp.Vector) (*Projectile, error) {
 	if asset.Image == nil {
 		return nil, fmt.Errorf("Failed to instantiate projectile. No asset provided")
 	}
 	p := &Projectile{world: world}
 	body := cp.NewBody(1, cp.INFINITY)
-	body.SetPosition(position)
+	body.SetPosition(startPosition)
 	body.SetVelocityUpdateFunc(p.calculateVelocity)
 	body.UserData = p
 	p.shape = cp.NewBox(body, 16, 16, 0)
 	p.shape.SetElasticity(0)
 	p.shape.SetFriction(0)
 	p.shape.SetCollisionType(cp.CollisionType(ProjectileCollision))
-	p.Destination = destinationFromOrientation(orientation)
-	p.velocity = 150
+	p.velocity = 300
 	p.asset = asset
+	p.Destination = endPosition
+	p.owner = owner
 	return p, nil
+}
+
+func NewProjectileWithOrientation(owner GameEntity, world GameEntityManager, asset *ProjectileAsset, position cp.Vector, orientation Orientation) (*Projectile, error) {
+	destination := destinationFromOrientation(orientation)
+	return NewProjectileWithDestination(owner, world, asset, position, destination)
 }
 
 func destinationFromOrientation(orientation Orientation) cp.Vector {
@@ -91,6 +105,11 @@ func (p *Projectile) Destroy() {
 func (p *Projectile) calculateVelocity(body *cp.Body, gravity cp.Vector, damping float64, dt float64) {
 	position := body.Position()
 	diff := p.Destination.Sub(position)
+	// Remove projectile if destination reached
+	if diff.Length() < 5 {
+		p.Destroy()
+		return
+	}
 	diffNormalized := diff.Normalize()
 	vel := diffNormalized.Mult(p.velocity)
 	body.SetVelocityVector(vel)

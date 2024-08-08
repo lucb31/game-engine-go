@@ -62,6 +62,10 @@ func (w *GameWorld) RemoveEntity(object GameEntity) error {
 	return nil
 }
 
+func (w *GameWorld) GetEntities() *map[GameEntityId]GameEntity {
+	return &w.objects
+}
+
 // Actually remove a game entity from physics & object space
 func (w *GameWorld) removeObject(id GameEntityId) {
 	object, ok := w.objects[id]

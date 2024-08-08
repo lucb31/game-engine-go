@@ -17,13 +17,19 @@ func NewPhysicsSpace() (*cp.Space, error) {
 }
 
 func removeProjectile(arb *cp.Arbiter, space *cp.Space, userData interface{}) {
-	p, _ := arb.Bodies()
+	a, b := arb.Bodies()
 
-	projectile, ok := p.UserData.(*Projectile)
+	projectile, ok := a.UserData.(*Projectile)
 	if !ok {
 		fmt.Println("Type assertion for projectile collision failed. Did not receive valid Projectile")
 		return
 	}
+	collisionPartner, ok := b.UserData.(GameEntity)
+	// Ignore collision with projectile owners
+	if ok && collisionPartner.Id() == projectile.owner.Id() {
+		return
+	}
+	fmt.Printf("Removing projectile after collision with %v \n", b.UserData)
 	projectile.Destroy()
 }
 

@@ -35,7 +35,11 @@ func NewTDWorld(width int64, height int64) (*engine.GameWorld, error) {
 	if !ok {
 		return nil, fmt.Errorf("Could not find tower asset")
 	}
-	tower, err := NewTower(w, &towerAsset)
+	projectile, ok := am.ProjectileAssets["bone"]
+	if !ok {
+		return nil, fmt.Errorf("Could not find projectile asset")
+	}
+	tower, err := NewTower(w, &towerAsset, &projectile)
 	if err != nil {
 		return w, err
 	}
