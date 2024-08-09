@@ -67,19 +67,7 @@ func (p *Player) shoot() {
 		return
 	}
 	// Spawn projectile at player position
-	projectilePos := p.shape.Body().Position()
-	offset := 25.0
-	switch p.orientation {
-	case East:
-		projectilePos = projectilePos.Add(cp.Vector{X: offset, Y: 0})
-	case West:
-		projectilePos = projectilePos.Add(cp.Vector{X: -offset, Y: 0})
-	case North:
-		projectilePos = projectilePos.Add(cp.Vector{X: 0, Y: -offset})
-	case South:
-		projectilePos = projectilePos.Add(cp.Vector{X: 0, Y: offset})
-	}
-	proj, err := NewProjectileWithOrientation(p, p.world, p.projectileAsset, projectilePos, p.orientation)
+	proj, err := NewProjectileWithOrientation(p, p.world, p.projectileAsset, p.orientation)
 	if err != nil {
 		fmt.Println("Could not shoot projectile")
 		return

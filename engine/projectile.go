@@ -87,21 +87,21 @@ func NewProjectileWithDirection(owner GameEntity, world GameEntityManager, asset
 	return p, nil
 }
 
-func NewProjectileWithOrientation(owner GameEntity, world GameEntityManager, asset *ProjectileAsset, position cp.Vector, orientation Orientation) (*Projectile, error) {
-	destination := directionFromOrientation(orientation)
+func NewProjectileWithOrientation(owner GameEntity, world GameEntityManager, asset *ProjectileAsset, orientation Orientation) (*Projectile, error) {
+	destination := directionFromOrientationAndPos(orientation, owner.Shape().Body().Position())
 	return NewProjectileWithDirection(owner, world, asset, destination)
 }
 
-func directionFromOrientation(orientation Orientation) cp.Vector {
+func directionFromOrientationAndPos(orientation Orientation, pos cp.Vector) cp.Vector {
 	switch orientation {
 	case North:
-		return cp.Vector{0, -1000}
+		return cp.Vector{pos.X, -1000}
 	case South:
-		return cp.Vector{0, 1000}
+		return cp.Vector{pos.X, 1000}
 	case East:
-		return cp.Vector{1000, 0}
+		return cp.Vector{1000, pos.Y}
 	default:
-		return cp.Vector{-1000, 0}
+		return cp.Vector{-1000, pos.Y}
 	}
 }
 
