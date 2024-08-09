@@ -32,8 +32,18 @@ func NewHUD(game *TDGame) (*GameHUD, error) {
 	// All other UI elements must be added to this container.
 	rootContainer := widget.NewContainer(widget.ContainerOpts.Layout(widget.NewAnchorLayout()))
 
-	// Construct a container to hold the progress bars.
-	progressBarsContainer := widget.NewContainer(
+	hud.creepProgress = initCreepProgressBar(rootContainer)
+
+	// This adds the root container to the UI, so that it will be rendered.
+	hud.ui = &ebitenui.UI{
+		Container: rootContainer,
+	}
+
+	return hud, nil
+}
+
+func initCreepProgressBar(root *widget.Container) *widget.ProgressBar {
+	creepProgressContainer := widget.NewContainer(
 		widget.ContainerOpts.Layout(widget.NewStackedLayout()),
 		// Set the required anchor layout data to determine where in the root
 		// container to place the progress bars.
@@ -45,9 +55,7 @@ func NewHUD(game *TDGame) (*GameHUD, error) {
 			}),
 		),
 	)
-
-	// Construct a horizontal progress bar.
-	hud.creepProgress = widget.NewProgressBar(
+	creepProgress := widget.NewProgressBar(
 		widget.ProgressBarOpts.WidgetOpts(
 			// Set the minimum size for the progress bar.
 			// This is necessary if you wish to have the progress bar be larger than
@@ -73,9 +81,10 @@ func NewHUD(game *TDGame) (*GameHUD, error) {
 			Bottom: 2,
 		}),
 	)
-	progressBarsContainer.AddChild(hud.creepProgress)
+	creepProgressContainer.AddChild(creepProgress)
+	root.AddChild(creepProgressContainer)
 
-	// This loads a font and creates a font face.
+	// Init label
 	ttfFont, err := truetype.Parse(goregular.TTF)
 	if err != nil {
 		log.Fatal("Error Parsing Font", err)
@@ -83,19 +92,11 @@ func NewHUD(game *TDGame) (*GameHUD, error) {
 	fontFace := truetype.NewFace(ttfFont, &truetype.Options{
 		Size: 16,
 	})
-	// This creates a text widget that says "Hello World!"
-	helloWorldLabel := widget.NewText(
+	creepProgressLabel := widget.NewText(
 		widget.TextOpts.Text("Wave 1", fontFace, color.White),
 	)
-	progressBarsContainer.AddChild(helloWorldLabel)
-
-	rootContainer.AddChild(progressBarsContainer)
-	// This adds the root container to the UI, so that it will be rendered.
-	hud.ui = &ebitenui.UI{
-		Container: rootContainer,
-	}
-
-	return hud, nil
+	creepProgressContainer.AddChild(creepProgressLabel)
+	return creepProgress
 }
 
 func (h *GameHUD) Draw(screen *ebiten.Image) {
