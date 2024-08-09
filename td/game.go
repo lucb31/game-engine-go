@@ -14,12 +14,14 @@ type TDGame struct {
 	screenWidth, screenHeight int
 	creepManager              *CreepManager
 	towerManager              *TowerManager
+	hud                       *GameHUD
 }
 
 func (g *TDGame) Update() error {
 	g.world.Update()
 	g.creepManager.Update()
 	g.towerManager.Update()
+	g.hud.Update()
 
 	return nil
 }
@@ -27,6 +29,7 @@ func (g *TDGame) Update() error {
 func (g *TDGame) Draw(screen *ebiten.Image) {
 	g.world.Draw(screen)
 	g.towerManager.Draw(screen)
+	g.hud.Draw(screen)
 }
 
 func (g *TDGame) Layout(outsideWidth, outsideHeight int) (int, int) {
@@ -34,6 +37,9 @@ func (g *TDGame) Layout(outsideWidth, outsideHeight int) (int, int) {
 }
 
 func NewTDGame(screenWidth, screenHeight int) (*TDGame, error) {
+	game := &TDGame{screenWidth: screenWidth, screenHeight: screenHeight}
+
+	// Init game world
 	width := int64(screenWidth)
 	height := int64(screenHeight)
 	w, err := engine.NewWorld(width, height)
@@ -41,12 +47,12 @@ func NewTDGame(screenWidth, screenHeight int) (*TDGame, error) {
 		return nil, err
 	}
 	am := w.AssetManager
-
 	// Initialize map
 	w.WorldMap, err = engine.NewWorldMap(width, height, assets.TestMapCSV, am.Tilesets["plains"])
 	if err != nil {
 		return nil, err
 	}
+	game.world = w
 
 	// Add collision handler for castle
 	// TODO: Should be registered within castle
@@ -81,7 +87,7 @@ func NewTDGame(screenWidth, screenHeight int) (*TDGame, error) {
 	if !ok {
 		return nil, fmt.Errorf("Cannot initialize creep management: Could not find npc asset")
 	}
-	cm, err := NewCreepManager(w, &npcAsset)
+	game.creepManager, err = NewCreepManager(w, &npcAsset)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +101,17 @@ func NewTDGame(screenWidth, screenHeight int) (*TDGame, error) {
 	if !ok {
 		return nil, fmt.Errorf("Could not find projectile asset")
 	}
-	towerManager, err := NewTowerManager(w, &towerAsset, &projectile)
+	game.towerManager, err = NewTowerManager(w, &towerAsset, &projectile)
 
-	return &TDGame{world: w, screenWidth: screenWidth, screenHeight: screenHeight, creepManager: cm, towerManager: towerManager}, nil
+	// Setup HUD
+	game.hud, err = NewHUD(game)
+	if err != nil {
+		return nil, err
+	}
+
+	return game, nil
+}
+
+func (g *TDGame) GetCreepProgress() ProgressInfo {
+	return g.creepManager.GetProgress()
 }
