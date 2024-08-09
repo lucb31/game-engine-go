@@ -13,17 +13,20 @@ type TDGame struct {
 	world                     *engine.GameWorld
 	screenWidth, screenHeight int
 	creepManager              *CreepManager
+	towerManager              *TowerManager
 }
 
 func (g *TDGame) Update() error {
 	g.world.Update()
 	g.creepManager.Update()
+	g.towerManager.Update()
 
 	return nil
 }
 
 func (g *TDGame) Draw(screen *ebiten.Image) {
 	g.world.Draw(screen)
+	g.towerManager.Draw(screen)
 }
 
 func (g *TDGame) Layout(outsideWidth, outsideHeight int) (int, int) {
@@ -47,7 +50,7 @@ func NewTDGame(screenWidth, screenHeight int) (*TDGame, error) {
 
 	// Add collision handler for castle
 	// TODO: Should be registered within castle
-	handler := w.Space.NewCollisionHandler(cp.CollisionType(engine.NpcCollision), CastleCollision)
+	handler := w.Space().NewCollisionHandler(cp.CollisionType(engine.NpcCollision), CastleCollision)
 	handler.BeginFunc = func(arb *cp.Arbiter, space *cp.Space, userData interface{}) bool {
 		a, b := arb.Bodies()
 		npc, ok := a.UserData.(*engine.NpcEntity)
@@ -73,21 +76,6 @@ func NewTDGame(screenWidth, screenHeight int) (*TDGame, error) {
 	}
 	w.AddEntity(castle)
 
-	// Initialize a tower
-	towerAsset, ok := am.CharacterAssets["tower-blue"]
-	if !ok {
-		return nil, fmt.Errorf("Could not find tower asset")
-	}
-	projectile, ok := am.ProjectileAssets["bone"]
-	if !ok {
-		return nil, fmt.Errorf("Could not find projectile asset")
-	}
-	tower, err := NewTower(w, &towerAsset, &projectile)
-	if err != nil {
-		return nil, err
-	}
-	w.AddEntity(tower)
-
 	// Setup creep management
 	npcAsset, ok := w.AssetManager.CharacterAssets["npc-torch"]
 	if !ok {
@@ -98,5 +86,16 @@ func NewTDGame(screenWidth, screenHeight int) (*TDGame, error) {
 		return nil, err
 	}
 
-	return &TDGame{world: w, screenWidth: screenWidth, screenHeight: screenHeight, creepManager: cm}, nil
+	// Setup tower management
+	towerAsset, ok := am.CharacterAssets["tower-blue"]
+	if !ok {
+		return nil, fmt.Errorf("Could not find tower asset")
+	}
+	projectile, ok := am.ProjectileAssets["bone"]
+	if !ok {
+		return nil, fmt.Errorf("Could not find projectile asset")
+	}
+	towerManager, err := NewTowerManager(w, &towerAsset, &projectile)
+
+	return &TDGame{world: w, screenWidth: screenWidth, screenHeight: screenHeight, creepManager: cm, towerManager: towerManager}, nil
 }

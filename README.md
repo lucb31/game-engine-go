@@ -5,16 +5,13 @@
 
 ## Projectiles
 ### Fix
-- Fix drift of projectiles
 - Put upper limit to nr of projectiles. Might cause problems otherwise
 
 ## Towers
-### Fix
-- Fix targetting algorithm: Seems pretty random 
 
 ### Feat
 - Add maximum range
-- Add option to add towers
+- Add targetting algorithm: Currently mostly pretty random 
 
 ## Creeps
 ### Feat
