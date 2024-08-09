@@ -29,6 +29,14 @@ func NewTowerManager(world engine.GameEntityManager, towerAsset *engine.Characte
 }
 
 func (t *TowerManager) Update() {
+	// Add tower on touch
+	for _, id := range ebiten.AppendTouchIDs(nil) {
+		x, y := ebiten.TouchPosition(id)
+		if y < 330 || x < 300 {
+			t.AddTower(cp.Vector{float64(x), float64(y)})
+		}
+	}
+	// Add tower on click
 	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
 		mx, my := ebiten.CursorPosition()
 		// FIX: Avoid spawning towers when interacting with speed toggle
@@ -52,16 +60,16 @@ func (t *TowerManager) Draw(screen *ebiten.Image) {
 }
 
 func (t *TowerManager) AddTower(pos cp.Vector) error {
-	// Avoid stacking towers
-	// TODO: Tower grid to solve this
-	queryInfo := t.world.Space().PointQueryNearest(pos, minDistanceBetweenTowers, engine.TowerCollisionFilter())
-	if queryInfo.Shape != nil {
-		return nil
-	}
 	// Delay: Do not spawn more than 1 tower per second
 	now := time.Now()
 	duration := float64(time.Second) / 1
 	if now.Sub(t.lastTowerSpawned) < time.Duration(duration) {
+		return nil
+	}
+	// Avoid stacking towers
+	// TODO: Tower grid to solve this
+	queryInfo := t.world.Space().PointQueryNearest(pos, minDistanceBetweenTowers, engine.TowerCollisionFilter())
+	if queryInfo.Shape != nil {
 		return nil
 	}
 
