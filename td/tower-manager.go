@@ -31,7 +31,10 @@ func NewTowerManager(world engine.GameEntityManager, towerAsset *engine.Characte
 func (t *TowerManager) Update() {
 	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
 		mx, my := ebiten.CursorPosition()
-		t.AddTower(cp.Vector{float64(mx), float64(my)})
+		// FIX: Avoid spawning towers when interacting with speed toggle
+		if my < 330 || mx < 300 {
+			t.AddTower(cp.Vector{float64(mx), float64(my)})
+		}
 	}
 	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonRight) {
 		mx, my := ebiten.CursorPosition()
