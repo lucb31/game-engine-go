@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/jakecoffman/cp"
 	"github.com/lucb31/game-engine-go/engine"
 )
@@ -18,7 +19,10 @@ type TowerManager struct {
 	lastTowerSpawned time.Time
 }
 
-const minDistanceBetweenTowers = float64(12.0)
+const (
+	minDistanceBetweenTowers = float64(12.0)
+	maxDistanceForDeletion   = float64(5.0)
+)
 
 func NewTowerManager(world engine.GameEntityManager, towerAsset *engine.CharacterAsset, projAsset *engine.ProjectileAsset) (*TowerManager, error) {
 	return &TowerManager{world: world, towerAsset: towerAsset, projectileAsset: projAsset}, nil
@@ -29,12 +33,21 @@ func (t *TowerManager) Update() {
 		mx, my := ebiten.CursorPosition()
 		t.AddTower(cp.Vector{float64(mx), float64(my)})
 	}
+	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonRight) {
+		mx, my := ebiten.CursorPosition()
+		err := t.RemoveTower(cp.Vector{float64(mx), float64(my)})
+		if err != nil {
+			fmt.Println("Could not remove tower", err.Error())
+		}
+	}
+
 }
 
 func (t *TowerManager) Draw(screen *ebiten.Image) {
+	ebitenutil.DebugPrintAt(screen, "Use left mouse click to add towers", 20, 340)
+	ebitenutil.DebugPrintAt(screen, "Use right mouse click to remove towers", 20, 360)
 }
 
-// Initialize a tower
 func (t *TowerManager) AddTower(pos cp.Vector) error {
 	// Avoid stacking towers
 	// TODO: Tower grid to solve this
@@ -58,5 +71,18 @@ func (t *TowerManager) AddTower(pos cp.Vector) error {
 	t.world.AddEntity(tower)
 	t.lastTowerSpawned = now
 
+	return nil
+}
+
+func (t *TowerManager) RemoveTower(pos cp.Vector) error {
+	queryInfo := t.world.Space().PointQueryNearest(pos, maxDistanceForDeletion, engine.TowerCollisionFilter())
+	if queryInfo.Shape == nil {
+		return nil
+	}
+	tower, ok := queryInfo.Shape.Body().UserData.(*TowerEntity)
+	if !ok {
+		return fmt.Errorf("Collision checker did not return Tower Entity")
+	}
+	tower.Destroy()
 	return nil
 }

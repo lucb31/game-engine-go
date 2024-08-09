@@ -3,6 +3,12 @@
 
 # Todo
 
+## HUD
+### Feat
+- Nr of alive creeps
+- Nr of spawned creeps
+- Nr of towers
+
 ## Projectiles
 ### Fix
 - Put upper limit to nr of projectiles. Might cause problems otherwise
