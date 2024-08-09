@@ -15,6 +15,7 @@ type TDGame struct {
 	creepManager              *CreepManager
 	towerManager              *TowerManager
 	hud                       *GameHUD
+	castle                    *CastleEntity
 }
 
 func (g *TDGame) Update() error {
@@ -76,11 +77,11 @@ func NewTDGame(screenWidth, screenHeight int) (*TDGame, error) {
 	if !ok {
 		return nil, fmt.Errorf("Could not find castle asset")
 	}
-	castle, err := NewCastle(w, &castleAsset)
+	game.castle, err = NewCastle(w, &castleAsset)
 	if err != nil {
 		return nil, err
 	}
-	w.AddEntity(castle)
+	w.AddEntity(game.castle)
 
 	// Setup creep management
 	npcAsset, ok := w.AssetManager.CharacterAssets["npc-torch"]
@@ -114,4 +115,8 @@ func NewTDGame(screenWidth, screenHeight int) (*TDGame, error) {
 
 func (g *TDGame) GetCreepProgress() ProgressInfo {
 	return g.creepManager.GetProgress()
+}
+
+func (g *TDGame) GetCastleHealth() ProgressInfo {
+	return g.castle.GetHealthBar()
 }

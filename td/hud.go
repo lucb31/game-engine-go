@@ -18,6 +18,7 @@ type GameHUD struct {
 	game *TDGame
 
 	creepProgress *widget.ProgressBar
+	castleHealth  *widget.ProgressBar
 }
 
 type ProgressInfo struct {
@@ -33,6 +34,7 @@ func NewHUD(game *TDGame) (*GameHUD, error) {
 	rootContainer := widget.NewContainer(widget.ContainerOpts.Layout(widget.NewAnchorLayout()))
 
 	hud.creepProgress = initCreepProgressBar(rootContainer)
+	hud.castleHealth = initCastleHealthProgressBar(rootContainer)
 
 	// This adds the root container to the UI, so that it will be rendered.
 	hud.ui = &ebitenui.UI{
@@ -43,19 +45,35 @@ func NewHUD(game *TDGame) (*GameHUD, error) {
 }
 
 func initCreepProgressBar(root *widget.Container) *widget.ProgressBar {
-	creepProgressContainer := widget.NewContainer(
+	layout := widget.AnchorLayoutData{
+		HorizontalPosition: widget.AnchorLayoutPositionCenter,
+		VerticalPosition:   widget.AnchorLayoutPositionStart,
+		Padding:            widget.NewInsetsSimple(4),
+	}
+	bgColor := color.NRGBA{0, 0, 255, 255}
+	return progressBarWithLabel(root, "Wave 1", layout, bgColor)
+}
+
+func initCastleHealthProgressBar(root *widget.Container) *widget.ProgressBar {
+	layout := widget.AnchorLayoutData{
+		HorizontalPosition: widget.AnchorLayoutPositionEnd,
+		VerticalPosition:   widget.AnchorLayoutPositionEnd,
+		Padding:            widget.NewInsetsSimple(8),
+	}
+	bgColor := color.NRGBA{255, 0, 0, 255}
+	return progressBarWithLabel(root, "Castle Health", layout, bgColor)
+}
+
+func progressBarWithLabel(root *widget.Container, label string, anchor widget.AnchorLayoutData, bgColor color.Color) *widget.ProgressBar {
+	container := widget.NewContainer(
 		widget.ContainerOpts.Layout(widget.NewStackedLayout()),
 		// Set the required anchor layout data to determine where in the root
 		// container to place the progress bars.
 		widget.ContainerOpts.WidgetOpts(
-			widget.WidgetOpts.LayoutData(widget.AnchorLayoutData{
-				HorizontalPosition: widget.AnchorLayoutPositionCenter,
-				VerticalPosition:   widget.AnchorLayoutPositionStart,
-				Padding:            widget.NewInsetsSimple(4),
-			}),
+			widget.WidgetOpts.LayoutData(anchor),
 		),
 	)
-	creepProgress := widget.NewProgressBar(
+	progressBar := widget.NewProgressBar(
 		widget.ProgressBarOpts.WidgetOpts(
 			// Set the minimum size for the progress bar.
 			// This is necessary if you wish to have the progress bar be larger than
@@ -70,7 +88,7 @@ func initCreepProgressBar(root *widget.Container) *widget.ProgressBar {
 			},
 			// Set the progress images (Idle, Disabled).
 			&widget.ProgressBarImage{
-				Idle: image.NewNineSliceColor(color.NRGBA{0, 0, 255, 255}),
+				Idle: image.NewNineSliceColor(bgColor),
 			},
 		),
 		// Set the min, max, and current values.
@@ -81,8 +99,8 @@ func initCreepProgressBar(root *widget.Container) *widget.ProgressBar {
 			Bottom: 2,
 		}),
 	)
-	creepProgressContainer.AddChild(creepProgress)
-	root.AddChild(creepProgressContainer)
+	container.AddChild(progressBar)
+	root.AddChild(container)
 
 	// Init label
 	ttfFont, err := truetype.Parse(goregular.TTF)
@@ -92,11 +110,11 @@ func initCreepProgressBar(root *widget.Container) *widget.ProgressBar {
 	fontFace := truetype.NewFace(ttfFont, &truetype.Options{
 		Size: 16,
 	})
-	creepProgressLabel := widget.NewText(
-		widget.TextOpts.Text("Wave 1", fontFace, color.White),
+	labelText := widget.NewText(
+		widget.TextOpts.Text(label, fontFace, color.White),
 	)
-	creepProgressContainer.AddChild(creepProgressLabel)
-	return creepProgress
+	container.AddChild(labelText)
+	return progressBar
 }
 
 func (h *GameHUD) Draw(screen *ebiten.Image) {
@@ -106,6 +124,7 @@ func (h *GameHUD) Draw(screen *ebiten.Image) {
 func (h *GameHUD) Update() {
 	h.ui.Update()
 	h.updateCreepProgress()
+	h.updateCastleHealth()
 }
 
 func (h *GameHUD) updateCreepProgress() {
@@ -113,4 +132,11 @@ func (h *GameHUD) updateCreepProgress() {
 	h.creepProgress.Min = progress.min
 	h.creepProgress.Max = progress.max
 	h.creepProgress.SetCurrent(progress.current)
+}
+
+func (h *GameHUD) updateCastleHealth() {
+	progress := h.game.GetCastleHealth()
+	h.castleHealth.Min = progress.min
+	h.castleHealth.Max = progress.max
+	h.castleHealth.SetCurrent(progress.current)
 }
