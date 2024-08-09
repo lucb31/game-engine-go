@@ -8,9 +8,6 @@ import (
 	"github.com/jakecoffman/cp"
 )
 
-// TODO: Add debug util to increase this via keybinds
-const gameSpeed = float64(1.0)
-
 type GameWorld struct {
 	objects      map[GameEntityId]GameEntity
 	player       GameEntity
@@ -25,7 +22,8 @@ type GameWorld struct {
 	// Removing object from the world needs to be buffered towards the end of a timestep
 	objectIdsToDelete []GameEntityId
 
-	gameOver bool
+	gameOver  bool
+	GameSpeed float64
 }
 
 func (w *GameWorld) Draw(screen *ebiten.Image) {
@@ -47,7 +45,7 @@ func (w *GameWorld) Update() {
 		return
 	}
 	w.FrameCount++
-	w.space.Step(1.0 / 60.0 * gameSpeed)
+	w.space.Step(w.GameSpeed / 60.0)
 	// Delete objects scheduled for deletion
 	if len(w.objectIdsToDelete) > 0 {
 		for _, id := range w.objectIdsToDelete {

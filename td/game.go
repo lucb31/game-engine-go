@@ -39,7 +39,6 @@ func (g *TDGame) Layout(outsideWidth, outsideHeight int) (int, int) {
 
 func NewTDGame(screenWidth, screenHeight int) (*TDGame, error) {
 	game := &TDGame{screenWidth: screenWidth, screenHeight: screenHeight}
-
 	// Init game world
 	width := int64(screenWidth)
 	height := int64(screenHeight)
@@ -119,4 +118,12 @@ func (g *TDGame) GetCreepProgress() ProgressInfo {
 
 func (g *TDGame) GetCastleHealth() ProgressInfo {
 	return g.castle.GetHealthBar()
+}
+
+func (g *TDGame) GetSpeed() float64 {
+	return g.world.GameSpeed
+}
+
+func (g *TDGame) SetSpeed(speed float64) {
+	g.world.GameSpeed = speed
 }

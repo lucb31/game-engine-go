@@ -19,6 +19,7 @@ type GameHUD struct {
 
 	creepProgress *widget.ProgressBar
 	castleHealth  *widget.ProgressBar
+	speedSlider   *widget.Slider
 }
 
 type ProgressInfo struct {
@@ -35,6 +36,7 @@ func NewHUD(game *TDGame) (*GameHUD, error) {
 
 	hud.creepProgress = initCreepProgressBar(rootContainer)
 	hud.castleHealth = initCastleHealthProgressBar(rootContainer)
+	hud.speedSlider = hud.initGameSpeedSlider(rootContainer)
 
 	// This adds the root container to the UI, so that it will be rendered.
 	hud.ui = &ebitenui.UI{
@@ -62,6 +64,67 @@ func initCastleHealthProgressBar(root *widget.Container) *widget.ProgressBar {
 	}
 	bgColor := color.NRGBA{255, 0, 0, 255}
 	return progressBarWithLabel(root, "Castle Health", layout, bgColor)
+}
+
+func (h *GameHUD) initGameSpeedSlider(root *widget.Container) *widget.Slider {
+	container := widget.NewContainer(
+		widget.ContainerOpts.Layout(widget.NewRowLayout()),
+		// Set the required anchor layout data to determine where in the root
+		// container to place the progress bars.
+		widget.ContainerOpts.WidgetOpts(
+			widget.WidgetOpts.LayoutData(widget.AnchorLayoutData{
+				HorizontalPosition: widget.AnchorLayoutPositionEnd,
+				VerticalPosition:   widget.AnchorLayoutPositionEnd,
+				Padding:            widget.Insets{Bottom: 30, Right: 8},
+			}),
+		),
+	)
+
+	// construct a slider (ebitenui/examples/slider/main.go)
+	slider := widget.NewSlider(
+		// Set the slider orientation - n/s vs e/w
+		widget.SliderOpts.Direction(widget.DirectionHorizontal),
+		// Set the minimum and maximum value for the slider
+		widget.SliderOpts.MinMax(0, 100),
+
+		widget.SliderOpts.WidgetOpts(
+			// Set the Widget to layout in the center on the screen
+			widget.WidgetOpts.LayoutData(widget.AnchorLayoutData{
+				HorizontalPosition: widget.AnchorLayoutPositionCenter,
+			}),
+			// Set the widget's dimensions
+			widget.WidgetOpts.MinSize(200, 6),
+		),
+		widget.SliderOpts.Images(
+			// Set the track images
+			&widget.SliderTrackImage{
+				Idle:  image.NewNineSliceColor(color.NRGBA{100, 100, 100, 255}),
+				Hover: image.NewNineSliceColor(color.NRGBA{100, 100, 100, 255}),
+			},
+			// Set the handle images
+			&widget.ButtonImage{
+				Idle:    image.NewNineSliceColor(color.NRGBA{255, 100, 100, 255}),
+				Hover:   image.NewNineSliceColor(color.NRGBA{255, 100, 100, 255}),
+				Pressed: image.NewNineSliceColor(color.NRGBA{255, 100, 100, 255}),
+			},
+		),
+		// Set the size of the handle
+		widget.SliderOpts.FixedHandleSize(6),
+		// Set the offset to display the track
+		widget.SliderOpts.TrackOffset(0),
+		// Set the size to move the handle
+		widget.SliderOpts.PageSizeFunc(func() int {
+			return 1
+		}),
+		// Set the callback to call when the slider value is changed
+		widget.SliderOpts.ChangedHandler(func(args *widget.SliderChangedEventArgs) {
+			h.game.SetSpeed(float64(args.Current) * 0.1)
+		}),
+	)
+	slider.Current = 10
+	container.AddChild(slider)
+	root.AddChild(container)
+	return slider
 }
 
 func progressBarWithLabel(root *widget.Container, label string, anchor widget.AnchorLayoutData, bgColor color.Color) *widget.ProgressBar {
