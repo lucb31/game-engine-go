@@ -9,12 +9,15 @@ import (
 )
 
 type GameWorld struct {
-	objects      map[GameEntityId]GameEntity
-	player       GameEntity
-	WorldMap     *WorldMap
-	Width        int64
-	Height       int64
-	FrameCount   int64
+	objects  map[GameEntityId]GameEntity
+	player   GameEntity
+	WorldMap *WorldMap
+	Width    int64
+	Height   int64
+	// Number of frames drawn. Used for animation
+	FrameCount int64
+	// Integral of Physical time steps. Used for game sim
+	gameTime     float64
 	AssetManager *AssetManager
 	space        *cp.Space
 
@@ -45,7 +48,9 @@ func (w *GameWorld) Update() {
 		return
 	}
 	w.FrameCount++
-	w.space.Step(w.GameSpeed / 60.0)
+	dt := w.GameSpeed / 60.0
+	w.gameTime += dt
+	w.space.Step(dt)
 	// Delete objects scheduled for deletion
 	if len(w.objectIdsToDelete) > 0 {
 		for _, id := range w.objectIdsToDelete {
@@ -84,6 +89,10 @@ func (w *GameWorld) EndGame() {
 
 func (w *GameWorld) Space() *cp.Space {
 	return w.space
+}
+
+func (w *GameWorld) GetIngameTime() float64 {
+	return w.gameTime
 }
 
 // Actually remove a game entity from physics & object space

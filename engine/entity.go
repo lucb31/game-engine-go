@@ -18,6 +18,7 @@ type GameEntityManager interface {
 	AddEntity(object GameEntity) error
 	RemoveEntity(object GameEntity) error
 	GetEntities() *map[GameEntityId](GameEntity)
+	GetIngameTime() float64
 	Space() *cp.Space
 	EndGame()
 }

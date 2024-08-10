@@ -2,17 +2,15 @@ package td
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/lucb31/game-engine-go/engine"
 )
 
-// TODO: Does not scale correctly with game speed
 type CreepManager struct {
 	entityManager           engine.GameEntityManager
 	asset                   *engine.CharacterAsset
 	creepsSpawned           int
-	lastCreepSpawned        time.Time
+	lastCreepSpawnedTime    float64
 	creepSpawnRatePerSecond float64
 	creepsToSpawn           int
 }
@@ -29,9 +27,14 @@ func (c *CreepManager) Update() error {
 }
 
 func (c *CreepManager) spawnCreep() error {
-	now := time.Now()
-	duration := float64(time.Second) / c.creepSpawnRatePerSecond
-	if now.Sub(c.lastCreepSpawned) < time.Duration(duration) || c.creepsSpawned >= c.creepsToSpawn {
+	// All creeps spawned
+	if c.creepsSpawned >= c.creepsToSpawn {
+		return nil
+	}
+	// Timeout until creep spawn timer over
+	now := c.entityManager.GetIngameTime()
+	diff := now - c.lastCreepSpawnedTime
+	if diff < 1/c.creepSpawnRatePerSecond {
 		return nil
 	}
 	// Initialize an npc
@@ -40,7 +43,7 @@ func (c *CreepManager) spawnCreep() error {
 		return err
 	}
 	c.entityManager.AddEntity(npc)
-	c.lastCreepSpawned = now
+	c.lastCreepSpawnedTime = now
 	c.creepsSpawned++
 	return nil
 }
