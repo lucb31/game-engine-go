@@ -95,6 +95,10 @@ func (w *GameWorld) GetIngameTime() float64 {
 	return w.gameTime
 }
 
+func (w *GameWorld) IsOver() bool {
+	return w.gameOver
+}
+
 // Actually remove a game entity from physics & object space
 func (w *GameWorld) removeObject(id GameEntityId) {
 	object, ok := w.objects[id]

@@ -19,6 +19,9 @@ type TDGame struct {
 }
 
 func (g *TDGame) Update() error {
+	if g.world.IsOver() {
+		return nil
+	}
 	g.world.Update()
 	g.creepManager.Update()
 	g.towerManager.Update()
