@@ -2,8 +2,12 @@
 [Try it out](https://lucb31.github.io/game-engine-go/)
 
 # Todo
+## Prio
+- Game speed not considered in creep timer
+
 ## Game loop
 ### Feat
+- Money / limit on how many towers to add
 - Restart
 
 ### Fix 
@@ -30,6 +34,4 @@
 ### Feat
 - Display current health
 
-### Fix
-- Game speed not considered in spawn timer
 

@@ -17,11 +17,13 @@ type TowerManager struct {
 	projectileAsset *engine.ProjectileAsset
 
 	lastTowerSpawned time.Time
+	touches          map[ebiten.TouchID]time.Time
 }
 
 const (
 	minDistanceBetweenTowers = float64(12.0)
 	maxDistanceForDeletion   = float64(5.0)
+	touchDurationForDeletion = float64(1.0)
 )
 
 func NewTowerManager(world engine.GameEntityManager, towerAsset *engine.CharacterAsset, projAsset *engine.ProjectileAsset) (*TowerManager, error) {
@@ -29,21 +31,36 @@ func NewTowerManager(world engine.GameEntityManager, towerAsset *engine.Characte
 }
 
 func (t *TowerManager) Update() {
-	// Add tower on touch
+	// Handle tower add / remove via touch
+	newTouches := map[ebiten.TouchID]time.Time{}
 	for _, id := range ebiten.AppendTouchIDs(nil) {
 		x, y := ebiten.TouchPosition(id)
-		if y < 330 || x < 300 {
-			t.AddTower(cp.Vector{float64(x), float64(y)})
+		pos := cp.Vector{float64(x), float64(y)}
+		existingTouch, ok := t.touches[id]
+		now := time.Now()
+		if ok {
+			// Remove tower on long touch
+			newTouches[id] = existingTouch
+			duration := float64(time.Second) * touchDurationForDeletion
+			if now.Sub(existingTouch) < time.Duration(duration) {
+				continue
+			}
+			t.RemoveTower(pos)
+		} else {
+			// Add tower on new touch
+			newTouches[id] = now
+			t.AddTower(pos)
 		}
 	}
-	// Add tower on click
+	t.touches = newTouches
+
+	// Add tower on left-click
 	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
 		mx, my := ebiten.CursorPosition()
-		// FIX: Avoid spawning towers when interacting with speed toggle
-		if my < 330 || mx < 300 {
-			t.AddTower(cp.Vector{float64(mx), float64(my)})
-		}
+		t.AddTower(cp.Vector{float64(mx), float64(my)})
 	}
+
+	// Remove tower on right-mouse click
 	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonRight) {
 		mx, my := ebiten.CursorPosition()
 		err := t.RemoveTower(cp.Vector{float64(mx), float64(my)})
@@ -70,6 +87,11 @@ func (t *TowerManager) AddTower(pos cp.Vector) error {
 	// TODO: Tower grid to solve this
 	queryInfo := t.world.Space().PointQueryNearest(pos, minDistanceBetweenTowers, engine.TowerCollisionFilter())
 	if queryInfo.Shape != nil {
+		return nil
+	}
+	// FIX: Avoid spawning towers when interacting with speed toggle
+	if pos.Y >= 330 && pos.X >= 300 {
+		fmt.Println("Rejected tower. hud interaction")
 		return nil
 	}
 
