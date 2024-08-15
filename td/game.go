@@ -14,6 +14,7 @@ type TDGame struct {
 	screenWidth, screenHeight int
 	creepManager              *CreepManager
 	towerManager              *TowerManager
+	goldManager               engine.GoldManager
 	hud                       *GameHUD
 	castle                    *CastleEntity
 }
@@ -95,6 +96,14 @@ func NewTDGame(screenWidth, screenHeight int) (*TDGame, error) {
 		return nil, err
 	}
 
+	// Setup gold management
+	game.goldManager, err = engine.NewInMemoryGoldManager()
+	if err != nil {
+		return nil, err
+	}
+	// Add starting gold
+	game.goldManager.Add(10)
+
 	// Setup tower management
 	towerAsset, ok := am.CharacterAssets["tower-blue"]
 	if !ok {
@@ -104,7 +113,7 @@ func NewTDGame(screenWidth, screenHeight int) (*TDGame, error) {
 	if !ok {
 		return nil, fmt.Errorf("Could not find projectile asset")
 	}
-	game.towerManager, err = NewTowerManager(w, &towerAsset, &projectile)
+	game.towerManager, err = NewTowerManager(w, &towerAsset, &projectile, game.goldManager)
 
 	// Setup HUD
 	game.hud, err = NewHUD(game)

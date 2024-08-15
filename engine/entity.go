@@ -11,7 +11,7 @@ type GameEntity interface {
 	SetId(GameEntityId)
 	Shape() *cp.Shape
 	Draw(*ebiten.Image)
-	Destroy()
+	Destroy() error
 }
 
 type GameEntityManager interface {

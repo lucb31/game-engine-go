@@ -52,9 +52,13 @@ func (e *CastleEntity) OnNpcHit(npc *engine.NpcEntity) {
 	}
 }
 
-func (e *CastleEntity) Destroy() {
-	e.world.RemoveEntity(e)
+func (e *CastleEntity) Destroy() error {
+	err := e.world.RemoveEntity(e)
+	if err != nil {
+		return err
+	}
 	e.world.EndGame()
+	return nil
 }
 func (e *CastleEntity) Id() engine.GameEntityId      { return e.id }
 func (e *CastleEntity) SetId(id engine.GameEntityId) { e.id = id }

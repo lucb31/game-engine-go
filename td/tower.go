@@ -78,8 +78,8 @@ func (t *TowerEntity) Draw(screen *ebiten.Image) {
 	t.asset.Draw(screen, t.animation, t.shape.Body().Position())
 }
 
-func (t *TowerEntity) Destroy() {
-	t.world.RemoveEntity(t)
+func (t *TowerEntity) Destroy() error {
+	return t.world.RemoveEntity(t)
 }
 func (n *TowerEntity) Id() engine.GameEntityId      { return n.id }
 func (n *TowerEntity) SetId(id engine.GameEntityId) { n.id = id }

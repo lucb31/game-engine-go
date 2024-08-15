@@ -79,8 +79,8 @@ func (p *Player) shoot() {
 	p.lastProjectileFired = time.Now()
 }
 
-func (p *Player) Destroy() {
-	fmt.Println("ERROR: Cannot destroy player")
+func (p *Player) Destroy() error {
+	return fmt.Errorf("ERROR: Cannot destroy player")
 }
 
 func (p *Player) Id() GameEntityId      { return p.id }

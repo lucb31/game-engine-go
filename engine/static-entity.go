@@ -24,6 +24,6 @@ func (p *StaticGameEntity) Draw(screen *ebiten.Image) {
 	screen.DrawImage(p.Image, &op)
 }
 
-func (p *StaticGameEntity) Destroy() {
-	fmt.Println("Missing impl: Destryo static entity")
+func (p *StaticGameEntity) Destroy() error {
+	return fmt.Errorf("Missing impl: Destryo static entity")
 }

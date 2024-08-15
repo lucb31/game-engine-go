@@ -74,8 +74,8 @@ func (n *NpcEntity) Draw(screen *ebiten.Image) {
 	n.asset.Draw(screen, n.animation, n.shape.Body().Position())
 }
 
-func (n *NpcEntity) Destroy() {
-	n.world.RemoveEntity(n)
+func (n *NpcEntity) Destroy() error {
+	return n.world.RemoveEntity(n)
 }
 
 func (n *NpcEntity) OnProjectileHit(projectile Projectile) {

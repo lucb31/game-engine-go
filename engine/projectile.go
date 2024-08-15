@@ -112,8 +112,8 @@ func (p *Projectile) Draw(screen *ebiten.Image) {
 func (p *Projectile) Id() GameEntityId      { return p.id }
 func (p *Projectile) SetId(id GameEntityId) { p.id = id }
 func (p *Projectile) Shape() *cp.Shape      { return p.shape }
-func (p *Projectile) Destroy() {
-	p.world.RemoveEntity(p)
+func (p *Projectile) Destroy() error {
+	return p.world.RemoveEntity(p)
 }
 
 func (p *Projectile) calculateVelocity(body *cp.Body, gravity cp.Vector, damping float64, dt float64) {

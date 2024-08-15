@@ -11,7 +11,8 @@ import (
 )
 
 type TowerManager struct {
-	world engine.GameEntityManager
+	world       engine.GameEntityManager
+	goldManager engine.GoldManager
 
 	towerAsset      *engine.CharacterAsset
 	projectileAsset *engine.ProjectileAsset
@@ -24,10 +25,12 @@ const (
 	minDistanceBetweenTowers = float64(12.0)
 	maxDistanceForDeletion   = float64(5.0)
 	touchDurationForDeletion = float64(1.0)
+	costToBuy                = int64(10)
+	refundIfSold             = int64(10)
 )
 
-func NewTowerManager(world engine.GameEntityManager, towerAsset *engine.CharacterAsset, projAsset *engine.ProjectileAsset) (*TowerManager, error) {
-	return &TowerManager{world: world, towerAsset: towerAsset, projectileAsset: projAsset}, nil
+func NewTowerManager(world engine.GameEntityManager, towerAsset *engine.CharacterAsset, projAsset *engine.ProjectileAsset, goldManager engine.GoldManager) (*TowerManager, error) {
+	return &TowerManager{world: world, towerAsset: towerAsset, projectileAsset: projAsset, goldManager: goldManager}, nil
 }
 
 func (t *TowerManager) Update() {
@@ -45,11 +48,15 @@ func (t *TowerManager) Update() {
 			if now.Sub(existingTouch) < time.Duration(duration) {
 				continue
 			}
-			t.RemoveTower(pos)
+			if err := t.RemoveTower(pos); err != nil {
+				fmt.Println("Could not remove tower: ", err.Error())
+			}
 		} else {
 			// Add tower on new touch
 			newTouches[id] = now
-			t.AddTower(pos)
+			if err := t.AddTower(pos); err != nil {
+				fmt.Println("Could not add tower: ", err.Error())
+			}
 		}
 	}
 	t.touches = newTouches
@@ -57,7 +64,9 @@ func (t *TowerManager) Update() {
 	// Add tower on left-click
 	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
 		mx, my := ebiten.CursorPosition()
-		t.AddTower(cp.Vector{float64(mx), float64(my)})
+		if err := t.AddTower(cp.Vector{float64(mx), float64(my)}); err != nil {
+			fmt.Println("Could not add tower: ", err.Error())
+		}
 	}
 
 	// Remove tower on right-mouse click
@@ -65,7 +74,7 @@ func (t *TowerManager) Update() {
 		mx, my := ebiten.CursorPosition()
 		err := t.RemoveTower(cp.Vector{float64(mx), float64(my)})
 		if err != nil {
-			fmt.Println("Could not remove tower", err.Error())
+			fmt.Println("Could not remove tower: ", err.Error())
 		}
 	}
 
@@ -94,8 +103,12 @@ func (t *TowerManager) AddTower(pos cp.Vector) error {
 		fmt.Println("Rejected tower. hud interaction")
 		return nil
 	}
+	// Check funds
+	if !t.goldManager.CanAfford(costToBuy) {
+		return fmt.Errorf("Insufficient funds!")
+	}
 
-	fmt.Println("Spawning tower at", pos)
+	// Add tower entity
 	tower, err := NewTower(t.world, t.towerAsset, t.projectileAsset)
 	if err != nil {
 		return err
@@ -103,6 +116,8 @@ func (t *TowerManager) AddTower(pos cp.Vector) error {
 	tower.shape.Body().SetPosition(pos)
 	t.world.AddEntity(tower)
 	t.lastTowerSpawned = now
+	// Spend gold
+	t.goldManager.Remove(costToBuy)
 
 	return nil
 }
@@ -116,6 +131,11 @@ func (t *TowerManager) RemoveTower(pos cp.Vector) error {
 	if !ok {
 		return fmt.Errorf("Collision checker did not return Tower Entity")
 	}
-	tower.Destroy()
+	// Remove tower entity
+	if err := tower.Destroy(); err != nil {
+		return fmt.Errorf("Unable to remove tower", err.Error())
+	}
+	// Refund gold
+	t.goldManager.Add(refundIfSold)
 	return nil
 }
