@@ -4,6 +4,7 @@
 ## Game loop
 ### Feat
 - Restart
+- Scoreboard / Record
 
 ## HUD
 ### Feat
@@ -17,7 +18,6 @@
 ## Towers
 
 ### Feat
-- Only allow building towers on certain tiles
 - Add maximum range
 - Add targetting algorithm: Currently mostly pretty random 
 

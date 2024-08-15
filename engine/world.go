@@ -39,7 +39,9 @@ func (w *GameWorld) Draw(screen *ebiten.Image) {
 	for _, obj := range w.objects {
 		obj.Draw(screen)
 	}
-	w.player.Draw(screen)
+	if w.player != nil {
+		w.player.Draw(screen)
+	}
 }
 
 func (w *GameWorld) Update() {
@@ -192,24 +194,27 @@ func NewWorld(width int64, height int64) (*GameWorld, error) {
 	}
 	w.AssetManager = am
 
+	return &w, nil
+}
+
+func initPlayer(w *GameWorld, am *AssetManager) error {
 	// Initialize player (after world has been initialized to reference it)
 	asset, ok := am.CharacterAssets["player"]
 	if !ok {
-		return nil, fmt.Errorf("Could not find player asset")
+		return fmt.Errorf("Could not find player asset")
 	}
 	projAsset, ok := am.ProjectileAssets["bone"]
 	if !ok {
-		return nil, fmt.Errorf("Could not find projectile asset")
+		return fmt.Errorf("Could not find projectile asset")
 	}
-	player, err := NewPlayer(&w, &asset, &projAsset)
+	player, err := NewPlayer(w, &asset, &projAsset)
 	if err != nil {
-		return &w, err
+		return err
 	}
-	w.player = player
 	// Explicitly NOT adding the player to the object space via addObject.
 	// Might want to revisit this later
-	space.AddBody(player.Shape().Body())
-	space.AddShape(player.Shape())
-
-	return &w, nil
+	w.space.AddBody(player.Shape().Body())
+	w.space.AddShape(player.Shape())
+	w.player = player
+	return nil
 }
