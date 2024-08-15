@@ -92,7 +92,7 @@ func NewTDGame(screenWidth, screenHeight int) (*TDGame, error) {
 		return nil, err
 	}
 	// Add starting gold
-	game.goldManager.Add(10)
+	game.goldManager.Add(50)
 
 	// Setup tower management
 	towerAsset, ok := am.CharacterAssets["tower-blue"]

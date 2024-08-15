@@ -25,8 +25,8 @@ const (
 	minDistanceBetweenTowers = float64(12.0)
 	maxDistanceForDeletion   = float64(5.0)
 	touchDurationForDeletion = float64(1.0)
-	costToBuy                = int64(10)
-	refundIfSold             = int64(10)
+	costToBuy                = int64(50)
+	refundIfSold             = int64(40)
 )
 
 func NewTowerManager(world engine.GameEntityManager, towerAsset *engine.CharacterAsset, projAsset *engine.ProjectileAsset, goldManager engine.GoldManager) (*TowerManager, error) {
