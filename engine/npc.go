@@ -31,12 +31,16 @@ type NpcEntity struct {
 	stopMovementUntil time.Time
 }
 
+type NpcOpts struct {
+	StartingHealth float64
+}
+
 func NpcCollisionFilter() cp.ShapeFilter {
 	return cp.NewShapeFilter(0, uint(NpcCategory), uint(PlayerCategory|OuterWallsCategory|InnerWallsCategory|TowerCategory|ProjectileCategory))
 }
 
-func NewNpc(remover EntityRemover, asset *CharacterAsset, goldManager GoldManager) (*NpcEntity, error) {
-	npc := &NpcEntity{remover: remover, orientation: South, health: 100.0}
+func NewNpc(remover EntityRemover, asset *CharacterAsset, opts NpcOpts) (*NpcEntity, error) {
+	npc := &NpcEntity{remover: remover, orientation: South}
 	// Physics model
 	body := cp.NewBody(1, cp.INFINITY)
 	body.SetPosition(cp.Vector{X: 48, Y: 16})
@@ -66,6 +70,14 @@ func NewNpc(remover EntityRemover, asset *CharacterAsset, goldManager GoldManage
 	npc.loopWaypoints = false
 	npc.velocity = 75.0
 	npc.animation = "idle_south"
+
+	// Parse opts
+	if opts.StartingHealth > 0 {
+		npc.health = opts.StartingHealth
+	} else {
+		npc.health = 100.0
+	}
+
 	return npc, nil
 }
 

@@ -2,6 +2,7 @@ package td
 
 import (
 	"fmt"
+	"math"
 
 	"github.com/lucb31/game-engine-go/engine"
 )
@@ -11,12 +12,19 @@ type CreepManager struct {
 	goldManager   engine.GoldManager
 	asset         *engine.CharacterAsset
 
-	activeWave int
+	activeWave *Wave
 
 	// Active wave
 	creepsSpawned        int
 	creepsAlive          int
 	lastCreepSpawnedTime float64
+}
+
+type Wave struct {
+	Round                   int
+	CreepsToSpawn           int
+	CreepOpts               engine.NpcOpts
+	CreepSpawnRatePerSecond float64
 }
 
 const goldPerKill = int64(1)
@@ -25,7 +33,9 @@ func NewCreepManager(em engine.GameEntityManager, asset *engine.CharacterAsset, 
 	if asset == nil || em == nil {
 		return nil, fmt.Errorf("Invalid arguments")
 	}
-	return &CreepManager{entityManager: em, asset: asset, activeWave: 1, goldManager: goldManager}, nil
+	cm := &CreepManager{entityManager: em, asset: asset, goldManager: goldManager}
+	cm.nextWave()
+	return cm, nil
 }
 
 func (c *CreepManager) Update() error {
@@ -49,7 +59,7 @@ func (c *CreepManager) spawnCreep() error {
 		return nil
 	}
 	// Initialize an npc
-	npc, err := engine.NewNpc(c, c.asset, c.goldManager)
+	npc, err := engine.NewNpc(c, c.asset, c.activeWave.CreepOpts)
 	if err != nil {
 		return err
 	}
@@ -60,11 +70,26 @@ func (c *CreepManager) spawnCreep() error {
 	return nil
 }
 
+// Wave scaling
+func calculateWaveOpts(round int) Wave {
+	wave := Wave{Round: round}
+	wave.CreepsToSpawn = int(math.Exp(float64(round)/4) + 29)
+	wave.CreepSpawnRatePerSecond = 0.5
+	startingHealth := math.Pow(1.5*float64(round), 2) + 100
+	wave.CreepOpts = engine.NpcOpts{StartingHealth: startingHealth}
+	return wave
+}
+
 func (c *CreepManager) nextWave() error {
-	c.activeWave++
+	nextRound := 1
+	if c.activeWave != nil {
+		nextRound = c.activeWave.Round + 1
+	}
+	wave := calculateWaveOpts(nextRound)
+	c.activeWave = &wave
 	c.creepsAlive = 0
 	c.creepsSpawned = 0
-	fmt.Printf("Wave cleared! Starting wave %d...\n", c.activeWave)
+	fmt.Printf("Wave cleared! Starting wave %v...\n", c.activeWave)
 	return nil
 }
 
@@ -80,14 +105,14 @@ func (c *CreepManager) RemoveEntity(entity engine.GameEntity) error {
 }
 
 func (c *CreepManager) creepSpawnRatePerSecond() float64 {
-	return 0.5
+	return c.activeWave.CreepSpawnRatePerSecond
 }
 
 func (c *CreepManager) creepsToSpawn() int {
-	return 30
+	return c.activeWave.CreepsToSpawn
 }
 
 func (c *CreepManager) GetProgress() ProgressInfo {
-	label := fmt.Sprintf("Wave %d", c.activeWave)
+	label := fmt.Sprintf("Wave %d", c.activeWave.Round)
 	return ProgressInfo{min: 0, max: c.creepsToSpawn(), current: c.creepsSpawned, label: label}
 }
