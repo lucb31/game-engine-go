@@ -14,9 +14,13 @@ type GameEntity interface {
 	Destroy() error
 }
 
-type GameEntityManager interface {
-	AddEntity(object GameEntity) error
+type EntityRemover interface {
 	RemoveEntity(object GameEntity) error
+}
+
+type GameEntityManager interface {
+	EntityRemover
+	AddEntity(object GameEntity) error
 	GetEntities() *map[GameEntityId](GameEntity)
 	GetIngameTime() float64
 	Space() *cp.Space

@@ -19,6 +19,7 @@ type GameHUD struct {
 	game *TDGame
 
 	creepProgress *widget.ProgressBar
+	creepLabel    *widget.Text
 	castleHealth  *widget.ProgressBar
 	speedSlider   *widget.Slider
 	goldLabel     *widget.Text
@@ -28,6 +29,7 @@ type ProgressInfo struct {
 	min     int
 	max     int
 	current int
+	label   string
 }
 
 func NewHUD(game *TDGame) (*GameHUD, error) {
@@ -36,7 +38,7 @@ func NewHUD(game *TDGame) (*GameHUD, error) {
 	// All other UI elements must be added to this container.
 	rootContainer := widget.NewContainer(widget.ContainerOpts.Layout(widget.NewAnchorLayout()))
 
-	hud.creepProgress = initCreepProgressBar(rootContainer)
+	hud.creepProgress, hud.creepLabel = initCreepProgressBar(rootContainer)
 	hud.castleHealth = initCastleHealthProgressBar(rootContainer)
 	hud.speedSlider = hud.initGameSpeedSlider(rootContainer)
 	hud.goldLabel = initGoldLabel(rootContainer)
@@ -49,7 +51,7 @@ func NewHUD(game *TDGame) (*GameHUD, error) {
 	return hud, nil
 }
 
-func initCreepProgressBar(root *widget.Container) *widget.ProgressBar {
+func initCreepProgressBar(root *widget.Container) (*widget.ProgressBar, *widget.Text) {
 	layout := widget.AnchorLayoutData{
 		HorizontalPosition: widget.AnchorLayoutPositionCenter,
 		VerticalPosition:   widget.AnchorLayoutPositionStart,
@@ -66,7 +68,8 @@ func initCastleHealthProgressBar(root *widget.Container) *widget.ProgressBar {
 		Padding:            widget.NewInsetsSimple(8),
 	}
 	bgColor := color.NRGBA{255, 0, 0, 255}
-	return progressBarWithLabel(root, "Castle Health", layout, bgColor)
+	progress, _ := progressBarWithLabel(root, "Castle Health", layout, bgColor)
+	return progress
 }
 
 func (h *GameHUD) initGameSpeedSlider(root *widget.Container) *widget.Slider {
@@ -130,7 +133,7 @@ func (h *GameHUD) initGameSpeedSlider(root *widget.Container) *widget.Slider {
 	return slider
 }
 
-func progressBarWithLabel(root *widget.Container, label string, anchor widget.AnchorLayoutData, bgColor color.Color) *widget.ProgressBar {
+func progressBarWithLabel(root *widget.Container, label string, anchor widget.AnchorLayoutData, bgColor color.Color) (*widget.ProgressBar, *widget.Text) {
 	container := widget.NewContainer(
 		widget.ContainerOpts.Layout(widget.NewStackedLayout()),
 		// Set the required anchor layout data to determine where in the root
@@ -180,7 +183,7 @@ func progressBarWithLabel(root *widget.Container, label string, anchor widget.An
 		widget.TextOpts.Text(label, fontFace, color.White),
 	)
 	container.AddChild(labelText)
-	return progressBar
+	return progressBar, labelText
 }
 
 func initGoldLabel(root *widget.Container) *widget.Text {
@@ -227,6 +230,7 @@ func (h *GameHUD) updateCreepProgress() {
 	h.creepProgress.Min = progress.min
 	h.creepProgress.Max = progress.max
 	h.creepProgress.SetCurrent(progress.current)
+	h.creepLabel.Label = progress.label
 }
 
 func (h *GameHUD) updateCastleHealth() {

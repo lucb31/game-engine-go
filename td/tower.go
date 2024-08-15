@@ -20,7 +20,8 @@ type TowerEntity struct {
 
 	// Physics
 	shape *cp.Shape
-
+	// TODO: does not account for game speed
+	// TODO: Check for any other occurence of time package
 	lastProjectileFired time.Time
 }
 

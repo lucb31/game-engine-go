@@ -65,5 +65,5 @@ func (e *CastleEntity) SetId(id engine.GameEntityId) { e.id = id }
 func (e *CastleEntity) Shape() *cp.Shape             { return e.shape }
 
 func (e *CastleEntity) GetHealthBar() ProgressInfo {
-	return ProgressInfo{0, int(startingHealth), int(e.health)}
+	return ProgressInfo{0, int(startingHealth), int(e.health), "Castle health"}
 }

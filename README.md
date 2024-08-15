@@ -2,9 +2,15 @@
 [Try it out](https://lucb31.github.io/game-engine-go/)
 
 # Todo
+- Fix timeouts for projectile reload and npc movement stop
+- Remove npc collision 
+
 ## Game loop
+### Wave scaling
+- NPC health
+- NPC count
+
 ### Feat
-- Money / limit on how many towers to add
 - Restart
 
 ## HUD

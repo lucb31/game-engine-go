@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -9,12 +8,11 @@ import (
 )
 
 type NpcEntity struct {
-	id    GameEntityId
-	world GameEntityManager
+	id      GameEntityId
+	remover EntityRemover
 
 	// Logic
-	health      float64
-	goldManager GoldManager
+	health float64
 
 	// Rendering
 	asset       *CharacterAsset
@@ -26,20 +24,19 @@ type NpcEntity struct {
 	velocity float64
 
 	// Movement AI
-	wayPoints         []cp.Vector
-	currentWpIndex    int
-	loopWaypoints     bool
+	wayPoints      []cp.Vector
+	currentWpIndex int
+	loopWaypoints  bool
+	// TODO: Does not respect game speed
 	stopMovementUntil time.Time
 }
-
-const goldPerKill = int64(1)
 
 func NpcCollisionFilter() cp.ShapeFilter {
 	return cp.NewShapeFilter(0, uint(NpcCategory), uint(PlayerCategory|OuterWallsCategory|InnerWallsCategory|TowerCategory|ProjectileCategory))
 }
 
-func NewNpc(world GameEntityManager, asset *CharacterAsset, goldManager GoldManager) (*NpcEntity, error) {
-	npc := &NpcEntity{world: world, orientation: South, health: 100.0, goldManager: goldManager}
+func NewNpc(remover EntityRemover, asset *CharacterAsset, goldManager GoldManager) (*NpcEntity, error) {
+	npc := &NpcEntity{remover: remover, orientation: South, health: 100.0}
 	// Physics model
 	body := cp.NewBody(1, cp.INFINITY)
 	body.SetPosition(cp.Vector{X: 48, Y: 16})
@@ -78,17 +75,12 @@ func (n *NpcEntity) Draw(screen *ebiten.Image) {
 }
 
 func (n *NpcEntity) Destroy() error {
-	if err := n.world.RemoveEntity(n); err != nil {
-		return err
-	}
-	// Add gold for kill
-	_, err := n.goldManager.Add(goldPerKill)
-	return err
+	return n.remover.RemoveEntity(n)
 }
 
 func (n *NpcEntity) OnProjectileHit(projectile Projectile) {
+	// TODO: Damage model
 	n.health -= 30.0
-	fmt.Printf("Npc [%d] hit by projectile [%d]. New health [%f] \n", n.Id(), projectile.Id(), n.health)
 	if n.health <= 0.0 {
 		n.Destroy()
 	}
