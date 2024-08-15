@@ -29,7 +29,9 @@ type Player struct {
 }
 
 const (
-	playerVelocity          = 50
+	playerVelocity          = 100
+	playerWidth             = 32
+	playerHeight            = 32
 	playerFireRatePerSecond = float64(1.3)
 )
 
@@ -43,7 +45,7 @@ func NewPlayer(world GameEntityManager, asset *CharacterAsset, projectileAsset *
 	playerBody.SetVelocityUpdateFunc(p.calculateVelocity)
 
 	// Collision model
-	p.shape = cp.NewBox(playerBody, 16, 16, 0)
+	p.shape = cp.NewBox(playerBody, playerWidth, playerHeight, 0)
 	p.shape.SetElasticity(0)
 	p.shape.SetFriction(0)
 	p.shape.SetCollisionType(cp.CollisionType(PlayerCollision))
@@ -56,6 +58,7 @@ func PlayerCollisionFilter() cp.ShapeFilter {
 }
 
 func (p *Player) Draw(screen *ebiten.Image) {
+	p.asset.DrawRectBoundingBox(screen, p.shape)
 	p.asset.Draw(screen, p.animation, p.shape.Body().Position())
 }
 

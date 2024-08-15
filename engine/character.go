@@ -3,9 +3,10 @@ package engine
 import (
 	"fmt"
 	"image"
-	"math"
+	"image/color"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/vector"
 	"github.com/jakecoffman/cp"
 )
 
@@ -55,16 +56,11 @@ func (a *CharacterAsset) Draw(screen *ebiten.Image, activeAnimation string, posi
 	return nil
 }
 
-// Draws quadratic bounding box around shape position
-// WARNING: Assumes widht = height
-func (a *CharacterAsset) DrawQuadraticBoundingBox(screen *ebiten.Image, shape *cp.Shape) error {
-	width := math.Sqrt(shape.BB().Area())
-	height := width
-	testImg := image.Rect(0, 0, int(width), int(height))
-	boundingBoxImg := ebiten.NewImageFromImage(testImg)
-	op := &ebiten.DrawImageOptions{}
-	op.GeoM.Translate(shape.Body().Position().X-width/2, shape.Body().Position().Y-height/2)
-	screen.DrawImage(boundingBoxImg, op)
+// Draws Rect bounding box around shape position
+func (a *CharacterAsset) DrawRectBoundingBox(screen *ebiten.Image, shape *cp.Shape) error {
+	width := shape.BB().R - shape.BB().L
+	height := shape.BB().T - shape.BB().B
+	vector.StrokeRect(screen, float32(shape.Body().Position().X-width/2), float32(shape.Body().Position().Y-height/2), float32(width), float32(height), 2.5, color.RGBA{255, 0, 0, 255}, false)
 	return nil
 }
 

@@ -74,6 +74,7 @@ func (t *TowerEntity) shoot(target engine.GameEntity) {
 }
 
 func (t *TowerEntity) Draw(screen *ebiten.Image) {
+	t.asset.DrawRectBoundingBox(screen, t.shape)
 	t.asset.Draw(screen, t.animation, t.shape.Body().Position())
 }
 

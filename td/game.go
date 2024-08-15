@@ -51,7 +51,7 @@ func NewTDGame(screenWidth, screenHeight int) (*TDGame, error) {
 	}
 	am := w.AssetManager
 	// Initialize map
-	w.WorldMap, err = engine.NewWorldMap(width, height, assets.TestMapCSV, am.Tilesets["plains"])
+	w.WorldMap, err = engine.NewWorldMap(width, height, assets.LabyrinthMapCSV, am.Tilesets["plains"])
 	if err != nil {
 		return nil, err
 	}

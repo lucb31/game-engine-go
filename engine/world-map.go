@@ -15,6 +15,7 @@ type MapTile int
 
 const (
 	Empty       MapTile = -1
+	Dirt        MapTile = 8
 	Gras        MapTile = 32
 	Rock        MapTile = 42
 	Undef       MapTile = 71
@@ -36,9 +37,9 @@ func (b *WorldMap) Draw(screen *ebiten.Image) {
 			op := ebiten.DrawImageOptions{}
 			op.GeoM.Translate(float64(col*mapTileSize), float64(row*mapTileSize))
 
-			// If NOT undef tile, draw undef tile first to have it in the background
+			// If NOT undef tile, draw dirt tile first to have it in the background
 			if mapTile != Undef {
-				subIm, err := b.tileset.GetTile(int(Undef))
+				subIm, err := b.tileset.GetTile(int(Dirt))
 				if err != nil {
 					fmt.Println("Unable to draw background cell", err.Error())
 					return

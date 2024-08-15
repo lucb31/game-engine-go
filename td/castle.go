@@ -30,7 +30,7 @@ func NewCastle(world engine.GameEntityManager, asset *engine.CharacterAsset) (*C
 	c := &CastleEntity{world: world, asset: asset, health: startingHealth}
 	c.animation = "idle"
 	body := cp.NewBody(1, cp.INFINITY)
-	body.SetPosition(cp.Vector{X: 450, Y: 25})
+	body.SetPosition(cp.Vector{X: 640, Y: 384})
 	body.SetType(cp.BODY_KINEMATIC)
 	body.UserData = c
 	c.shape = cp.NewBox(body, 32, 32, 0)

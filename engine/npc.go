@@ -39,12 +39,12 @@ func NewNpc(world GameEntityManager, asset *CharacterAsset) (*NpcEntity, error) 
 	npc := &NpcEntity{world: world, orientation: South, health: 100.0}
 	// Physics model
 	body := cp.NewBody(1, cp.INFINITY)
-	body.SetPosition(cp.Vector{X: 10, Y: 10})
+	body.SetPosition(cp.Vector{X: 48, Y: 16})
 	body.SetVelocityUpdateFunc(npc.calculateVelocity)
 	body.UserData = npc
 
 	// Collision model
-	npc.shape = cp.NewBox(body, 8, 8, 0)
+	npc.shape = cp.NewBox(body, 32, 32, 0)
 	npc.shape.SetElasticity(0)
 	npc.shape.SetFriction(1)
 	npc.shape.SetCollisionType(cp.CollisionType(NpcCollision))
@@ -52,22 +52,25 @@ func NewNpc(world GameEntityManager, asset *CharacterAsset) (*NpcEntity, error) 
 
 	npc.asset = asset
 	npc.wayPoints = []cp.Vector{
-		{X: 15, Y: 15},
-		{X: 15, Y: 340},
-		{X: 165, Y: 340},
-		{X: 165, Y: 15},
-		{X: 310, Y: 15},
-		{X: 310, Y: 340},
-		{X: 450, Y: 340},
-		{X: 450, Y: 10},
+		{X: 48, Y: 720},
+		{X: 976, Y: 720},
+		{X: 976, Y: 48},
+		{X: 208, Y: 48},
+		{X: 208, Y: 560},
+		{X: 816, Y: 560},
+		{X: 816, Y: 208},
+		{X: 368, Y: 208},
+		{X: 368, Y: 384},
+		{X: 640, Y: 384},
 	}
 	npc.loopWaypoints = false
-	npc.velocity = 50.0
+	npc.velocity = 75.0
 	npc.animation = "idle_south"
 	return npc, nil
 }
 
 func (n *NpcEntity) Draw(screen *ebiten.Image) {
+	n.asset.DrawRectBoundingBox(screen, n.shape)
 	n.asset.Draw(screen, n.animation, n.shape.Body().Position())
 }
 

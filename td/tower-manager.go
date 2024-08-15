@@ -72,8 +72,8 @@ func (t *TowerManager) Update() {
 }
 
 func (t *TowerManager) Draw(screen *ebiten.Image) {
-	ebitenutil.DebugPrintAt(screen, "Use left mouse click to add towers", 20, 340)
-	ebitenutil.DebugPrintAt(screen, "Use right mouse click to remove towers", 20, 360)
+	ebitenutil.DebugPrintAt(screen, "Use left mouse click to add towers", 20, 680)
+	ebitenutil.DebugPrintAt(screen, "Use right mouse click to remove towers", 20, 700)
 }
 
 func (t *TowerManager) AddTower(pos cp.Vector) error {
@@ -90,7 +90,7 @@ func (t *TowerManager) AddTower(pos cp.Vector) error {
 		return nil
 	}
 	// FIX: Avoid spawning towers when interacting with speed toggle
-	if pos.Y >= 330 && pos.X >= 300 {
+	if pos.Y >= 650 && pos.X >= 850 {
 		fmt.Println("Rejected tower. hud interaction")
 		return nil
 	}
