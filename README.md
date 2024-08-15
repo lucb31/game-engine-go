@@ -3,7 +3,6 @@
 
 # Todo
 - Tower range
-- Creeps get stuck at waypoints on high game speeds
 ## Game loop
 ### Feat
 - Restart

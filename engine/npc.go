@@ -112,7 +112,9 @@ func (n *NpcEntity) calculateVelocity(body *cp.Body, gravity cp.Vector, damping 
 	diffNormalized := diff.Normalize()
 
 	// Go to next waypoint if in close proximity to current WP
-	if diff.Length() < 5 {
+	// ~Distance covered within next timestep
+	dx := n.velocity * dt
+	if diff.Length() < dx {
 		n.currentWpIndex++
 		if n.currentWpIndex > len(n.wayPoints)-1 {
 			if n.loopWaypoints {
