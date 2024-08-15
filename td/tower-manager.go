@@ -11,8 +11,9 @@ import (
 )
 
 type TowerManager struct {
-	world       engine.GameEntityManager
-	goldManager engine.GoldManager
+	world          engine.GameEntityManager
+	goldManager    engine.GoldManager
+	worldMapReader engine.WorldMapReader
 
 	towerAsset      *engine.CharacterAsset
 	projectileAsset *engine.ProjectileAsset
@@ -26,11 +27,18 @@ const (
 	maxDistanceForDeletion   = float64(5.0)
 	touchDurationForDeletion = float64(1.0)
 	costToBuy                = int64(50)
-	refundIfSold             = int64(40)
+	refundIfSold             = int64(50)
 )
 
-func NewTowerManager(world engine.GameEntityManager, towerAsset *engine.CharacterAsset, projAsset *engine.ProjectileAsset, goldManager engine.GoldManager) (*TowerManager, error) {
-	return &TowerManager{world: world, towerAsset: towerAsset, projectileAsset: projAsset, goldManager: goldManager}, nil
+var buildableTiles = []engine.MapTile{25, 26, 27, 29, 31, 32, 33, 34, 37, 38, 39}
+
+func NewTowerManager(
+	world engine.GameEntityManager,
+	towerAsset *engine.CharacterAsset,
+	projAsset *engine.ProjectileAsset,
+	goldManager engine.GoldManager,
+	worldMapReader engine.WorldMapReader) (*TowerManager, error) {
+	return &TowerManager{world: world, towerAsset: towerAsset, projectileAsset: projAsset, goldManager: goldManager, worldMapReader: worldMapReader}, nil
 }
 
 func (t *TowerManager) Update() {
@@ -77,7 +85,6 @@ func (t *TowerManager) Update() {
 			fmt.Println("Could not remove tower: ", err.Error())
 		}
 	}
-
 }
 
 func (t *TowerManager) Draw(screen *ebiten.Image) {
@@ -90,19 +97,22 @@ func (t *TowerManager) AddTower(cursorPos cp.Vector) error {
 	now := time.Now()
 	duration := float64(time.Second) / 1
 	if now.Sub(t.lastTowerSpawned) < time.Duration(duration) {
-		return nil
+		return fmt.Errorf("Trying to spawn towers too quickly")
 	}
 	// Snap pos to 32x32 grid
 	pos := engine.SnapToGrid(cursorPos, 32)
-	// Avoid stacking towers
-	// TODO: Tower grid to solve this
+	// Check if we're allowed to build on this map tile
+	tile, err := t.worldMapReader.TileAt(pos)
+	if err != nil {
+		return fmt.Errorf("Unable to read tile data: %s", err.Error())
+	}
+	if !tileIsBuildable(tile) {
+		return fmt.Errorf("Cannot build on tile %d", tile)
+	}
+	// Check if already occupied by other tower
 	queryInfo := t.world.Space().PointQueryNearest(pos, minDistanceBetweenTowers, engine.TowerCollisionFilter())
 	if queryInfo.Shape != nil {
-		return nil
-	}
-	// FIX: Avoid spawning towers when interacting with speed toggle
-	if pos.Y >= 650 && pos.X >= 850 {
-		return nil
+		return fmt.Errorf("Collsion with existing tower")
 	}
 	// Check funds
 	if !t.goldManager.CanAfford(costToBuy) {
@@ -139,4 +149,13 @@ func (t *TowerManager) RemoveTower(pos cp.Vector) error {
 	// Refund gold
 	t.goldManager.Add(refundIfSold)
 	return nil
+}
+
+func tileIsBuildable(tile engine.MapTile) bool {
+	for _, iteratedTile := range buildableTiles {
+		if iteratedTile == tile {
+			return true
+		}
+	}
+	return false
 }

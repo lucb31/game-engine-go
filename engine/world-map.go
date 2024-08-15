@@ -13,6 +13,9 @@ import (
 )
 
 type MapTile int
+type WorldMapReader interface {
+	TileAt(cp.Vector) (MapTile, error)
+}
 
 const (
 	Empty       MapTile = -1
@@ -82,6 +85,18 @@ func NewWorldMap(width, height int64, mapCsv []byte, tileset Tileset) (*WorldMap
 		}
 	}
 	return &WorldMap{tileData: mapData, tileset: tileset}, nil
+}
+
+func (w *WorldMap) TileAt(worldPos cp.Vector) (MapTile, error) {
+	if worldPos.X < 0 || worldPos.Y < 0 {
+		return Undef, fmt.Errorf("Out of bounds")
+	}
+	row := int(worldPos.Y / mapTileSize)
+	col := int(worldPos.X / mapTileSize)
+	if len(w.tileData) <= row || len(w.tileData[0]) <= col {
+		return Undef, fmt.Errorf("Out of bounds")
+	}
+	return w.tileData[row][col], nil
 }
 
 func readCsvFromBinary(data []byte) ([][]MapTile, error) {

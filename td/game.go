@@ -103,7 +103,7 @@ func NewTDGame(screenWidth, screenHeight int) (*TDGame, error) {
 	if !ok {
 		return nil, fmt.Errorf("Could not find projectile asset")
 	}
-	game.towerManager, err = NewTowerManager(w, &towerAsset, &projectile, game.goldManager)
+	game.towerManager, err = NewTowerManager(w, &towerAsset, &projectile, game.goldManager, game.world.WorldMap)
 
 	// Setup creep management
 	npcAsset, ok := w.AssetManager.CharacterAssets["npc-torch"]
