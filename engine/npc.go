@@ -36,7 +36,7 @@ type NpcOpts struct {
 }
 
 func NpcCollisionFilter() cp.ShapeFilter {
-	return cp.NewShapeFilter(0, uint(NpcCategory), uint(PlayerCategory|OuterWallsCategory|InnerWallsCategory|TowerCategory|ProjectileCategory))
+	return cp.NewShapeFilter(0, uint(NpcCategory), uint((PlayerCategory|OuterWallsCategory|InnerWallsCategory|TowerCategory|ProjectileCategory)&^NpcCategory))
 }
 
 func NewNpc(remover EntityRemover, asset *CharacterAsset, opts NpcOpts) (*NpcEntity, error) {

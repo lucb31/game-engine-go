@@ -45,7 +45,7 @@ func (a *CharacterAsset) GetTile(activeAnimation string) (*ebiten.Image, error) 
 func (a *CharacterAsset) Draw(screen *ebiten.Image, activeAnimation string, position cp.Vector) error {
 	subIm, err := a.GetTile(activeAnimation)
 	if err != nil {
-		return fmt.Errorf("Error animating player", err.Error())
+		return fmt.Errorf("Error animating player: %s", err.Error())
 	}
 	op := ebiten.DrawImageOptions{}
 	// Offset to make sure asset is drawn centered on current position

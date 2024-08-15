@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/jakecoffman/cp"
 	"github.com/lucb31/game-engine-go/engine"
 )
 
@@ -13,8 +12,8 @@ func TestCollisionFilters(t *testing.T) {
 	tower := engine.TowerCollisionFilter()
 	outerWall := engine.BoundingBoxFilter()
 	npc := engine.NpcCollisionFilter()
-	projectile := cp.NewShapeFilter(0, uint(engine.ProjectileCategory), uint(engine.NpcCategory|engine.OuterWallsCategory&^engine.PlayerCategory))
-	//	projectile := engine.ProjectileCollisionFilter()
+	// projectile := cp.NewShapeFilter(0, uint(engine.ProjectileCategory), uint(engine.NpcCategory|engine.OuterWallsCategory&^engine.PlayerCategory))
+	projectile := engine.ProjectileCollisionFilter()
 	fmt.Println("Player: ", player.Categories, player.Mask)
 	fmt.Println("Tower: ", tower.Categories, tower.Mask)
 	fmt.Println("Outer wall: ", outerWall.Categories, outerWall.Mask)
@@ -55,6 +54,9 @@ func TestCollisionFilters(t *testing.T) {
 	}
 	if npc.Reject(projectile) {
 		t.Fatal("Collision between npc and projectile was rejected. But should collide")
+	}
+	if !npc.Reject(npc) {
+		t.Fatal("Collision between npc and npc was not rejected. But should ignore collision")
 	}
 	if outerWall.Reject(tower) {
 		t.Fatal("Collision between outer wall and tower was rejected. But should collide")
