@@ -1,8 +1,9 @@
 package engine
 
 import (
-	"fmt"
 	"testing"
+
+	"github.com/jakecoffman/cp"
 )
 
 func TestPlayerCollisionFilters(t *testing.T) {
@@ -67,8 +68,15 @@ func TestTowerCollisionFilter(t *testing.T) {
 func TestProjectileCollisionFilter(t *testing.T) {
 	projectile := ProjectileCollisionFilter()
 	if !projectile.Reject(projectile) {
-		fmt.Println(projectile)
 		t.Fatal("Collision between projectile and projectile was checked, but should NOT collide")
+	}
+}
+
+func TestPointQueryFilter(t *testing.T) {
+	filter := cp.NewShapeFilter(cp.NO_GROUP, cp.ALL_CATEGORIES, NpcCategory)
+	npc := NpcCollisionFilter()
+	if filter.Reject(npc) {
+		t.Fatal("Collision between query and npc was rejected, but should collide")
 	}
 }
 

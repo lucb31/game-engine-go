@@ -171,7 +171,7 @@ func initializeBoundingBox(space *cp.Space, width float64, height float64) {
 }
 
 func BoundingBoxFilter() cp.ShapeFilter {
-	return cp.NewShapeFilter(0, uint(OuterWallsCategory), uint(PlayerCategory|NpcCategory|TowerCategory|ProjectileCategory))
+	return cp.NewShapeFilter(0, OuterWallsCategory, PlayerCategory|NpcCategory|TowerCategory|ProjectileCategory)
 }
 
 func NewWorld(width int64, height int64) (*GameWorld, error) {

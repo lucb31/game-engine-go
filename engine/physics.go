@@ -14,19 +14,13 @@ const (
 	NpcCollision
 )
 
-type CollisionCategory uint
-
 const (
-	PlayerCategory CollisionCategory = iota + 1
-	NpcCategory
-	OuterWallsCategory
-	InnerWallsCategory
-	TowerCategory
-	ProjectileCategory
-)
-
-const (
-	ProjectileCollisiongroup uint = 1
+	PlayerCategory     uint = 1
+	NpcCategory        uint = 1 << 1
+	OuterWallsCategory uint = 1 << 2
+	InnerWallsCategory uint = 1 << 3
+	TowerCategory      uint = 1 << 4
+	ProjectileCategory uint = 1 << 5
 )
 
 func NewPhysicsSpace() (*cp.Space, error) {
@@ -40,7 +34,7 @@ func NewPhysicsSpace() (*cp.Space, error) {
 }
 
 func TowerCollisionFilter() cp.ShapeFilter {
-	return cp.NewShapeFilter(0, uint(TowerCategory), uint(PlayerCategory|NpcCategory|OuterWallsCategory|InnerWallsCategory))
+	return cp.NewShapeFilter(0, TowerCategory, PlayerCategory|NpcCategory|OuterWallsCategory|InnerWallsCategory|TowerCategory)
 }
 
 func removeProjectile(arb *cp.Arbiter, space *cp.Space, userData interface{}) {

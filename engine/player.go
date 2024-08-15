@@ -54,7 +54,7 @@ func NewPlayer(world GameEntityManager, asset *CharacterAsset, projectileAsset *
 }
 
 func PlayerCollisionFilter() cp.ShapeFilter {
-	return cp.NewShapeFilter(0, uint(PlayerCategory), uint(PlayerCategory|NpcCategory|OuterWallsCategory|TowerCategory))
+	return cp.NewShapeFilter(0, PlayerCategory, PlayerCategory|NpcCategory|OuterWallsCategory|TowerCategory)
 }
 
 func (p *Player) Draw(screen *ebiten.Image) {
