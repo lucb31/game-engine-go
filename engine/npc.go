@@ -13,7 +13,8 @@ type NpcEntity struct {
 	world GameEntityManager
 
 	// Logic
-	health float64
+	health      float64
+	goldManager GoldManager
 
 	// Rendering
 	asset       *CharacterAsset
@@ -31,12 +32,14 @@ type NpcEntity struct {
 	stopMovementUntil time.Time
 }
 
+const goldPerKill = int64(1)
+
 func NpcCollisionFilter() cp.ShapeFilter {
 	return cp.NewShapeFilter(0, uint(NpcCategory), uint(PlayerCategory|OuterWallsCategory|InnerWallsCategory|TowerCategory|ProjectileCategory))
 }
 
-func NewNpc(world GameEntityManager, asset *CharacterAsset) (*NpcEntity, error) {
-	npc := &NpcEntity{world: world, orientation: South, health: 100.0}
+func NewNpc(world GameEntityManager, asset *CharacterAsset, goldManager GoldManager) (*NpcEntity, error) {
+	npc := &NpcEntity{world: world, orientation: South, health: 100.0, goldManager: goldManager}
 	// Physics model
 	body := cp.NewBody(1, cp.INFINITY)
 	body.SetPosition(cp.Vector{X: 48, Y: 16})
@@ -75,7 +78,12 @@ func (n *NpcEntity) Draw(screen *ebiten.Image) {
 }
 
 func (n *NpcEntity) Destroy() error {
-	return n.world.RemoveEntity(n)
+	if err := n.world.RemoveEntity(n); err != nil {
+		return err
+	}
+	// Add gold for kill
+	_, err := n.goldManager.Add(goldPerKill)
+	return err
 }
 
 func (n *NpcEntity) OnProjectileHit(projectile Projectile) {

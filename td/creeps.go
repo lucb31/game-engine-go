@@ -8,6 +8,7 @@ import (
 
 type CreepManager struct {
 	entityManager           engine.GameEntityManager
+	goldManger              engine.GoldManager
 	asset                   *engine.CharacterAsset
 	creepsSpawned           int
 	lastCreepSpawnedTime    float64
@@ -15,11 +16,11 @@ type CreepManager struct {
 	creepsToSpawn           int
 }
 
-func NewCreepManager(em engine.GameEntityManager, asset *engine.CharacterAsset) (*CreepManager, error) {
+func NewCreepManager(em engine.GameEntityManager, asset *engine.CharacterAsset, goldManager engine.GoldManager) (*CreepManager, error) {
 	if asset == nil || em == nil {
 		return nil, fmt.Errorf("Invalid arguments")
 	}
-	return &CreepManager{entityManager: em, asset: asset, creepSpawnRatePerSecond: 0.5, creepsToSpawn: 30}, nil
+	return &CreepManager{entityManager: em, asset: asset, creepSpawnRatePerSecond: 0.5, creepsToSpawn: 30, goldManger: goldManager}, nil
 }
 
 func (c *CreepManager) Update() error {
@@ -38,7 +39,7 @@ func (c *CreepManager) spawnCreep() error {
 		return nil
 	}
 	// Initialize an npc
-	npc, err := engine.NewNpc(c.entityManager, c.asset)
+	npc, err := engine.NewNpc(c.entityManager, c.asset, c.goldManger)
 	if err != nil {
 		return err
 	}

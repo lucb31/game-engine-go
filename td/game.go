@@ -86,16 +86,6 @@ func NewTDGame(screenWidth, screenHeight int) (*TDGame, error) {
 	}
 	w.AddEntity(game.castle)
 
-	// Setup creep management
-	npcAsset, ok := w.AssetManager.CharacterAssets["npc-torch"]
-	if !ok {
-		return nil, fmt.Errorf("Cannot initialize creep management: Could not find npc asset")
-	}
-	game.creepManager, err = NewCreepManager(w, &npcAsset)
-	if err != nil {
-		return nil, err
-	}
-
 	// Setup gold management
 	game.goldManager, err = engine.NewInMemoryGoldManager()
 	if err != nil {
@@ -114,6 +104,16 @@ func NewTDGame(screenWidth, screenHeight int) (*TDGame, error) {
 		return nil, fmt.Errorf("Could not find projectile asset")
 	}
 	game.towerManager, err = NewTowerManager(w, &towerAsset, &projectile, game.goldManager)
+
+	// Setup creep management
+	npcAsset, ok := w.AssetManager.CharacterAssets["npc-torch"]
+	if !ok {
+		return nil, fmt.Errorf("Cannot initialize creep management: Could not find npc asset")
+	}
+	game.creepManager, err = NewCreepManager(w, &npcAsset, game.goldManager)
+	if err != nil {
+		return nil, err
+	}
 
 	// Setup HUD
 	game.hud, err = NewHUD(game)
