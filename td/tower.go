@@ -2,7 +2,6 @@ package td
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/jakecoffman/cp"
@@ -19,10 +18,8 @@ type TowerEntity struct {
 	animation       string
 
 	// Physics
-	shape *cp.Shape
-	// TODO: does not account for game speed
-	// TODO: Check for any other occurence of time package
-	lastProjectileFired time.Time
+	shape               *cp.Shape
+	lastProjectileFired float64
 }
 
 const (
@@ -57,10 +54,10 @@ func (t *TowerEntity) shoot(target engine.GameEntity) {
 	if target == nil {
 		return
 	}
-	now := time.Now()
-	duration := float64(time.Second) / towerFireRatePerSecond
-	if now.Sub(t.lastProjectileFired) < time.Duration(duration) {
-		// Still reloading
+	// Timeout until reloaded
+	now := t.world.GetIngameTime()
+	diff := now - t.lastProjectileFired
+	if diff < 1/towerFireRatePerSecond {
 		return
 	}
 
@@ -71,7 +68,7 @@ func (t *TowerEntity) shoot(target engine.GameEntity) {
 		return
 	}
 	t.world.AddEntity(proj)
-	t.lastProjectileFired = time.Now()
+	t.lastProjectileFired = now
 }
 
 func (t *TowerEntity) Draw(screen *ebiten.Image) {

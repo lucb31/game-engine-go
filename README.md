@@ -2,10 +2,8 @@
 [Try it out](https://lucb31.github.io/game-engine-go/)
 
 # Todo
-- Fix timeouts for projectile reload and npc movement stop
-- Remove npc collision 
+- Fix timeouts for npc movement stop
 
-- Fix: Projectiles seem to be removed when colliding with towers
 
 ## Game loop
 ### Wave scaling
