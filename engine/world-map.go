@@ -9,6 +9,7 @@ import (
 	"strconv"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/jakecoffman/cp"
 )
 
 type MapTile int
@@ -119,4 +120,9 @@ func readCsv(r io.Reader) ([][]MapTile, error) {
 		}
 	}
 	return mapData, nil
+}
+
+// Returns vector centered on grid
+func SnapToGrid(v cp.Vector, gridSize int) cp.Vector {
+	return cp.Vector{X: float64(int(v.X/float64(gridSize))*gridSize) + float64(gridSize)/2, Y: float64(int(v.Y/float64(gridSize))*gridSize) + float64(gridSize/2)}
 }

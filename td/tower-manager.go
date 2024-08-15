@@ -85,13 +85,15 @@ func (t *TowerManager) Draw(screen *ebiten.Image) {
 	ebitenutil.DebugPrintAt(screen, "Use right mouse click to remove towers", 20, 700)
 }
 
-func (t *TowerManager) AddTower(pos cp.Vector) error {
+func (t *TowerManager) AddTower(cursorPos cp.Vector) error {
 	// Delay: Do not spawn more than 1 tower per second
 	now := time.Now()
 	duration := float64(time.Second) / 1
 	if now.Sub(t.lastTowerSpawned) < time.Duration(duration) {
 		return nil
 	}
+	// Snap pos to 32x32 grid
+	pos := engine.SnapToGrid(cursorPos, 32)
 	// Avoid stacking towers
 	// TODO: Tower grid to solve this
 	queryInfo := t.world.Space().PointQueryNearest(pos, minDistanceBetweenTowers, engine.TowerCollisionFilter())
