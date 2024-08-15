@@ -30,7 +30,7 @@ const (
 	refundIfSold             = int64(50)
 )
 
-var buildableTiles = []engine.MapTile{25, 26, 27, 29, 31, 32, 33, 34, 37, 38, 39}
+var buildableTiles = []engine.MapTile{25, 26, 27, 28, 29, 31, 32, 33, 34, 37, 38, 39}
 
 func NewTowerManager(
 	world engine.GameEntityManager,
