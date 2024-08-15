@@ -120,6 +120,7 @@ func (p *Projectile) calculateVelocity(body *cp.Body, gravity cp.Vector, damping
 	direction := p.direction
 	if p.target != nil {
 		// Remove guided projectile if target no longer exists
+		// TODO: Utilize physics space query to find target. Then we can remove the whole "GetEntities" idea
 		_, ok := (*p.world.GetEntities())[p.target.Id()]
 		if !ok {
 			p.Destroy()
