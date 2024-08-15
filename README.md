@@ -5,6 +5,8 @@
 - Fix timeouts for projectile reload and npc movement stop
 - Remove npc collision 
 
+- Fix: Projectiles seem to be removed when colliding with towers
+
 ## Game loop
 ### Wave scaling
 - NPC health

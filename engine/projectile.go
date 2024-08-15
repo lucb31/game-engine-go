@@ -119,6 +119,12 @@ func (p *Projectile) Destroy() error {
 func (p *Projectile) calculateVelocity(body *cp.Body, gravity cp.Vector, damping float64, dt float64) {
 	direction := p.direction
 	if p.target != nil {
+		// Remove guided projectile if target no longer exists
+		_, ok := (*p.world.GetEntities())[p.target.Id()]
+		if !ok {
+			p.Destroy()
+			return
+		}
 		direction = p.target.Shape().Body().Position()
 	}
 	position := body.Position()
