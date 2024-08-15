@@ -1,8 +1,6 @@
 package engine
 
 import (
-	"time"
-
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/jakecoffman/cp"
 )
@@ -27,8 +25,6 @@ type NpcEntity struct {
 	wayPoints      []cp.Vector
 	currentWpIndex int
 	loopWaypoints  bool
-	// TODO: Does not respect game speed
-	stopMovementUntil time.Time
 }
 
 type NpcOpts struct {
@@ -96,8 +92,6 @@ func (n *NpcEntity) OnProjectileHit(projectile Projectile) {
 	if n.health <= 0.0 {
 		n.Destroy()
 	}
-	// Briefly stop movement
-	n.stopMovementUntil = time.Now().Add(time.Millisecond * 300)
 }
 
 func (n *NpcEntity) Id() GameEntityId      { return n.id }
@@ -106,8 +100,8 @@ func (n *NpcEntity) Shape() *cp.Shape      { return n.shape }
 
 // Calculate velocity based on simple pathfinding algorithm between waypoints
 func (n *NpcEntity) calculateVelocity(body *cp.Body, gravity cp.Vector, damping float64, dt float64) {
-	// No movement if no active wayPoint or movement paused
-	if n.currentWpIndex == -1 || n.stopMovementUntil.After(time.Now()) {
+	// No movement if no active wayPoint
+	if n.currentWpIndex == -1 {
 		body.SetVelocityVector(cp.Vector{})
 		n.animation = calculateWalkingAnimation(body.Velocity(), n.orientation)
 		return
