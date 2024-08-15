@@ -4,12 +4,7 @@
 # Todo
 - Fix timeouts for npc movement stop
 
-
 ## Game loop
-### Wave scaling
-- NPC health
-- NPC count
-
 ### Feat
 - Restart
 

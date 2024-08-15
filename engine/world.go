@@ -74,7 +74,14 @@ func (w *GameWorld) AddEntity(object GameEntity) error {
 
 // Removes an object from the world by scheduling for deletion
 func (w *GameWorld) RemoveEntity(object GameEntity) error {
-	w.objectIdsToDelete = append(w.objectIdsToDelete, object.Id())
+	idToDelete := object.Id()
+	// Check for duplicates
+	for _, id := range w.objectIdsToDelete {
+		if id == idToDelete {
+			return fmt.Errorf("Already scheduled for deletion")
+		}
+	}
+	w.objectIdsToDelete = append(w.objectIdsToDelete, idToDelete)
 	return nil
 }
 
