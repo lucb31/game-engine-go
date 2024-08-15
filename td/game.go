@@ -139,3 +139,7 @@ func (g *TDGame) GetSpeed() float64 {
 func (g *TDGame) SetSpeed(speed float64) {
 	g.world.GameSpeed = speed
 }
+
+func (g *TDGame) Balance() int64 {
+	return g.goldManager.Balance()
+}

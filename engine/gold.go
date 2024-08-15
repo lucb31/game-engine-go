@@ -5,7 +5,7 @@ import "fmt"
 type GoldManager interface {
 	Add(int64) (int64, error)
 	Remove(int64) (int64, error)
-	Balance() (int64, error)
+	Balance() int64
 	CanAfford(int64) bool
 }
 
@@ -29,8 +29,8 @@ func (g *InMemoryGoldManager) Remove(amount int64) (int64, error) {
 	return g.balance, nil
 }
 
-func (g *InMemoryGoldManager) Balance() (int64, error) {
-	return g.balance, nil
+func (g *InMemoryGoldManager) Balance() int64 {
+	return g.balance
 }
 
 func (g *InMemoryGoldManager) CanAfford(amount int64) bool {

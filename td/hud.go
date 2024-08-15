@@ -1,6 +1,7 @@
 package td
 
 import (
+	"fmt"
 	"image/color"
 	"log"
 
@@ -20,6 +21,7 @@ type GameHUD struct {
 	creepProgress *widget.ProgressBar
 	castleHealth  *widget.ProgressBar
 	speedSlider   *widget.Slider
+	goldLabel     *widget.Text
 }
 
 type ProgressInfo struct {
@@ -37,6 +39,7 @@ func NewHUD(game *TDGame) (*GameHUD, error) {
 	hud.creepProgress = initCreepProgressBar(rootContainer)
 	hud.castleHealth = initCastleHealthProgressBar(rootContainer)
 	hud.speedSlider = hud.initGameSpeedSlider(rootContainer)
+	hud.goldLabel = initGoldLabel(rootContainer)
 
 	// This adds the root container to the UI, so that it will be rendered.
 	hud.ui = &ebitenui.UI{
@@ -180,6 +183,34 @@ func progressBarWithLabel(root *widget.Container, label string, anchor widget.An
 	return progressBar
 }
 
+func initGoldLabel(root *widget.Container) *widget.Text {
+	container := widget.NewContainer(
+		widget.ContainerOpts.Layout(widget.NewStackedLayout()),
+		widget.ContainerOpts.WidgetOpts(
+			widget.WidgetOpts.LayoutData(widget.AnchorLayoutData{
+				HorizontalPosition: widget.AnchorLayoutPositionCenter,
+				VerticalPosition:   widget.AnchorLayoutPositionEnd,
+				Padding:            widget.Insets{Bottom: 30, Right: 8},
+			}),
+		),
+	)
+
+	// Init label
+	ttfFont, err := truetype.Parse(goregular.TTF)
+	if err != nil {
+		log.Fatal("Error Parsing Font", err)
+	}
+	fontFace := truetype.NewFace(ttfFont, &truetype.Options{
+		Size: 16,
+	})
+	labelText := widget.NewText(
+		widget.TextOpts.Text("", fontFace, color.RGBA{244, 228, 0, 1}),
+	)
+	container.AddChild(labelText)
+	root.AddChild(container)
+	return labelText
+}
+
 func (h *GameHUD) Draw(screen *ebiten.Image) {
 	h.ui.Draw(screen)
 }
@@ -188,6 +219,7 @@ func (h *GameHUD) Update() {
 	h.ui.Update()
 	h.updateCreepProgress()
 	h.updateCastleHealth()
+	h.updateGold()
 }
 
 func (h *GameHUD) updateCreepProgress() {
@@ -202,4 +234,8 @@ func (h *GameHUD) updateCastleHealth() {
 	h.castleHealth.Min = progress.min
 	h.castleHealth.Max = progress.max
 	h.castleHealth.SetCurrent(progress.current)
+}
+
+func (h *GameHUD) updateGold() {
+	h.goldLabel.Label = fmt.Sprintf("Gold: %d", h.game.Balance())
 }

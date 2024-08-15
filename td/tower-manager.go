@@ -100,7 +100,6 @@ func (t *TowerManager) AddTower(pos cp.Vector) error {
 	}
 	// FIX: Avoid spawning towers when interacting with speed toggle
 	if pos.Y >= 650 && pos.X >= 850 {
-		fmt.Println("Rejected tower. hud interaction")
 		return nil
 	}
 	// Check funds
