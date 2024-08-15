@@ -26,7 +26,6 @@ type TowerEntity struct {
 
 const (
 	towerFireRatePerSecond = float64(1.5)
-	towerRange             = float64(200)
 )
 
 func NewTower(world engine.GameEntityManager, asset *engine.CharacterAsset, projectile *engine.ProjectileAsset) (*TowerEntity, error) {
@@ -47,9 +46,8 @@ func (t *TowerEntity) Update(body *cp.Body, dt float64) {
 }
 
 func (t *TowerEntity) chooseTarget() engine.GameEntity {
-	query := t.shape.Space().PointQueryNearest(t.shape.Body().Position(), towerRange, cp.NewShapeFilter(cp.NO_GROUP, cp.ALL_CATEGORIES, engine.NpcCategory))
+	query := t.shape.Space().PointQueryNearest(t.shape.Body().Position(), t.towerRange(), cp.NewShapeFilter(cp.NO_GROUP, cp.ALL_CATEGORIES, engine.NpcCategory))
 	if query.Shape == nil {
-		fmt.Println("No target in range")
 		return nil
 	}
 	npc, ok := query.Shape.Body().UserData.(*engine.NpcEntity)
@@ -81,6 +79,10 @@ func (t *TowerEntity) shoot(target engine.GameEntity) {
 	t.lastProjectileFired = now
 }
 
+func (t *TowerEntity) towerRange() float64 {
+	return 250.0
+}
+
 func (t *TowerEntity) Draw(screen *ebiten.Image) {
 	t.asset.DrawRectBoundingBox(screen, t.shape)
 	t.asset.Draw(screen, t.animation, t.shape.Body().Position())
@@ -88,7 +90,7 @@ func (t *TowerEntity) Draw(screen *ebiten.Image) {
 }
 
 func (t *TowerEntity) DrawRange(screen *ebiten.Image) {
-	vector.StrokeCircle(screen, float32(t.shape.Body().Position().X), float32(t.shape.Body().Position().Y), float32(towerRange), 2.0, color.RGBA{255, 0, 0, 0}, false)
+	vector.StrokeCircle(screen, float32(t.shape.Body().Position().X), float32(t.shape.Body().Position().Y), float32(t.towerRange()), 2.0, color.RGBA{255, 0, 0, 0}, false)
 }
 
 func (t *TowerEntity) Destroy() error {

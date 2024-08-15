@@ -1,8 +1,6 @@
 # LIVE
 [Try it out](https://lucb31.github.io/game-engine-go/)
 
-# Todo
-- Tower range
 ## Game loop
 ### Feat
 - Restart
@@ -20,8 +18,7 @@
 ## Towers
 
 ### Feat
-- Add maximum range
-- Add targetting algorithm: Currently mostly pretty random 
+- Add targetting algorithm: Currently closest to tower 
 
 ## Creeps
 ### Feat
