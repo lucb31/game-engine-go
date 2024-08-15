@@ -1,51 +1,40 @@
-package main
+package engine
 
 import (
 	"fmt"
 	"testing"
-
-	"github.com/lucb31/game-engine-go/engine"
 )
 
-func TestCollisionFilters(t *testing.T) {
-	player := engine.PlayerCollisionFilter()
-	tower := engine.TowerCollisionFilter()
-	outerWall := engine.BoundingBoxFilter()
-	npc := engine.NpcCollisionFilter()
-	// projectile := cp.NewShapeFilter(0, uint(engine.ProjectileCategory), uint(engine.NpcCategory|engine.OuterWallsCategory&^engine.PlayerCategory))
-	projectile := engine.ProjectileCollisionFilter()
-	fmt.Println("Player: ", player.Categories, player.Mask)
-	fmt.Println("Tower: ", tower.Categories, tower.Mask)
-	fmt.Println("Outer wall: ", outerWall.Categories, outerWall.Mask)
-	fmt.Println("Projectile: ", projectile.Categories, projectile.Mask)
+func TestPlayerCollisionFilters(t *testing.T) {
+	player := PlayerCollisionFilter()
+	tower := TowerCollisionFilter()
+	outerWall := BoundingBoxFilter()
+	npc := NpcCollisionFilter()
+	projectile := ProjectileCollisionFilter()
 	if player.Reject(player) {
 		t.Fatal("Collision between player and player was ignored")
 	}
 	if player.Reject(tower) {
-		fmt.Println(player.Group != 0 && player.Group == tower.Group)
-		// One of the category/mask combinations fails.
-		fmt.Println((player.Categories & tower.Mask) == 0)
-		fmt.Println((tower.Categories & player.Mask) == 0)
 		t.Fatal("Collision between player and tower was rejected. But should collide")
 		return
 	}
 	if player.Reject(outerWall) {
-		fmt.Println(player.Group != 0 && player.Group == outerWall.Group)
-		fmt.Println((player.Categories & outerWall.Mask) == 0)
-		fmt.Println((outerWall.Categories & player.Mask) == 0)
 		t.Fatal("Collision between player and outer wall was rejected. But should collide")
 	}
 	if player.Reject(npc) {
 		t.Fatal("Collision between player and npc was rejected. But should collide")
 	}
 	if !player.Reject(projectile) {
-		fmt.Println(player.Group != 0 && player.Group == projectile.Group)
-		fmt.Println((player.Categories & projectile.Mask) == 0)
-		fmt.Println((player.Categories & projectile.Mask))
-		fmt.Println((projectile.Categories & player.Mask) == 0)
-		fmt.Println((projectile.Categories & player.Mask))
 		t.Fatal("Collision between player and projectile was NOT rejected. But should NOT collide")
 	}
+}
+
+func TestNpcCollisionFilters(t *testing.T) {
+	player := PlayerCollisionFilter()
+	tower := TowerCollisionFilter()
+	outerWall := BoundingBoxFilter()
+	npc := NpcCollisionFilter()
+	projectile := ProjectileCollisionFilter()
 	if npc.Reject(outerWall) {
 		t.Fatal("Collision between npc and outer wall was rejected. But should collide")
 	}
@@ -55,17 +44,31 @@ func TestCollisionFilters(t *testing.T) {
 	if npc.Reject(projectile) {
 		t.Fatal("Collision between npc and projectile was rejected. But should collide")
 	}
+	if npc.Reject(player) {
+		t.Fatal("Collision between npc and player was rejected. But should collide")
+	}
 	if !npc.Reject(npc) {
 		t.Fatal("Collision between npc and npc was not rejected. But should ignore collision")
 	}
-	if outerWall.Reject(tower) {
-		t.Fatal("Collision between outer wall and tower was rejected. But should collide")
-	}
-	if outerWall.Reject(projectile) {
-		t.Fatal("Collision between outer wall and projectile was rejected. But should collide")
+}
+
+func TestTowerCollisionFilter(t *testing.T) {
+	player := PlayerCollisionFilter()
+	tower := TowerCollisionFilter()
+	projectile := ProjectileCollisionFilter()
+	if tower.Reject(player) {
+		t.Fatal("Collision between tower and player was rejected. But should collide")
 	}
 	if !tower.Reject(projectile) {
 		t.Fatal("Collision between tower and projectile was checked. But should NOT collide")
+	}
+}
+
+func TestProjectileCollisionFilter(t *testing.T) {
+	projectile := ProjectileCollisionFilter()
+	if !projectile.Reject(projectile) {
+		fmt.Println(projectile)
+		t.Fatal("Collision between projectile and projectile was checked, but should NOT collide")
 	}
 }
 

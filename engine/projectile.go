@@ -9,7 +9,7 @@ import (
 )
 
 func ProjectileCollisionFilter() cp.ShapeFilter {
-	return cp.NewShapeFilter(0, uint(ProjectileCategory), uint(NpcCategory|OuterWallsCategory&^PlayerCategory))
+	return cp.NewShapeFilter(ProjectileCollisiongroup, uint(ProjectileCategory), uint(NpcCategory|OuterWallsCategory&^PlayerCategory))
 }
 
 type Projectile struct {

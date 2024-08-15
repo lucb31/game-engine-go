@@ -1,6 +1,9 @@
 # LIVE
 [Try it out](https://lucb31.github.io/game-engine-go/)
 
+# Todo
+- Tower range
+- Creeps get stuck at waypoints on high game speeds
 ## Game loop
 ### Feat
 - Restart

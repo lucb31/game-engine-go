@@ -25,6 +25,10 @@ const (
 	ProjectileCategory
 )
 
+const (
+	ProjectileCollisiongroup uint = 1
+)
+
 func NewPhysicsSpace() (*cp.Space, error) {
 	// Initialize physics
 	space := cp.NewSpace()
