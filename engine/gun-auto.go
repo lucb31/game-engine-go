@@ -31,10 +31,11 @@ func (g *AutoAimGun) Shoot() error {
 	}
 
 	// Spawn projectile
-	proj, err := NewProjectileWithTarget(g, target, g.em, g.projectileAsset)
+	proj, err := NewProjectile(g, g.em, g.projectileAsset)
 	if err != nil {
 		return err
 	}
+	proj.target = target
 	g.em.AddEntity(proj)
 	g.lastProjectileFired = g.em.GetIngameTime()
 	return nil

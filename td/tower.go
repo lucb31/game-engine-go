@@ -84,8 +84,7 @@ func NewMultiTargetTower(world engine.GameEntityManager, assetManager engine.Ass
 		FireRatePerSecond: 1.0,
 		FireRange:         150.0,
 	}
-	// TODO: Make shot gun
-	tower.gun, err = engine.NewAutoAimGun(world, tower, projAsset, gunOpts)
+	tower.gun, err = engine.NewShotGun(world, tower, projAsset, gunOpts)
 	if err != nil {
 		return nil, err
 	}

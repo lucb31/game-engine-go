@@ -26,6 +26,7 @@ type Projectile struct {
 	gun       Gun
 	target    GameEntity
 	direction cp.Vector
+	origin    cp.Vector
 
 	// Rendering
 	asset *ProjectileAsset
@@ -36,6 +37,8 @@ type ProjectileAsset struct {
 	currentFrame   *int64
 	animationSpeed int
 }
+
+const defaultProjectileSpeed = float64(300.0)
 
 func (a *ProjectileAsset) Draw(screen *ebiten.Image, position cp.Vector) error {
 	op := ebiten.DrawImageOptions{}
@@ -51,16 +54,7 @@ func (a *ProjectileAsset) Draw(screen *ebiten.Image, position cp.Vector) error {
 	return nil
 }
 
-func NewProjectileWithTarget(gun Gun, target GameEntity, world GameEntityManager, asset *ProjectileAsset) (*Projectile, error) {
-	p, err := newProjectile(gun, world, asset)
-	if err != nil {
-		return nil, err
-	}
-	p.target = target
-	return p, nil
-}
-
-func newProjectile(gun Gun, world GameEntityManager, asset *ProjectileAsset) (*Projectile, error) {
+func NewProjectile(gun Gun, world GameEntityManager, asset *ProjectileAsset) (*Projectile, error) {
 	if asset.Image == nil {
 		return nil, fmt.Errorf("Failed to instantiate projectile. No asset provided")
 	}
@@ -69,41 +63,16 @@ func newProjectile(gun Gun, world GameEntityManager, asset *ProjectileAsset) (*P
 	body.SetPosition(gun.Owner().Shape().Body().Position())
 	body.SetVelocityUpdateFunc(p.calculateVelocity)
 	body.UserData = p
+
 	p.shape = cp.NewBox(body, 16, 16, 0)
 	p.shape.SetElasticity(0)
 	p.shape.SetFriction(0)
 	p.shape.SetCollisionType(cp.CollisionType(ProjectileCollision))
 	p.shape.SetFilter(ProjectileCollisionFilter())
-	p.velocity = 300
+	p.velocity = defaultProjectileSpeed
 	p.gun = gun
+	p.origin = body.Position()
 	return p, nil
-}
-
-func NewProjectileWithDirection(gun Gun, world GameEntityManager, asset *ProjectileAsset, endPosition cp.Vector) (*Projectile, error) {
-	p, err := newProjectile(gun, world, asset)
-	if err != nil {
-		return nil, err
-	}
-	p.direction = endPosition
-	return p, nil
-}
-
-func NewProjectileWithOrientation(gun Gun, world GameEntityManager, asset *ProjectileAsset, orientation Orientation) (*Projectile, error) {
-	destination := directionFromOrientationAndPos(orientation, gun.Owner().Shape().Body().Position())
-	return NewProjectileWithDirection(gun, world, asset, destination)
-}
-
-func directionFromOrientationAndPos(orientation Orientation, pos cp.Vector) cp.Vector {
-	switch orientation {
-	case North:
-		return cp.Vector{pos.X, -1000}
-	case South:
-		return cp.Vector{pos.X, 1000}
-	case East:
-		return cp.Vector{1000, pos.Y}
-	default:
-		return cp.Vector{-1000, pos.Y}
-	}
 }
 
 func (p *Projectile) Draw(screen *ebiten.Image) {
@@ -119,16 +88,24 @@ func (p *Projectile) Destroy() error {
 
 func (p *Projectile) calculateVelocity(body *cp.Body, gravity cp.Vector, damping float64, dt float64) {
 	direction := p.direction
+	// Remove guided projectile if target no longer exists
 	if p.target != nil {
-		// Remove guided projectile if target no longer exists
 		// TODO: Utilize physics space query to find target. Then we can remove the whole "GetEntities" idea
 		_, ok := (*p.world.GetEntities())[p.target.Id()]
 		if !ok {
 			p.Destroy()
 			return
 		}
+
 		direction = p.target.Shape().Body().Position()
 	}
+	// Remove projectile if fire range exceeded
+	distanceTravelled := p.shape.Body().Position().Distance(p.origin)
+	if distanceTravelled >= p.gun.FireRange() {
+		p.Destroy()
+		return
+	}
+
 	position := body.Position()
 	diff := direction.Sub(position)
 	diffNormalized := diff.Normalize()
