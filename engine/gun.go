@@ -4,6 +4,7 @@ import "fmt"
 
 type Gun interface {
 	Shoot() error
+	FireRange() float64
 	IsReloading() bool
 	Owner() GameEntity
 }
@@ -26,7 +27,8 @@ type BasicGun struct {
 	fireRange         float64
 }
 
-func (g *BasicGun) Owner() GameEntity { return g.owner }
+func (g *BasicGun) Owner() GameEntity  { return g.owner }
+func (g *BasicGun) FireRange() float64 { return g.fireRange }
 
 func (g *BasicGun) IsReloading() bool {
 	now := g.em.GetIngameTime()

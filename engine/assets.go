@@ -162,6 +162,17 @@ var characterResources []characterResource = []characterResource{
 		0.22,
 	},
 	{
+		"tower-red",
+		assets.TowerRed,
+		256,
+		map[string]GameAssetAnimation{
+			"idle": {StartTile: 0, FrameCount: 1},
+		},
+		-28,
+		-30,
+		0.22,
+	},
+	{
 		"castle",
 		assets.Castle,
 		192,

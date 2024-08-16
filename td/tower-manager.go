@@ -2,6 +2,7 @@ package td
 
 import (
 	"fmt"
+	"math/rand"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -25,8 +26,16 @@ const (
 	touchDurationForDeletion = float64(1.0)
 	towerSizeX               = int(32)
 	towerSizeY               = int(48)
-	costToBuy                = int64(50)
-	refundIfSold             = int64(50)
+	// TODO: Belongs to tower type
+	costToBuy    = int64(50)
+	refundIfSold = int64(50)
+)
+
+type TowerType int
+
+const (
+	SingleTarget TowerType = iota
+	MultiTarget
 )
 
 var buildableTiles = []engine.MapTile{25, 26, 27, 28, 29, 31, 32, 33, 34, 37, 38, 39}
@@ -111,17 +120,18 @@ func (t *TowerManager) AddTower(cursorPos cp.Vector) error {
 		return fmt.Errorf("Insufficient funds!")
 	}
 
-	// Load assets
-	towerAsset, err := t.assetManager.CharacterAsset("tower-blue")
-	if err != nil {
-		return fmt.Errorf("Could not find tower asset")
+	// Tower Factory
+	// FIX:Currently type of tower is randomly selected
+	selectedTower := TowerType(rand.Intn(2))
+	var tower *TowerEntity
+	switch selectedTower {
+	case SingleTarget:
+		tower, err = NewSingleTargetTower(t.world, t.assetManager)
+	case MultiTarget:
+		tower, err = NewMultiTargetTower(t.world, t.assetManager)
+	default:
+		err = fmt.Errorf("Invalid tower type provided")
 	}
-	projAsset, err := t.assetManager.ProjectileAsset("bone")
-	if err != nil {
-		return fmt.Errorf("Could not find projectile asset")
-	}
-	// Add tower entity
-	tower, err := NewTower(t.world, towerAsset, projAsset)
 	if err != nil {
 		return err
 	}

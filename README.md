@@ -2,6 +2,7 @@
 [Try it out](https://lucb31.github.io/game-engine-go/)
 
 # Engine
+TODO: Test player projectile shootin
 ## Damage model
 - Currently just plain damage values
 - Abstract to interface to calculate damage
