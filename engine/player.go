@@ -26,13 +26,13 @@ type Player struct {
 	projectileAsset     *ProjectileAsset
 	lastProjectileFired time.Time
 	animation           string
+	gun                 Gun
 }
 
 const (
-	playerVelocity          = 100
-	playerWidth             = 32
-	playerHeight            = 32
-	playerFireRatePerSecond = float64(1.3)
+	playerVelocity = 100
+	playerWidth    = 32
+	playerHeight   = 32
 )
 
 func NewPlayer(world GameEntityManager, asset *CharacterAsset, projectileAsset *ProjectileAsset) (*Player, error) {
@@ -50,6 +50,13 @@ func NewPlayer(world GameEntityManager, asset *CharacterAsset, projectileAsset *
 	p.shape.SetFriction(0)
 	p.shape.SetCollisionType(cp.CollisionType(PlayerCollision))
 	p.shape.SetFilter(PlayerCollisionFilter())
+
+	var err error
+	gunOpts := BasicGunOpts{FireRatePerSecond: 1.3}
+	p.gun, err = NewSimpleGun(world, p, projectileAsset, &p.orientation, gunOpts)
+	if err != nil {
+		return nil, err
+	}
 	return p, nil
 }
 
@@ -63,20 +70,6 @@ func (p *Player) Draw(screen *ebiten.Image) {
 }
 
 func (p *Player) shoot() {
-	now := time.Now()
-	duration := float64(time.Second) / playerFireRatePerSecond
-	if now.Sub(p.lastProjectileFired) < time.Duration(duration) {
-		// Still reloading
-		return
-	}
-	// Spawn projectile at player position
-	proj, err := NewProjectileWithOrientation(p, p.world, p.projectileAsset, p.orientation)
-	if err != nil {
-		fmt.Println("Could not shoot projectile")
-		return
-	}
-	p.world.AddEntity(proj)
-	p.lastProjectileFired = time.Now()
 }
 
 func (p *Player) Destroy() error {
@@ -88,8 +81,10 @@ func (p *Player) SetId(id GameEntityId) { p.id = id }
 func (p *Player) Shape() *cp.Shape      { return p.shape }
 
 func (p *Player) calculateVelocity(body *cp.Body, gravity cp.Vector, damping float64, dt float64) {
-	if ebiten.IsKeyPressed(ebiten.KeySpace) {
-		p.shoot()
+	if ebiten.IsKeyPressed(ebiten.KeySpace) && !p.gun.IsReloading() {
+		if err := p.gun.Shoot(); err != nil {
+			fmt.Println("Error when trying to shoot player gun", err.Error())
+		}
 	}
 	// Smoothen velocity
 	velocity := body.Velocity()

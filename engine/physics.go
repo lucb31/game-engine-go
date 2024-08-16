@@ -47,7 +47,7 @@ func removeProjectile(arb *cp.Arbiter, space *cp.Space, userData interface{}) {
 	}
 	collisionPartner, ok := b.UserData.(GameEntity)
 	// Ignore collision with projectile owners
-	if ok && collisionPartner.Id() == projectile.owner.Id() {
+	if ok && collisionPartner.Id() == projectile.gun.Owner().Id() {
 		return
 	}
 	fmt.Printf("Removing projectile after collision with %v \n", b.UserData)

@@ -1,7 +1,6 @@
 package td
 
 import (
-	"fmt"
 	"image/color"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -15,13 +14,14 @@ type TowerEntity struct {
 	world engine.GameEntityManager
 
 	// Rendering
-	asset           *engine.CharacterAsset
-	projectileAsset *engine.ProjectileAsset
-	animation       string
+	asset     *engine.CharacterAsset
+	animation string
 
 	// Physics
-	shape               *cp.Shape
-	lastProjectileFired float64
+	shape *cp.Shape
+
+	// Logic
+	gun engine.Gun
 }
 
 const (
@@ -29,7 +29,7 @@ const (
 )
 
 func NewTower(world engine.GameEntityManager, asset *engine.CharacterAsset, projectile *engine.ProjectileAsset) (*TowerEntity, error) {
-	tower := &TowerEntity{world: world, asset: asset, animation: "idle", projectileAsset: projectile}
+	tower := &TowerEntity{world: world, asset: asset, animation: "idle"}
 	body := cp.NewBody(1, cp.INFINITY)
 	body.SetPosition(cp.Vector{X: 70, Y: 70})
 	body.SetType(cp.BODY_KINEMATIC)
@@ -37,46 +37,24 @@ func NewTower(world engine.GameEntityManager, asset *engine.CharacterAsset, proj
 	body.UserData = tower
 	tower.shape = cp.NewBox(body, float64(towerSizeX), float64(towerSizeY), 0)
 	tower.shape.SetFilter(engine.TowerCollisionFilter())
+
+	var err error
+	gunOpts := engine.BasicGunOpts{
+		FireRatePerSecond: towerFireRatePerSecond,
+		FireRange:         tower.towerRange(),
+	}
+	tower.gun, err = engine.NewAutoAimGun(world, tower, projectile, gunOpts)
+	if err != nil {
+		return nil, err
+	}
 	return tower, nil
 }
 
 func (t *TowerEntity) Update(body *cp.Body, dt float64) {
-	target := t.chooseTarget()
-	t.shoot(target)
-}
-
-func (t *TowerEntity) chooseTarget() engine.GameEntity {
-	query := t.shape.Space().PointQueryNearest(t.shape.Body().Position(), t.towerRange(), cp.NewShapeFilter(cp.NO_GROUP, cp.ALL_CATEGORIES, engine.NpcCategory))
-	if query.Shape == nil {
-		return nil
-	}
-	npc, ok := query.Shape.Body().UserData.(*engine.NpcEntity)
-	if !ok {
-		fmt.Println("Expected npc target, but found something else")
-		return nil
-	}
-	return npc
-}
-
-func (t *TowerEntity) shoot(target engine.GameEntity) {
-	if target == nil {
+	if t.gun.IsReloading() {
 		return
 	}
-	// Timeout until reloaded
-	now := t.world.GetIngameTime()
-	diff := now - t.lastProjectileFired
-	if diff < 1/towerFireRatePerSecond {
-		return
-	}
-
-	// Spawn projectile
-	proj, err := engine.NewProjectileWithTarget(t, target, t.world, t.projectileAsset)
-	if err != nil {
-		fmt.Println("Could not shoot projectile")
-		return
-	}
-	t.world.AddEntity(proj)
-	t.lastProjectileFired = now
+	t.gun.Shoot()
 }
 
 func (t *TowerEntity) towerRange() float64 {

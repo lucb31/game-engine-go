@@ -22,7 +22,8 @@ type Projectile struct {
 	velocity float64
 
 	// Logic
-	owner     GameEntity
+	// Gun this projectile was fired from
+	gun       Gun
 	target    GameEntity
 	direction cp.Vector
 
@@ -50,8 +51,8 @@ func (a *ProjectileAsset) Draw(screen *ebiten.Image, position cp.Vector) error {
 	return nil
 }
 
-func NewProjectileWithTarget(owner GameEntity, target GameEntity, world GameEntityManager, asset *ProjectileAsset) (*Projectile, error) {
-	p, err := newProjectile(owner, world, asset)
+func NewProjectileWithTarget(gun Gun, target GameEntity, world GameEntityManager, asset *ProjectileAsset) (*Projectile, error) {
+	p, err := newProjectile(gun, world, asset)
 	if err != nil {
 		return nil, err
 	}
@@ -59,13 +60,13 @@ func NewProjectileWithTarget(owner GameEntity, target GameEntity, world GameEnti
 	return p, nil
 }
 
-func newProjectile(owner GameEntity, world GameEntityManager, asset *ProjectileAsset) (*Projectile, error) {
+func newProjectile(gun Gun, world GameEntityManager, asset *ProjectileAsset) (*Projectile, error) {
 	if asset.Image == nil {
 		return nil, fmt.Errorf("Failed to instantiate projectile. No asset provided")
 	}
 	p := &Projectile{world: world, asset: asset}
 	body := cp.NewBody(1, cp.INFINITY)
-	body.SetPosition(owner.Shape().Body().Position())
+	body.SetPosition(gun.Owner().Shape().Body().Position())
 	body.SetVelocityUpdateFunc(p.calculateVelocity)
 	body.UserData = p
 	p.shape = cp.NewBox(body, 16, 16, 0)
@@ -74,12 +75,12 @@ func newProjectile(owner GameEntity, world GameEntityManager, asset *ProjectileA
 	p.shape.SetCollisionType(cp.CollisionType(ProjectileCollision))
 	p.shape.SetFilter(ProjectileCollisionFilter())
 	p.velocity = 300
-	p.owner = owner
+	p.gun = gun
 	return p, nil
 }
 
-func NewProjectileWithDirection(owner GameEntity, world GameEntityManager, asset *ProjectileAsset, endPosition cp.Vector) (*Projectile, error) {
-	p, err := newProjectile(owner, world, asset)
+func NewProjectileWithDirection(gun Gun, world GameEntityManager, asset *ProjectileAsset, endPosition cp.Vector) (*Projectile, error) {
+	p, err := newProjectile(gun, world, asset)
 	if err != nil {
 		return nil, err
 	}
@@ -87,9 +88,9 @@ func NewProjectileWithDirection(owner GameEntity, world GameEntityManager, asset
 	return p, nil
 }
 
-func NewProjectileWithOrientation(owner GameEntity, world GameEntityManager, asset *ProjectileAsset, orientation Orientation) (*Projectile, error) {
-	destination := directionFromOrientationAndPos(orientation, owner.Shape().Body().Position())
-	return NewProjectileWithDirection(owner, world, asset, destination)
+func NewProjectileWithOrientation(gun Gun, world GameEntityManager, asset *ProjectileAsset, orientation Orientation) (*Projectile, error) {
+	destination := directionFromOrientationAndPos(orientation, gun.Owner().Shape().Body().Position())
+	return NewProjectileWithDirection(gun, world, asset, destination)
 }
 
 func directionFromOrientationAndPos(orientation Orientation, pos cp.Vector) cp.Vector {
