@@ -1,5 +1,7 @@
 package damage
 
+import "fmt"
+
 type Attacker interface {
 	Power() float64
 }
@@ -22,6 +24,7 @@ func ApplyDamage(atk Attacker, def Defender) error {
 		return err
 	}
 	newHealth := def.Health() - damage
+	fmt.Println("Applying damage ", damage, newHealth, def)
 	def.SetHealth(newHealth)
 	if newHealth <= 0.0 {
 		return def.Destroy()

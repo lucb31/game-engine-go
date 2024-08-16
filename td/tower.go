@@ -56,6 +56,7 @@ func NewSingleTargetTower(world engine.GameEntityManager, assetManager engine.As
 	gunOpts := engine.BasicGunOpts{
 		FireRatePerSecond: 1.5,
 		FireRange:         250.0,
+		Damage:            40,
 	}
 	tower.gun, err = engine.NewAutoAimGun(world, tower, projAsset, gunOpts)
 	if err != nil {
@@ -83,6 +84,7 @@ func NewMultiTargetTower(world engine.GameEntityManager, assetManager engine.Ass
 	gunOpts := engine.BasicGunOpts{
 		FireRatePerSecond: 1.0,
 		FireRange:         150.0,
+		Damage:            25,
 	}
 	tower.gun, err = engine.NewShotGun(world, tower, projAsset, gunOpts)
 	if err != nil {

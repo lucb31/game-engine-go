@@ -9,6 +9,7 @@ import (
 type Gun interface {
 	Shoot() error
 	FireRange() float64
+	Power() float64
 	IsReloading() bool
 	Owner() GameEntity
 }
@@ -16,6 +17,7 @@ type Gun interface {
 type BasicGunOpts struct {
 	FireRatePerSecond float64
 	FireRange         float64
+	Damage            float64
 }
 
 type BasicGun struct {
@@ -29,9 +31,11 @@ type BasicGun struct {
 	// Opts
 	fireRatePerSecond float64
 	fireRange         float64
+	damage            float64
 }
 
 func (g *BasicGun) Owner() GameEntity  { return g.owner }
+func (g *BasicGun) Power() float64     { return g.damage }
 func (g *BasicGun) FireRange() float64 { return g.fireRange }
 
 func (g *BasicGun) IsReloading() bool {
@@ -68,6 +72,11 @@ func NewBasicGun(em GameEntityManager, owner GameEntity, proj *ProjectileAsset, 
 		gun.fireRange = opts.FireRange
 	} else {
 		gun.fireRange = 100
+	}
+	if opts.Damage > 0 {
+		gun.damage = opts.Damage
+	} else {
+		gun.damage = 30
 	}
 	return gun, nil
 }
