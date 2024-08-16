@@ -33,10 +33,10 @@ func NewCastle(world engine.EntityRemover, asset *engine.CharacterAsset, cb game
 	c := &CastleEntity{world: world, asset: asset, health: startingHealth, gameOverCallback: cb}
 	c.animation = "idle"
 	body := cp.NewBody(1, cp.INFINITY)
-	body.SetPosition(cp.Vector{X: 640, Y: 384})
+	body.SetPosition(cp.Vector{X: 640, Y: 395})
 	body.SetType(cp.BODY_KINEMATIC)
 	body.UserData = c
-	c.shape = cp.NewBox(body, 32, 32, 0)
+	c.shape = cp.NewBox(body, 70, 50, 0)
 	c.shape.SetFilter(engine.TowerCollisionFilter())
 	c.shape.SetCollisionType(CastleCollision)
 	return c, nil

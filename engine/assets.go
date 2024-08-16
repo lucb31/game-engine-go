@@ -138,9 +138,9 @@ var characterResources []characterResource = []characterResource{
 		map[string]GameAssetAnimation{
 			"idle": {StartTile: 0, FrameCount: 1},
 		},
-		-22,
-		-14,
-		0.22,
+		-44,
+		-28,
+		0.44,
 	},
 }
 
