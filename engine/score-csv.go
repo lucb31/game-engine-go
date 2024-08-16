@@ -42,7 +42,7 @@ func (c *CsvScoreBoard) IsHighscore(score ScoreValue) bool {
 	if highscore == nil {
 		return false
 	}
-	return score > highscore.Score
+	return score >= highscore.Score
 }
 
 func (c *CsvScoreBoard) Highscore() *ScoreRecord {

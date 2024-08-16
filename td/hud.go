@@ -24,6 +24,7 @@ type GameHUD struct {
 	speedSlider       *widget.Slider
 	goldLabel         *widget.Text
 	gameOverContainer *widget.Container
+	gameOverScore     *widget.Text
 }
 
 type ProgressInfo struct {
@@ -43,7 +44,7 @@ func NewHUD(game *TDGame) (*GameHUD, error) {
 	hud.castleHealth = initCastleHealthProgressBar(rootContainer)
 	hud.speedSlider = hud.initGameSpeedSlider(rootContainer)
 	hud.goldLabel = initGoldLabel(rootContainer)
-	hud.gameOverContainer = initGameOverContainer(rootContainer)
+	hud.gameOverContainer = hud.initGameOverContainer(rootContainer)
 
 	// This adds the root container to the UI, so that it will be rendered.
 	hud.ui = &ebitenui.UI{
@@ -216,7 +217,7 @@ func initGoldLabel(root *widget.Container) *widget.Text {
 	return labelText
 }
 
-func initGameOverContainer(root *widget.Container) *widget.Container {
+func (hud *GameHUD) initGameOverContainer(root *widget.Container) *widget.Container {
 	container := widget.NewContainer(
 		widget.ContainerOpts.Layout(widget.NewRowLayout(
 			widget.RowLayoutOpts.Direction(widget.DirectionVertical),
@@ -252,6 +253,16 @@ func initGameOverContainer(root *widget.Container) *widget.Container {
 	)
 	container.AddChild(restartLabel)
 
+	// Display final score
+	fontFace = truetype.NewFace(ttfFont, &truetype.Options{
+		Size: 16,
+	})
+	hud.gameOverScore = widget.NewText(
+		widget.TextOpts.Text("Final score: 0", fontFace, color.RGBA{255, 255, 255, 1}),
+	)
+	container.AddChild(hud.gameOverScore)
+
+	// Disable game over elements by default
 	container.GetWidget().Visibility = widget.Visibility_Hide
 	root.AddChild(container)
 	return container
@@ -289,9 +300,19 @@ func (h *GameHUD) updateGold() {
 }
 
 func (h *GameHUD) updateGameOver() {
-	visibility := widget.Visibility_Hide
-	if h.game.world.IsOver() {
-		visibility = widget.Visibility_Show
+	// Toggle visibility of game over container
+	if !h.game.world.IsOver() {
+		h.gameOverContainer.GetWidget().Visibility = widget.Visibility_Hide
+		return
 	}
-	h.gameOverContainer.GetWidget().Visibility = visibility
+	h.gameOverContainer.GetWidget().Visibility = widget.Visibility_Show
+
+	// Update final score
+	currentHighscore := h.game.scoreBoard.Highscore().Score
+	currentScore := h.game.Score()
+	newScoreLabel := fmt.Sprintf("Final score: %1.1f (BEST %1.1f)", currentScore, currentHighscore)
+	if h.game.scoreBoard.IsHighscore(currentScore) {
+		newScoreLabel = fmt.Sprintf("HIGHSCORE: %1.1f", currentScore)
+	}
+	h.gameOverScore.Label = newScoreLabel
 }

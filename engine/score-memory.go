@@ -32,7 +32,7 @@ func (s *InMemoryScoreBoard) IsHighscore(val ScoreValue) bool {
 	if highscore == nil {
 		return true
 	}
-	return val > highscore.Score
+	return val >= highscore.Score
 }
 
 func (s *InMemoryScoreBoard) Highscore() *ScoreRecord {
