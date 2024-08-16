@@ -49,7 +49,7 @@ func NewSingleTargetTower(world engine.GameEntityManager, assetManager engine.As
 	}
 
 	// Init gun
-	projAsset, err := assetManager.ProjectileAsset("bone")
+	projAsset, err := assetManager.ProjectileAsset("arrow")
 	if err != nil {
 		return nil, fmt.Errorf("Could not find projectile asset")
 	}

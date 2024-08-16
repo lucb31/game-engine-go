@@ -25,20 +25,9 @@ func NewTileset(tilesetImage *ebiten.Image, tilesPerRow int, tileSize int, scale
 			(tileX+1)*tileSize,
 			(tileY+1)*tileSize,
 		)).(*ebiten.Image)
-		images[tileIdx] = scaleImg(rawIm, scale)
+		images[tileIdx] = ScaleImg(rawIm, scale)
 	}
 	return &Tileset{images: images}, nil
-}
-
-func scaleImg(im *ebiten.Image, scale float64) *ebiten.Image {
-	if scale == 1.0 || im.Bounds().Dx() == 0 || im.Bounds().Dy() == 0 {
-		return im
-	}
-	op := ebiten.DrawImageOptions{}
-	op.GeoM.Scale(scale, scale)
-	result := ebiten.NewImage(int(float64(im.Bounds().Dx())*scale), int(float64(im.Bounds().Dy())*scale))
-	result.DrawImage(im, &op)
-	return result
 }
 
 func (t *Tileset) GetTile(tileIdx int) (*ebiten.Image, error) {

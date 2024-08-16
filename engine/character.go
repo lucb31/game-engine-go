@@ -39,7 +39,7 @@ func (a *CharacterAsset) GetTile(activeAnimation string) (*ebiten.Image, error) 
 		return nil, err
 	}
 	if animation.Flip {
-		return flipHorizontal(subIm), nil
+		return FlipHorizontal(subIm), nil
 	}
 	return subIm, nil
 }
@@ -66,15 +66,6 @@ func (a *CharacterAsset) DrawRectBoundingBox(screen *ebiten.Image, shape *cp.Sha
 	height := shape.BB().T - shape.BB().B
 	vector.StrokeRect(screen, float32(shape.Body().Position().X-width/2), float32(shape.Body().Position().Y-height/2), float32(width), float32(height), 2.5, color.RGBA{255, 0, 0, 255}, false)
 	return nil
-}
-
-func flipHorizontal(source *ebiten.Image) *ebiten.Image {
-	result := ebiten.NewImage(source.Bounds().Dx(), source.Bounds().Dy())
-	op := &ebiten.DrawImageOptions{}
-	op.GeoM.Scale(-1, 1)
-	op.GeoM.Translate(float64(source.Bounds().Dx()), 0)
-	result.DrawImage(source, op)
-	return result
 }
 
 func calculateWalkingAnimation(vel cp.Vector, orientation Orientation) string {

@@ -40,14 +40,19 @@ type ProjectileAsset struct {
 
 const defaultProjectileSpeed = float64(300.0)
 
-func (a *ProjectileAsset) Draw(screen *ebiten.Image, position cp.Vector) error {
+func (a *ProjectileAsset) Draw(screen *ebiten.Image, position cp.Vector, angleInRad float64) error {
 	op := ebiten.DrawImageOptions{}
 	// Offset by half asset size to center position
 	op.GeoM.Translate(-float64(a.Image.Bounds().Dx())/2, -float64(a.Image.Bounds().Dy())/2)
 	// Add rotating animation
-	animationFrameCount := 16
-	animationFrame := int(*a.currentFrame/int64(a.animationSpeed)) % animationFrameCount
-	op.GeoM.Rotate(2 * math.Pi / float64(animationFrameCount) * float64(animationFrame))
+	if a.animationSpeed > 0 {
+		animationFrameCount := 16
+		animationFrame := int(*a.currentFrame/int64(a.animationSpeed)) % animationFrameCount
+		op.GeoM.Rotate(2 * math.Pi / float64(animationFrameCount) * float64(animationFrame))
+	} else {
+		op.GeoM.Rotate(angleInRad)
+	}
+
 	// Translate to physical position
 	op.GeoM.Translate(position.X, position.Y)
 	screen.DrawImage(a.Image, &op)
@@ -76,7 +81,8 @@ func NewProjectile(gun Gun, world GameEntityManager, asset *ProjectileAsset) (*P
 }
 
 func (p *Projectile) Draw(screen *ebiten.Image) {
-	p.asset.Draw(screen, p.shape.Body().Position())
+	angle := p.Shape().Body().Position().Sub(p.direction).Neg().ToAngle()
+	p.asset.Draw(screen, p.shape.Body().Position(), angle)
 }
 
 func (p *Projectile) Id() GameEntityId      { return p.id }
@@ -87,7 +93,6 @@ func (p *Projectile) Destroy() error {
 }
 
 func (p *Projectile) calculateVelocity(body *cp.Body, gravity cp.Vector, damping float64, dt float64) {
-	direction := p.direction
 	// Remove guided projectile if target no longer exists
 	if p.target != nil {
 		// TODO: Utilize physics space query to find target. Then we can remove the whole "GetEntities" idea
@@ -97,7 +102,7 @@ func (p *Projectile) calculateVelocity(body *cp.Body, gravity cp.Vector, damping
 			return
 		}
 
-		direction = p.target.Shape().Body().Position()
+		p.direction = p.target.Shape().Body().Position()
 	}
 	// Remove projectile if fire range exceeded
 	distanceTravelled := p.shape.Body().Position().Distance(p.origin)
@@ -107,7 +112,7 @@ func (p *Projectile) calculateVelocity(body *cp.Body, gravity cp.Vector, damping
 	}
 
 	position := body.Position()
-	diff := direction.Sub(position)
+	diff := p.direction.Sub(position)
 	diffNormalized := diff.Normalize()
 	vel := diffNormalized.Mult(p.velocity)
 	body.SetVelocityVector(vel)

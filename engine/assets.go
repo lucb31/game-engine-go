@@ -208,6 +208,8 @@ func loadCharacterAssets(frameCount *int64) (map[string]CharacterAsset, error) {
 
 func loadProjectileAssets(frameCount *int64) (map[string]ProjectileAsset, error) {
 	projectiles := map[string]ProjectileAsset{}
+
+	// Load bone
 	im, err := loadImageFromBinaryPng(assets.Bone)
 	if err != nil {
 		return nil, err
@@ -220,12 +222,22 @@ func loadProjectileAssets(frameCount *int64) (map[string]ProjectileAsset, error)
 	op.GeoM.Scale(float64(targetSize)/float64(rawIm.Bounds().Dx()), float64(targetSize)/float64(rawIm.Bounds().Dy()))
 	scaledIm.DrawImage(rawIm, op)
 	// Add to asset map
-	asset := ProjectileAsset{
+	projectiles["bone"] = ProjectileAsset{
 		Image:          scaledIm,
 		currentFrame:   frameCount,
 		animationSpeed: 2,
 	}
-	projectiles["bone"] = asset
+
+	// Load arrow
+	im, err = loadImageFromBinaryPng(assets.Arrow)
+	if err != nil {
+		return nil, err
+	}
+	projectiles["arrow"] = ProjectileAsset{
+		Image:          ScaleImg(ebiten.NewImageFromImage(im), 0.5),
+		currentFrame:   frameCount,
+		animationSpeed: 0,
+	}
 	return projectiles, nil
 }
 
