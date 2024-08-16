@@ -10,6 +10,7 @@ type InMemoryScoreBoard struct {
 }
 
 func NewInMemoryScoreBoard() (*InMemoryScoreBoard, error) {
+	fmt.Println("Initializing in mem scoreboard")
 	return &InMemoryScoreBoard{}, nil
 }
 

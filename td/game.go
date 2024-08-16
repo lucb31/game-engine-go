@@ -2,6 +2,7 @@ package td
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/jakecoffman/cp"
@@ -140,10 +141,14 @@ func NewTDGame(screenWidth, screenHeight int) (*TDGame, error) {
 	game := &TDGame{screenWidth: screenWidth, screenHeight: screenHeight}
 	var err error
 
-	// Setup scoreboard
-	// TODO: Determine scoreboard based on OS. Use in mem in web
-	// game.scoreBoard, err = engine.NewCsvScoreKeeper("data/score.csv")
-	game.scoreBoard, err = engine.NewInMemoryScoreBoard()
+	// Setup scoreboard: Use in memory in web env
+	_, err = os.Getwd()
+	if err != nil {
+		game.scoreBoard, err = engine.NewInMemoryScoreBoard()
+	} else {
+		game.scoreBoard, err = engine.NewCsvScoreKeeper("data/score.csv")
+	}
+
 	if err != nil {
 		return nil, err
 	}

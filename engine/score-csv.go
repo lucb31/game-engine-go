@@ -14,6 +14,7 @@ type CsvScoreBoard struct {
 }
 
 func NewCsvScoreKeeper(path string) (*CsvScoreBoard, error) {
+	fmt.Println("Initializing csv scoreboard")
 	return &CsvScoreBoard{path}, nil
 }
 
