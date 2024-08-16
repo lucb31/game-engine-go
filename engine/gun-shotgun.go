@@ -27,6 +27,12 @@ func (g *ShotGun) Shoot() error {
 		return fmt.Errorf("Still Reloading...")
 	}
 
+	// Dont shoot if nothing in range
+	target := g.chooseTarget()
+	if target == nil {
+		return nil
+	}
+
 	// Spawn projectiles
 	for idx := range g.projectiles {
 		angleInRad := math.Pi * float64(2*idx) / float64(g.projectiles)

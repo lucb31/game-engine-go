@@ -1,5 +1,11 @@
 package engine
 
+import (
+	"fmt"
+
+	"github.com/jakecoffman/cp"
+)
+
 type Gun interface {
 	Shoot() error
 	FireRange() float64
@@ -35,6 +41,19 @@ func (g *BasicGun) IsReloading() bool {
 		return true
 	}
 	return false
+}
+
+func (g *BasicGun) chooseTarget() GameEntity {
+	query := g.owner.Shape().Space().PointQueryNearest(g.owner.Shape().Body().Position(), g.fireRange, cp.NewShapeFilter(cp.NO_GROUP, cp.ALL_CATEGORIES, NpcCategory))
+	if query.Shape == nil {
+		return nil
+	}
+	npc, ok := query.Shape.Body().UserData.(*NpcEntity)
+	if !ok {
+		fmt.Println("Expected npc target, but found something else")
+		return nil
+	}
+	return npc
 }
 
 func NewBasicGun(em GameEntityManager, owner GameEntity, proj *ProjectileAsset, opts BasicGunOpts) (*BasicGun, error) {

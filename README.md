@@ -22,7 +22,6 @@ TODO: Test player projectile shootin
 ## Towers
 
 ### Feat
-- Add AoE tower
 - Add targetting algorithm: Currently closest to tower 
 
 ## Creeps

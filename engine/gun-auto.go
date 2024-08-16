@@ -2,8 +2,6 @@ package engine
 
 import (
 	"fmt"
-
-	"github.com/jakecoffman/cp"
 )
 
 type AutoAimGun struct {
@@ -39,17 +37,4 @@ func (g *AutoAimGun) Shoot() error {
 	g.em.AddEntity(proj)
 	g.lastProjectileFired = g.em.GetIngameTime()
 	return nil
-}
-
-func (g *AutoAimGun) chooseTarget() GameEntity {
-	query := g.owner.Shape().Space().PointQueryNearest(g.owner.Shape().Body().Position(), g.fireRange, cp.NewShapeFilter(cp.NO_GROUP, cp.ALL_CATEGORIES, NpcCategory))
-	if query.Shape == nil {
-		return nil
-	}
-	npc, ok := query.Shape.Body().UserData.(*NpcEntity)
-	if !ok {
-		fmt.Println("Expected npc target, but found something else")
-		return nil
-	}
-	return npc
 }
