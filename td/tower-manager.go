@@ -15,8 +15,8 @@ type TowerManager struct {
 	goldManager    engine.GoldManager
 	worldMapReader engine.WorldMapReader
 
-	towerAsset      *engine.CharacterAsset
 	projectileAsset *engine.ProjectileAsset
+	towerAsset      *engine.CharacterAsset
 
 	lastTowerSpawned time.Time
 	touches          map[ebiten.TouchID]time.Time
@@ -34,10 +34,17 @@ var buildableTiles = []engine.MapTile{25, 26, 27, 28, 29, 31, 32, 33, 34, 37, 38
 
 func NewTowerManager(
 	world engine.GameEntityManager,
-	towerAsset *engine.CharacterAsset,
-	projAsset *engine.ProjectileAsset,
+	am engine.AssetManager,
 	goldManager engine.GoldManager,
 	worldMapReader engine.WorldMapReader) (*TowerManager, error) {
+	towerAsset, err := am.CharacterAsset("tower-blue")
+	if err != nil {
+		return nil, fmt.Errorf("Could not find tower asset")
+	}
+	projAsset, err := am.ProjectileAsset("bone")
+	if err != nil {
+		return nil, fmt.Errorf("Could not find projectile asset")
+	}
 	return &TowerManager{world: world, towerAsset: towerAsset, projectileAsset: projAsset, goldManager: goldManager, worldMapReader: worldMapReader}, nil
 }
 

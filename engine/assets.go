@@ -11,14 +11,20 @@ import (
 	"github.com/lucb31/game-engine-go/assets"
 )
 
-type AssetManager struct {
-	Tilesets         map[string]Tileset
-	CharacterAssets  map[string]CharacterAsset
-	ProjectileAssets map[string]ProjectileAsset
+type AssetManager interface {
+	CharacterAsset(string) (*CharacterAsset, error)
+	ProjectileAsset(string) (*ProjectileAsset, error)
+	Tileset(string) (*Tileset, error)
 }
 
-func NewAssetManager(frameCount *int64) (*AssetManager, error) {
-	am := &AssetManager{}
+type AssetManagerImpl struct {
+	Tilesets         map[string]Tileset
+	characterAssets  map[string]CharacterAsset
+	projectileAssets map[string]ProjectileAsset
+}
+
+func NewAssetManager(frameCount *int64) (*AssetManagerImpl, error) {
+	am := &AssetManagerImpl{}
 	var err error
 
 	am.Tilesets, err = loadEnvironmentTilesets()
@@ -26,12 +32,12 @@ func NewAssetManager(frameCount *int64) (*AssetManager, error) {
 		return nil, err
 	}
 
-	am.CharacterAssets, err = loadCharacterAssets(frameCount)
+	am.characterAssets, err = loadCharacterAssets(frameCount)
 	if err != nil {
 		return nil, err
 	}
 
-	am.ProjectileAssets, err = loadProjectileAssets(frameCount)
+	am.projectileAssets, err = loadProjectileAssets(frameCount)
 	if err != nil {
 		return nil, err
 	}
@@ -39,12 +45,36 @@ func NewAssetManager(frameCount *int64) (*AssetManager, error) {
 	return am, nil
 }
 
-func (a *AssetManager) GetTile(tileSetKey string, tileIdx int) (*ebiten.Image, error) {
+func (a *AssetManagerImpl) GetTile(tileSetKey string, tileIdx int) (*ebiten.Image, error) {
 	tileSet, ok := a.Tilesets[tileSetKey]
 	if !ok {
 		return nil, fmt.Errorf("Trying to access unknown tileset %v", tileSetKey)
 	}
 	return tileSet.GetTile(tileIdx)
+}
+
+func (a *AssetManagerImpl) CharacterAsset(identifier string) (*CharacterAsset, error) {
+	res, ok := a.characterAssets[identifier]
+	if !ok {
+		return nil, fmt.Errorf("Trying to access unknown asset %s", identifier)
+	}
+	return &res, nil
+}
+
+func (a *AssetManagerImpl) ProjectileAsset(identifier string) (*ProjectileAsset, error) {
+	res, ok := a.projectileAssets[identifier]
+	if !ok {
+		return nil, fmt.Errorf("Trying to access unknown asset %s", identifier)
+	}
+	return &res, nil
+}
+
+func (a *AssetManagerImpl) Tileset(identifier string) (*Tileset, error) {
+	res, ok := a.Tilesets[identifier]
+	if !ok {
+		return nil, fmt.Errorf("Trying to access unknown asset %s", identifier)
+	}
+	return &res, nil
 }
 
 type tileResource struct {

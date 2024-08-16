@@ -17,7 +17,7 @@ type GameWorld struct {
 	FrameCount int64
 	// Integral of Physical time steps. Used for game sim
 	gameTime     float64
-	AssetManager *AssetManager
+	AssetManager AssetManager
 	space        *cp.Space
 
 	nextObjectId GameEntityId
@@ -125,30 +125,31 @@ func createFences(am *AssetManager, space *cp.Space) ([]GameEntity, error) {
 		{-1, -1, -1, -1, 4, -1, -1, 4},
 		{-1, -1, -1, -1, 9, 14, 14, 10},
 	}
+	_ = fenceData
 	objects := []GameEntity{}
 	// Temporary disable fence
 	return objects, nil
-	for row, rowData := range fenceData {
-		for col, tileIdx := range rowData {
-			if tileIdx > -1 {
-				im, err := am.GetTile("fences", tileIdx)
-				if err != nil {
-					return nil, err
-				}
-				body := cp.NewStaticBody()
-				body.SetPosition(cp.Vector{X: float64(mapTileSize * col), Y: float64(mapTileSize * row)})
-				shape := cp.NewBox(body, 16, 16, 0)
-				//shape := cp.NewCircle(body, 8, cp.Vector{})
+	// for row, rowData := range fenceData {
+	// 	for col, tileIdx := range rowData {
+	// 		if tileIdx > -1 {
+	// 			im, err := am.GetTile("fences", tileIdx)
+	// 			if err != nil {
+	// 				return nil, err
+	// 			}
+	// 			body := cp.NewStaticBody()
+	// 			body.SetPosition(cp.Vector{X: float64(mapTileSize * col), Y: float64(mapTileSize * row)})
+	// 			shape := cp.NewBox(body, 16, 16, 0)
+	// 			//shape := cp.NewCircle(body, 8, cp.Vector{})
 
-				shape.SetFriction(1)
-				shape.SetElasticity(0)
-				space.AddBody(body)
-				space.AddShape(shape)
-				objects = append(objects, &StaticGameEntity{shape: shape, Image: im})
-			}
-		}
-	}
-	return objects, nil
+	// 			shape.SetFriction(1)
+	// 			shape.SetElasticity(0)
+	// 			space.AddBody(body)
+	// 			space.AddShape(shape)
+	// 			objects = append(objects, &StaticGameEntity{shape: shape, Image: im})
+	// 		}
+	// 	}
+	// }
+	// return objects, nil
 }
 
 func initializeBoundingBox(space *cp.Space, width float64, height float64) {
@@ -195,17 +196,17 @@ func NewWorld(width int64, height int64) (*GameWorld, error) {
 	return &w, nil
 }
 
-func initPlayer(w *GameWorld, am *AssetManager) error {
+func initPlayer(w *GameWorld, am AssetManager) error {
 	// Initialize player (after world has been initialized to reference it)
-	asset, ok := am.CharacterAssets["player"]
-	if !ok {
-		return fmt.Errorf("Could not find player asset")
+	playerAsset, err := am.CharacterAsset("player")
+	if err != nil {
+		return err
 	}
-	projAsset, ok := am.ProjectileAssets["bone"]
-	if !ok {
-		return fmt.Errorf("Could not find projectile asset")
+	projAsset, err := am.ProjectileAsset("bone")
+	if err != nil {
+		return err
 	}
-	player, err := NewPlayer(w, &asset, &projAsset)
+	player, err := NewPlayer(w, playerAsset, projAsset)
 	if err != nil {
 		return err
 	}

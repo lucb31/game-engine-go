@@ -66,7 +66,7 @@ func (b *WorldMap) Draw(screen *ebiten.Image) {
 }
 
 // Generate new world map for widht & height dimensions IN PX
-func NewWorldMap(width, height int64, mapCsv []byte, tileset Tileset) (*WorldMap, error) {
+func NewWorldMap(width, height int64, mapCsv []byte, tileset *Tileset) (*WorldMap, error) {
 	// Read map data from provided path
 	csvMapData, err := readCsvFromBinary(mapCsv)
 	if err != nil {
@@ -84,7 +84,7 @@ func NewWorldMap(width, height int64, mapCsv []byte, tileset Tileset) (*WorldMap
 			}
 		}
 	}
-	return &WorldMap{tileData: mapData, tileset: tileset}, nil
+	return &WorldMap{tileData: mapData, tileset: *tileset}, nil
 }
 
 func (w *WorldMap) TileAt(worldPos cp.Vector) (MapTile, error) {

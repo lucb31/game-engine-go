@@ -64,7 +64,11 @@ func (game *TDGame) initialize() error {
 	}
 	am := w.AssetManager
 	// Initialize map
-	w.WorldMap, err = engine.NewWorldMap(width, height, assets.LabyrinthMapCSV, am.Tilesets["plains"])
+	tileset, err := am.Tileset("plains")
+	if err != nil {
+		return err
+	}
+	w.WorldMap, err = engine.NewWorldMap(width, height, assets.LabyrinthMapCSV, tileset)
 	if err != nil {
 		return err
 	}
@@ -88,11 +92,11 @@ func (game *TDGame) initialize() error {
 	}
 
 	// Initialize castle
-	castleAsset, ok := am.CharacterAssets["castle"]
-	if !ok {
+	castleAsset, err := am.CharacterAsset("castle")
+	if err != nil {
 		return fmt.Errorf("Could not find castle asset")
 	}
-	game.castle, err = NewCastle(w, &castleAsset, game.EndGame)
+	game.castle, err = NewCastle(w, castleAsset, game.EndGame)
 	if err != nil {
 		return err
 	}
@@ -107,22 +111,14 @@ func (game *TDGame) initialize() error {
 	game.goldManager.Add(50)
 
 	// Setup tower management
-	towerAsset, ok := am.CharacterAssets["tower-blue"]
-	if !ok {
-		return fmt.Errorf("Could not find tower asset")
-	}
-	projectile, ok := am.ProjectileAssets["bone"]
-	if !ok {
-		return fmt.Errorf("Could not find projectile asset")
-	}
-	game.towerManager, err = NewTowerManager(w, &towerAsset, &projectile, game.goldManager, game.world.WorldMap)
+	game.towerManager, err = NewTowerManager(w, am, game.goldManager, game.world.WorldMap)
 
 	// Setup creep management
-	npcAsset, ok := w.AssetManager.CharacterAssets["npc-torch"]
-	if !ok {
+	npcAsset, err := w.AssetManager.CharacterAsset("npc-torch")
+	if err != nil {
 		return fmt.Errorf("Cannot initialize creep management: Could not find npc asset")
 	}
-	game.creepManager, err = NewCreepManager(w, &npcAsset, game.goldManager)
+	game.creepManager, err = NewCreepManager(w, npcAsset, game.goldManager)
 	if err != nil {
 		return err
 	}
