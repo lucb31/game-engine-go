@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/jakecoffman/cp"
+	"github.com/lucb31/game-engine-go/engine/damage"
 )
 
 type CustomCollisionType cp.CollisionType
@@ -23,12 +24,19 @@ const (
 	ProjectileCategory uint = 1 << 5
 )
 
-func NewPhysicsSpace() (*cp.Space, error) {
+// Used to pass damage model and in game timer to collision callback
+type HandlerUserData struct {
+	damageModel damage.DamageModel
+	gameTime    *float64
+}
+
+func NewPhysicsSpace(damageModel damage.DamageModel, gameTime *float64) (*cp.Space, error) {
 	// Initialize physics
 	space := cp.NewSpace()
 	// Register collision handlers
 	handler := space.NewCollisionHandler(cp.CollisionType(ProjectileCollision), cp.CollisionType(NpcCollision))
-	handler.BeginFunc = npcProjectilecollisionHandler
+	handler.UserData = HandlerUserData{damageModel, gameTime}
+	handler.BeginFunc = projectileCollisionHandler
 	space.NewWildcardCollisionHandler(cp.CollisionType(ProjectileCollision)).PostSolveFunc = removeProjectile
 	return space, nil
 }
@@ -54,7 +62,7 @@ func removeProjectile(arb *cp.Arbiter, space *cp.Space, userData interface{}) {
 	projectile.Destroy()
 }
 
-func npcProjectilecollisionHandler(arb *cp.Arbiter, space *cp.Space, userData interface{}) bool {
+func projectileCollisionHandler(arb *cp.Arbiter, space *cp.Space, userData interface{}) bool {
 	// Validate correct collision partners & type assert
 	a, b := arb.Bodies()
 	projectile, ok := a.UserData.(*Projectile)
@@ -62,13 +70,24 @@ func npcProjectilecollisionHandler(arb *cp.Arbiter, space *cp.Space, userData in
 		fmt.Println("Type assertion for projectile collision failed. Did not receive valid Projectile")
 		return false
 	}
-	npc, ok := b.UserData.(*NpcEntity)
+	defender, ok := b.UserData.(damage.Defender)
 	if !ok {
-		fmt.Println("Type assertion for projectile collision failed. Did not receive valid Npc", b.UserData)
+		fmt.Println("Type assertion for projectile collision failed. Did not receive valid Damage defender", b.UserData)
 		return false
 	}
-	// Trigger projectile hit with COPY of projectile
-	npc.OnProjectileHit(*projectile)
+
+	// Read damage model from userData
+	handlerData, ok := userData.(HandlerUserData)
+	if !ok {
+		fmt.Println("Could not read damage model")
+		return false
+	}
+	damageModel := handlerData.damageModel
+	// Calculate & apply damage with COPY of projectile
+	_, err := damageModel.ApplyDamage(projectile, defender, *handlerData.gameTime)
+	if err != nil {
+		fmt.Println("Could not apply damage", err.Error())
+	}
 	// Remove projectile
 	projectile.Destroy()
 	return false

@@ -3,7 +3,6 @@ package engine
 import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/jakecoffman/cp"
-	"github.com/lucb31/game-engine-go/engine/damage"
 )
 
 type NpcEntity struct {
@@ -84,10 +83,6 @@ func (n *NpcEntity) Draw(screen *ebiten.Image) {
 
 func (n *NpcEntity) Destroy() error {
 	return n.remover.RemoveEntity(n)
-}
-
-func (n *NpcEntity) OnProjectileHit(projectile Projectile) {
-	damage.ApplyDamage(&projectile, n)
 }
 
 func (n *NpcEntity) Id() GameEntityId      { return n.id }

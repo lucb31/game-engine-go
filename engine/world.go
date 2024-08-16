@@ -4,7 +4,9 @@ import (
 	"fmt"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/jakecoffman/cp"
+	"github.com/lucb31/game-engine-go/engine/damage"
 )
 
 type GameWorld struct {
@@ -16,7 +18,7 @@ type GameWorld struct {
 	// Number of frames drawn. Used for animation
 	FrameCount int64
 	// Integral of Physical time steps. Used for game sim
-	gameTime     float64
+	gameTime     *float64
 	AssetManager AssetManager
 	space        *cp.Space
 
@@ -24,8 +26,10 @@ type GameWorld struct {
 	// Removing object from the world needs to be buffered towards the end of a timestep
 	objectIdsToDelete []GameEntityId
 
-	gameOver  bool
-	GameSpeed float64
+	// Game logic
+	gameOver    bool
+	GameSpeed   float64
+	damageModel damage.DamageModel
 }
 
 func (w *GameWorld) Draw(screen *ebiten.Image) {
@@ -40,6 +44,27 @@ func (w *GameWorld) Draw(screen *ebiten.Image) {
 	if w.player != nil {
 		w.player.Draw(screen)
 	}
+	w.drawCombatLog(screen)
+}
+
+func (w *GameWorld) drawCombatLog(screen *ebiten.Image) {
+	log := w.damageModel.DamageLog()
+	entries := log.Entries()
+	for idx, entry := range entries {
+		// Cleanup: Remove entries older than X seconds
+		maxTimeDiff := 1.5
+		timeDiff := w.GetIngameTime() - entry.GameTime
+		if timeDiff > maxTimeDiff {
+			if err := log.RemoveByIdx(idx); err != nil {
+				fmt.Println("Could not remove log entry", entry, err.Error())
+			}
+			return
+		}
+		x := int(entry.Pos.X)
+		// Animate to scroll upwards
+		y := int(entry.Pos.Y - timeDiff/maxTimeDiff*20)
+		ebitenutil.DebugPrintAt(screen, fmt.Sprintf("%.0f", entry.Damage), x, y)
+	}
 }
 
 func (w *GameWorld) Update() {
@@ -49,7 +74,7 @@ func (w *GameWorld) Update() {
 	}
 	w.FrameCount++
 	dt := w.GameSpeed / 60.0
-	w.gameTime += dt
+	*w.gameTime += dt
 	w.space.Step(dt)
 	// Delete objects scheduled for deletion
 	if len(w.objectIdsToDelete) > 0 {
@@ -85,25 +110,12 @@ func (w *GameWorld) RemoveEntity(object GameEntity) error {
 	return nil
 }
 
-func (w *GameWorld) GetEntities() *map[GameEntityId]GameEntity {
-	return &w.objects
-}
-
-func (w *GameWorld) EndGame() {
-	w.gameOver = true
-}
-
-func (w *GameWorld) Space() *cp.Space {
-	return w.space
-}
-
-func (w *GameWorld) GetIngameTime() float64 {
-	return w.gameTime
-}
-
-func (w *GameWorld) IsOver() bool {
-	return w.gameOver
-}
+func (w *GameWorld) GetEntities() *map[GameEntityId]GameEntity { return &w.objects }
+func (w *GameWorld) EndGame()                                  { w.gameOver = true }
+func (w *GameWorld) Space() *cp.Space                          { return w.space }
+func (w *GameWorld) GetIngameTime() float64                    { return *w.gameTime }
+func (w *GameWorld) IsOver() bool                              { return w.gameOver }
+func (w *GameWorld) DamageModel() damage.DamageModel           { return w.damageModel }
 
 // Actually remove a game entity from physics & object space
 func (w *GameWorld) removeObject(id GameEntityId) {
@@ -173,18 +185,27 @@ func BoundingBoxFilter() cp.ShapeFilter {
 }
 
 func NewWorld(width int64, height int64) (*GameWorld, error) {
+	// Intialize damage model
+	damageModel, err := damage.NewBasicDamageModel()
+	if err != nil {
+		return nil, err
+	}
+
 	// Initialize physics
-	space, err := NewPhysicsSpace()
+	gameTime := float64(0)
+	space, err := NewPhysicsSpace(damageModel, &gameTime)
 	if err != nil {
 		return nil, err
 	}
 	initializeBoundingBox(space, float64(width), float64(height))
 	w := GameWorld{
-		Width:     width,
-		Height:    height,
-		space:     space,
-		objects:   map[GameEntityId]GameEntity{},
-		GameSpeed: 1.0,
+		gameTime:    &gameTime,
+		Width:       width,
+		Height:      height,
+		space:       space,
+		damageModel: damageModel,
+		objects:     map[GameEntityId]GameEntity{},
+		GameSpeed:   1.0,
 	}
 	// Initialize assets
 	am, err := NewAssetManager(&w.FrameCount)

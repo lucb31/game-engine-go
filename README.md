@@ -4,8 +4,6 @@
 # Engine
 TODO: Test player projectile shootin
 ## Damage model
-- Currently just plain damage values
-- Abstract to interface to calculate damage
 - Add floating combat text
 - Add some randomization to demonstrate damage model (might remove / disable later) 
 

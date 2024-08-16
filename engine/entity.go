@@ -3,6 +3,7 @@ package engine
 import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/jakecoffman/cp"
+	"github.com/lucb31/game-engine-go/engine/damage"
 )
 
 type GameEntityId int
@@ -18,11 +19,15 @@ type EntityRemover interface {
 	RemoveEntity(object GameEntity) error
 }
 
+type IngameTimeProvider interface {
+	GetIngameTime() float64
+}
 type GameEntityManager interface {
 	EntityRemover
+	IngameTimeProvider
 	AddEntity(object GameEntity) error
 	GetEntities() *map[GameEntityId](GameEntity)
-	GetIngameTime() float64
 	Space() *cp.Space
+	DamageModel() damage.DamageModel
 	EndGame()
 }
