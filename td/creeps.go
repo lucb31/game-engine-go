@@ -27,7 +27,7 @@ type Wave struct {
 	CreepSpawnRatePerSecond float64
 }
 
-const goldPerKill = int64(1)
+const goldPerKill = int64(2)
 
 func NewCreepManager(em engine.GameEntityManager, asset *engine.CharacterAsset, goldManager engine.GoldManager) (*CreepManager, error) {
 	if asset == nil || em == nil {
@@ -74,7 +74,7 @@ func (c *CreepManager) spawnCreep() error {
 func calculateWaveOpts(round int) Wave {
 	wave := Wave{Round: round}
 	wave.CreepsToSpawn = int(math.Exp(float64(round)/4) + 29)
-	wave.CreepSpawnRatePerSecond = 0.5
+	wave.CreepSpawnRatePerSecond = 1.0
 	startingHealth := math.Pow(3.5*float64(round), 2) + 100
 	wave.CreepOpts = engine.NpcOpts{StartingHealth: startingHealth}
 	return wave
