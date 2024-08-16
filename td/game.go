@@ -15,6 +15,7 @@ type TDGame struct {
 	creepManager              *CreepManager
 	towerManager              *TowerManager
 	goldManager               engine.GoldManager
+	scoreBoard                engine.ScoreBoard
 	hud                       *GameHUD
 	castle                    *CastleEntity
 }
@@ -80,7 +81,7 @@ func NewTDGame(screenWidth, screenHeight int) (*TDGame, error) {
 	if !ok {
 		return nil, fmt.Errorf("Could not find castle asset")
 	}
-	game.castle, err = NewCastle(w, &castleAsset)
+	game.castle, err = NewCastle(w, &castleAsset, game.EndGame)
 	if err != nil {
 		return nil, err
 	}
@@ -121,6 +122,12 @@ func NewTDGame(screenWidth, screenHeight int) (*TDGame, error) {
 		return nil, err
 	}
 
+	// Setup scoreboard
+	game.scoreBoard, err = engine.NewCsvScoreKeeper("data/score.csv")
+	if err != nil {
+		return nil, err
+	}
+
 	return game, nil
 }
 
@@ -142,4 +149,17 @@ func (g *TDGame) SetSpeed(speed float64) {
 
 func (g *TDGame) Balance() int64 {
 	return g.goldManager.Balance()
+}
+
+func (g *TDGame) EndGame() {
+	g.world.EndGame()
+	fmt.Printf("You've lost at wave %d \n", g.creepManager.Round())
+	err := g.scoreBoard.Save(engine.ScoreValue(float64(g.creepManager.goldManager.Revenue())))
+	if err != nil {
+		fmt.Println("Could not save score", err.Error())
+	}
+	if err = g.scoreBoard.Print(); err != nil {
+		fmt.Println("Could not print scoreboard", err.Error())
+	}
+	fmt.Println("Waiting for restart...")
 }

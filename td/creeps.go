@@ -116,3 +116,7 @@ func (c *CreepManager) GetProgress() ProgressInfo {
 	label := fmt.Sprintf("Wave %d", c.activeWave.Round)
 	return ProgressInfo{min: 0, max: c.creepsToSpawn(), current: c.creepsSpawned, label: label}
 }
+
+func (c *CreepManager) Round() int {
+	return c.activeWave.Round
+}

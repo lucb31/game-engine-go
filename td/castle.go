@@ -11,9 +11,10 @@ import (
 const startingHealth = float64(100.0)
 const CastleCollision = cp.CollisionType(200)
 
+type gameOverCallback = func()
 type CastleEntity struct {
 	id    engine.GameEntityId
-	world engine.GameEntityManager
+	world engine.EntityRemover
 
 	// Logic
 	health float64
@@ -24,10 +25,12 @@ type CastleEntity struct {
 
 	// Physics
 	shape *cp.Shape
+
+	gameOverCallback gameOverCallback
 }
 
-func NewCastle(world engine.GameEntityManager, asset *engine.CharacterAsset) (*CastleEntity, error) {
-	c := &CastleEntity{world: world, asset: asset, health: startingHealth}
+func NewCastle(world engine.EntityRemover, asset *engine.CharacterAsset, cb gameOverCallback) (*CastleEntity, error) {
+	c := &CastleEntity{world: world, asset: asset, health: startingHealth, gameOverCallback: cb}
 	c.animation = "idle"
 	body := cp.NewBody(1, cp.INFINITY)
 	body.SetPosition(cp.Vector{X: 640, Y: 384})
@@ -57,7 +60,7 @@ func (e *CastleEntity) Destroy() error {
 	if err != nil {
 		return err
 	}
-	e.world.EndGame()
+	e.gameOverCallback()
 	return nil
 }
 func (e *CastleEntity) Id() engine.GameEntityId      { return e.id }

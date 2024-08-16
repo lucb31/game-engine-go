@@ -147,7 +147,7 @@ func (t *TowerManager) RemoveTower(pos cp.Vector) error {
 		return fmt.Errorf("Unable to remove tower: %s", err.Error())
 	}
 	// Refund gold
-	t.goldManager.Add(refundIfSold)
+	t.goldManager.Refund(refundIfSold)
 	return nil
 }
 
