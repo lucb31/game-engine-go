@@ -3,6 +3,7 @@ package engine
 import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/jakecoffman/cp"
+	"github.com/lucb31/game-engine-go/engine/damage"
 )
 
 type NpcEntity struct {
@@ -86,16 +87,15 @@ func (n *NpcEntity) Destroy() error {
 }
 
 func (n *NpcEntity) OnProjectileHit(projectile Projectile) {
-	// TODO: Damage model
-	n.health -= 30.0
-	if n.health <= 0.0 {
-		n.Destroy()
-	}
+	damage.ApplyDamage(&projectile, n)
 }
 
 func (n *NpcEntity) Id() GameEntityId      { return n.id }
 func (n *NpcEntity) SetId(id GameEntityId) { n.id = id }
 func (n *NpcEntity) Shape() *cp.Shape      { return n.shape }
+func (n *NpcEntity) Armor() float64        { return 0.0 }
+func (n *NpcEntity) Health() float64       { return n.health }
+func (n *NpcEntity) SetHealth(h float64)   { n.health = h }
 
 // Calculate velocity based on simple pathfinding algorithm between waypoints
 func (n *NpcEntity) calculateVelocity(body *cp.Body, gravity cp.Vector, damping float64, dt float64) {

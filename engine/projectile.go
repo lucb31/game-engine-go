@@ -88,6 +88,7 @@ func (p *Projectile) Draw(screen *ebiten.Image) {
 func (p *Projectile) Id() GameEntityId      { return p.id }
 func (p *Projectile) SetId(id GameEntityId) { p.id = id }
 func (p *Projectile) Shape() *cp.Shape      { return p.shape }
+func (p *Projectile) Power() float64        { return 30.0 }
 func (p *Projectile) Destroy() error {
 	return p.world.RemoveEntity(p)
 }
