@@ -141,7 +141,9 @@ func NewTDGame(screenWidth, screenHeight int) (*TDGame, error) {
 	var err error
 
 	// Setup scoreboard
-	game.scoreBoard, err = engine.NewCsvScoreKeeper("data/score.csv")
+	// TODO: Determine scoreboard based on OS. Use in mem in web
+	// game.scoreBoard, err = engine.NewCsvScoreKeeper("data/score.csv")
+	game.scoreBoard, err = engine.NewInMemoryScoreBoard()
 	if err != nil {
 		return nil, err
 	}
@@ -163,15 +165,27 @@ func (g *TDGame) SetSpeed(speed float64) { g.world.GameSpeed = speed }
 
 func (g *TDGame) Balance() int64 { return g.goldManager.Balance() }
 
+func (g *TDGame) Score() engine.ScoreValue {
+	return engine.ScoreValue(float64(g.creepManager.goldManager.Revenue()))
+}
+
 func (g *TDGame) EndGame() {
 	g.world.EndGame()
+
+	// Keeping score
 	fmt.Printf("You've lost at wave %d \n", g.creepManager.Round())
-	err := g.scoreBoard.Save(engine.ScoreValue(float64(g.creepManager.goldManager.Revenue())))
+	score := g.Score()
+	fmt.Printf("You've earned a score of %f\n", score)
+	if g.scoreBoard.IsHighscore(score) {
+		fmt.Println("NEW HIGHSCORE!")
+	}
+	err := g.scoreBoard.Save(score)
 	if err != nil {
 		fmt.Println("Could not save score", err.Error())
 	}
 	if err = g.scoreBoard.Print(); err != nil {
 		fmt.Println("Could not print scoreboard", err.Error())
 	}
+
 	fmt.Println("Waiting for restart...")
 }
