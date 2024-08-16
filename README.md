@@ -9,8 +9,6 @@
 - Add some randomization to demonstrate damage model (might remove / disable later) 
 
 ## HUD
-### Feat
-- Display highscore alert & current highscore after every game
 
 ### Optional
 - Nr of alive creeps

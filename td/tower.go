@@ -84,8 +84,7 @@ func (t *TowerEntity) towerRange() float64 {
 }
 
 func (t *TowerEntity) Draw(screen *ebiten.Image) {
-	t.asset.DrawRectBoundingBox(screen, t.shape)
-	t.asset.Draw(screen, t.animation, t.shape.Body().Position())
+	t.asset.Draw(screen, t.animation, t.shape)
 	t.DrawRange(screen)
 }
 

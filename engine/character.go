@@ -9,6 +9,8 @@ import (
 	"github.com/jakecoffman/cp"
 )
 
+const DEBUG_RENDER_COLLISION_BOXES = false
+
 type GameAssetAnimation struct {
 	StartTile  int
 	FrameCount int
@@ -42,7 +44,10 @@ func (a *CharacterAsset) GetTile(activeAnimation string) (*ebiten.Image, error) 
 	return subIm, nil
 }
 
-func (a *CharacterAsset) Draw(screen *ebiten.Image, activeAnimation string, position cp.Vector) error {
+func (a *CharacterAsset) Draw(screen *ebiten.Image, activeAnimation string, shape *cp.Shape) error {
+	if DEBUG_RENDER_COLLISION_BOXES {
+		a.DrawRectBoundingBox(screen, shape)
+	}
 	subIm, err := a.GetTile(activeAnimation)
 	if err != nil {
 		return fmt.Errorf("Error animating player: %s", err.Error())
@@ -50,7 +55,7 @@ func (a *CharacterAsset) Draw(screen *ebiten.Image, activeAnimation string, posi
 	op := ebiten.DrawImageOptions{}
 	// Offset to make sure asset is drawn centered on current position
 	op.GeoM.Translate(a.offsetX, a.offsetY)
-	op.GeoM.Translate(position.X, position.Y)
+	op.GeoM.Translate(shape.Body().Position().X, shape.Body().Position().Y)
 	screen.DrawImage(subIm, &op)
 	return nil
 }

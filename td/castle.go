@@ -43,7 +43,7 @@ func NewCastle(world engine.EntityRemover, asset *engine.CharacterAsset, cb game
 }
 
 func (t *CastleEntity) Draw(screen *ebiten.Image) {
-	t.asset.Draw(screen, t.animation, t.shape.Body().Position())
+	t.asset.Draw(screen, t.animation, t.shape)
 }
 
 func (e *CastleEntity) OnNpcHit(npc *engine.NpcEntity) {

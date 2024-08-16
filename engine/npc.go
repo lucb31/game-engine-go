@@ -78,8 +78,7 @@ func NewNpc(remover EntityRemover, asset *CharacterAsset, opts NpcOpts) (*NpcEnt
 }
 
 func (n *NpcEntity) Draw(screen *ebiten.Image) {
-	n.asset.DrawRectBoundingBox(screen, n.shape)
-	n.asset.Draw(screen, n.animation, n.shape.Body().Position())
+	n.asset.Draw(screen, n.animation, n.shape)
 }
 
 func (n *NpcEntity) Destroy() error {

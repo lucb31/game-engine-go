@@ -59,7 +59,7 @@ func PlayerCollisionFilter() cp.ShapeFilter {
 
 func (p *Player) Draw(screen *ebiten.Image) {
 	p.asset.DrawRectBoundingBox(screen, p.shape)
-	p.asset.Draw(screen, p.animation, p.shape.Body().Position())
+	p.asset.Draw(screen, p.animation, p.shape)
 }
 
 func (p *Player) shoot() {
