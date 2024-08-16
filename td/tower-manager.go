@@ -13,19 +13,18 @@ import (
 type TowerManager struct {
 	world          engine.GameEntityManager
 	goldManager    engine.GoldManager
+	assetManager   engine.AssetManager
 	worldMapReader engine.WorldMapReader
 
-	projectileAsset *engine.ProjectileAsset
-	towerAsset      *engine.CharacterAsset
-
-	lastTowerSpawned time.Time
-	touches          map[ebiten.TouchID]time.Time
+	touches map[ebiten.TouchID]time.Time
 }
 
 const (
 	minDistanceBetweenTowers = float64(12.0)
 	maxDistanceForDeletion   = float64(5.0)
 	touchDurationForDeletion = float64(1.0)
+	towerSizeX               = int(32)
+	towerSizeY               = int(48)
 	costToBuy                = int64(50)
 	refundIfSold             = int64(50)
 )
@@ -37,15 +36,7 @@ func NewTowerManager(
 	am engine.AssetManager,
 	goldManager engine.GoldManager,
 	worldMapReader engine.WorldMapReader) (*TowerManager, error) {
-	towerAsset, err := am.CharacterAsset("tower-blue")
-	if err != nil {
-		return nil, fmt.Errorf("Could not find tower asset")
-	}
-	projAsset, err := am.ProjectileAsset("bone")
-	if err != nil {
-		return nil, fmt.Errorf("Could not find projectile asset")
-	}
-	return &TowerManager{world: world, towerAsset: towerAsset, projectileAsset: projAsset, goldManager: goldManager, worldMapReader: worldMapReader}, nil
+	return &TowerManager{world: world, assetManager: am, goldManager: goldManager, worldMapReader: worldMapReader}, nil
 }
 
 func (t *TowerManager) Update() {
@@ -100,14 +91,8 @@ func (t *TowerManager) Draw(screen *ebiten.Image) {
 }
 
 func (t *TowerManager) AddTower(cursorPos cp.Vector) error {
-	// Delay: Do not spawn more than 1 tower per second
-	now := time.Now()
-	duration := float64(time.Second) / 1
-	if now.Sub(t.lastTowerSpawned) < time.Duration(duration) {
-		return fmt.Errorf("Trying to spawn towers too quickly")
-	}
-	// Snap pos to 32x32 grid
-	pos := engine.SnapToGrid(cursorPos, 32)
+	// Snap pos to 32x48 grid
+	pos := engine.SnapToGrid(cursorPos, towerSizeX, towerSizeY)
 	// Check if we're allowed to build on this map tile
 	tile, err := t.worldMapReader.TileAt(pos)
 	if err != nil {
@@ -126,14 +111,22 @@ func (t *TowerManager) AddTower(cursorPos cp.Vector) error {
 		return fmt.Errorf("Insufficient funds!")
 	}
 
+	// Load assets
+	towerAsset, err := t.assetManager.CharacterAsset("tower-blue")
+	if err != nil {
+		return fmt.Errorf("Could not find tower asset")
+	}
+	projAsset, err := t.assetManager.ProjectileAsset("bone")
+	if err != nil {
+		return fmt.Errorf("Could not find projectile asset")
+	}
 	// Add tower entity
-	tower, err := NewTower(t.world, t.towerAsset, t.projectileAsset)
+	tower, err := NewTower(t.world, towerAsset, projAsset)
 	if err != nil {
 		return err
 	}
 	tower.shape.Body().SetPosition(pos)
 	t.world.AddEntity(tower)
-	t.lastTowerSpawned = now
 	// Spend gold
 	t.goldManager.Remove(costToBuy)
 

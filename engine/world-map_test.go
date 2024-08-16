@@ -20,7 +20,7 @@ func TestSnapToGrid(t *testing.T) {
 		{cp.Vector{96, 55}, cp.Vector{112, 48}},
 	}
 	for _, testCase := range testCases {
-		res := SnapToGrid(testCase.input, 32)
+		res := SnapToGrid(testCase.input, 32, 32)
 		if res != testCase.output {
 			t.Fatal("Input != Output", testCase, res)
 		}
