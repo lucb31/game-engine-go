@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/jakecoffman/cp"
 )
 
@@ -32,7 +31,6 @@ type GameWorld struct {
 func (w *GameWorld) Draw(screen *ebiten.Image) {
 	w.WorldMap.Draw(screen)
 	if w.gameOver {
-		ebitenutil.DebugPrintAt(screen, "GAME OVER!", int(w.Width)/2, int(w.Height)/2)
 		return
 	}
 	// TODO: Currently drawing ALL objects. Fine as long as there is no camera movement
@@ -93,7 +91,6 @@ func (w *GameWorld) GetEntities() *map[GameEntityId]GameEntity {
 
 func (w *GameWorld) EndGame() {
 	w.gameOver = true
-	fmt.Println("GAME OVER!!")
 }
 
 func (w *GameWorld) Space() *cp.Space {
@@ -182,10 +179,11 @@ func NewWorld(width int64, height int64) (*GameWorld, error) {
 	}
 	initializeBoundingBox(space, float64(width), float64(height))
 	w := GameWorld{
-		Width:   width,
-		Height:  height,
-		space:   space,
-		objects: map[GameEntityId]GameEntity{},
+		Width:     width,
+		Height:    height,
+		space:     space,
+		objects:   map[GameEntityId]GameEntity{},
+		GameSpeed: 1.0,
 	}
 	// Initialize assets
 	am, err := NewAssetManager(&w.FrameCount)

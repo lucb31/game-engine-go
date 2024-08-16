@@ -22,10 +22,19 @@ type TDGame struct {
 
 func (g *TDGame) Update() error {
 	if g.world.IsOver() {
+		// Wait for restart
+		if ebiten.IsKeyPressed(ebiten.KeySpace) {
+			err := g.initialize()
+			if err != nil {
+				fmt.Println("Could not restart game: ", err.Error())
+			}
+		}
 		return nil
 	}
 	g.world.Update()
-	g.creepManager.Update()
+	if err := g.creepManager.Update(); err != nil {
+		fmt.Println("Could not update creeps: ", err.Error())
+	}
 	g.towerManager.Update()
 	g.hud.Update()
 
@@ -42,20 +51,21 @@ func (g *TDGame) Layout(outsideWidth, outsideHeight int) (int, int) {
 	return g.screenWidth, g.screenHeight
 }
 
-func NewTDGame(screenWidth, screenHeight int) (*TDGame, error) {
-	game := &TDGame{screenWidth: screenWidth, screenHeight: screenHeight}
+// Initialize all parts of the game world that need to be reset on restart
+func (game *TDGame) initialize() error {
+	fmt.Println("Initializing game")
 	// Init game world
-	width := int64(screenWidth)
-	height := int64(screenHeight)
+	width := int64(game.screenWidth)
+	height := int64(game.screenHeight)
 	w, err := engine.NewWorld(width, height)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	am := w.AssetManager
 	// Initialize map
 	w.WorldMap, err = engine.NewWorldMap(width, height, assets.LabyrinthMapCSV, am.Tilesets["plains"])
 	if err != nil {
-		return nil, err
+		return err
 	}
 	game.world = w
 
@@ -79,18 +89,18 @@ func NewTDGame(screenWidth, screenHeight int) (*TDGame, error) {
 	// Initialize castle
 	castleAsset, ok := am.CharacterAssets["castle"]
 	if !ok {
-		return nil, fmt.Errorf("Could not find castle asset")
+		return fmt.Errorf("Could not find castle asset")
 	}
 	game.castle, err = NewCastle(w, &castleAsset, game.EndGame)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	w.AddEntity(game.castle)
 
 	// Setup gold management
 	game.goldManager, err = engine.NewInMemoryGoldManager()
 	if err != nil {
-		return nil, err
+		return err
 	}
 	// Add starting gold
 	game.goldManager.Add(50)
@@ -98,29 +108,37 @@ func NewTDGame(screenWidth, screenHeight int) (*TDGame, error) {
 	// Setup tower management
 	towerAsset, ok := am.CharacterAssets["tower-blue"]
 	if !ok {
-		return nil, fmt.Errorf("Could not find tower asset")
+		return fmt.Errorf("Could not find tower asset")
 	}
 	projectile, ok := am.ProjectileAssets["bone"]
 	if !ok {
-		return nil, fmt.Errorf("Could not find projectile asset")
+		return fmt.Errorf("Could not find projectile asset")
 	}
 	game.towerManager, err = NewTowerManager(w, &towerAsset, &projectile, game.goldManager, game.world.WorldMap)
 
 	// Setup creep management
 	npcAsset, ok := w.AssetManager.CharacterAssets["npc-torch"]
 	if !ok {
-		return nil, fmt.Errorf("Cannot initialize creep management: Could not find npc asset")
+		return fmt.Errorf("Cannot initialize creep management: Could not find npc asset")
 	}
 	game.creepManager, err = NewCreepManager(w, &npcAsset, game.goldManager)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	// Setup HUD
+	// Setup HUD. Needs to be reset to initialize speed slider correctly
 	game.hud, err = NewHUD(game)
 	if err != nil {
-		return nil, err
+		return err
 	}
+
+	return nil
+}
+
+// Constructor: Initialize parts of game that are constant even after restarting
+func NewTDGame(screenWidth, screenHeight int) (*TDGame, error) {
+	game := &TDGame{screenWidth: screenWidth, screenHeight: screenHeight}
+	var err error
 
 	// Setup scoreboard
 	game.scoreBoard, err = engine.NewCsvScoreKeeper("data/score.csv")
@@ -128,28 +146,22 @@ func NewTDGame(screenWidth, screenHeight int) (*TDGame, error) {
 		return nil, err
 	}
 
+	// Initialize
+	if err := game.initialize(); err != nil {
+		return nil, err
+	}
 	return game, nil
 }
 
-func (g *TDGame) GetCreepProgress() ProgressInfo {
-	return g.creepManager.GetProgress()
-}
+func (g *TDGame) GetCreepProgress() ProgressInfo { return g.creepManager.GetProgress() }
 
-func (g *TDGame) GetCastleHealth() ProgressInfo {
-	return g.castle.GetHealthBar()
-}
+func (g *TDGame) GetCastleHealth() ProgressInfo { return g.castle.GetHealthBar() }
 
-func (g *TDGame) GetSpeed() float64 {
-	return g.world.GameSpeed
-}
+func (g *TDGame) GetSpeed() float64 { return g.world.GameSpeed }
 
-func (g *TDGame) SetSpeed(speed float64) {
-	g.world.GameSpeed = speed
-}
+func (g *TDGame) SetSpeed(speed float64) { g.world.GameSpeed = speed }
 
-func (g *TDGame) Balance() int64 {
-	return g.goldManager.Balance()
-}
+func (g *TDGame) Balance() int64 { return g.goldManager.Balance() }
 
 func (g *TDGame) EndGame() {
 	g.world.EndGame()

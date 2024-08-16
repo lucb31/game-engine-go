@@ -18,11 +18,12 @@ type GameHUD struct {
 	ui   *ebitenui.UI
 	game *TDGame
 
-	creepProgress *widget.ProgressBar
-	creepLabel    *widget.Text
-	castleHealth  *widget.ProgressBar
-	speedSlider   *widget.Slider
-	goldLabel     *widget.Text
+	creepProgress     *widget.ProgressBar
+	creepLabel        *widget.Text
+	castleHealth      *widget.ProgressBar
+	speedSlider       *widget.Slider
+	goldLabel         *widget.Text
+	gameOverContainer *widget.Container
 }
 
 type ProgressInfo struct {
@@ -42,6 +43,7 @@ func NewHUD(game *TDGame) (*GameHUD, error) {
 	hud.castleHealth = initCastleHealthProgressBar(rootContainer)
 	hud.speedSlider = hud.initGameSpeedSlider(rootContainer)
 	hud.goldLabel = initGoldLabel(rootContainer)
+	hud.gameOverContainer = initGameOverContainer(rootContainer)
 
 	// This adds the root container to the UI, so that it will be rendered.
 	hud.ui = &ebitenui.UI{
@@ -214,6 +216,47 @@ func initGoldLabel(root *widget.Container) *widget.Text {
 	return labelText
 }
 
+func initGameOverContainer(root *widget.Container) *widget.Container {
+	container := widget.NewContainer(
+		widget.ContainerOpts.Layout(widget.NewRowLayout(
+			widget.RowLayoutOpts.Direction(widget.DirectionVertical),
+			widget.RowLayoutOpts.Spacing(16),
+		)),
+		widget.ContainerOpts.WidgetOpts(
+			widget.WidgetOpts.LayoutData(widget.AnchorLayoutData{
+				HorizontalPosition: widget.AnchorLayoutPositionCenter,
+				VerticalPosition:   widget.AnchorLayoutPositionCenter,
+			}),
+		),
+	)
+
+	ttfFont, err := truetype.Parse(goregular.TTF)
+	if err != nil {
+		log.Fatal("Error Parsing Font", err)
+	}
+	// Game over label
+	fontFace := truetype.NewFace(ttfFont, &truetype.Options{
+		Size: 32,
+	})
+	gameOverLabel := widget.NewText(
+		widget.TextOpts.Text("Game Over", fontFace, color.RGBA{255, 0, 0, 1}),
+	)
+	container.AddChild(gameOverLabel)
+
+	// Space to continue
+	fontFace = truetype.NewFace(ttfFont, &truetype.Options{
+		Size: 16,
+	})
+	restartLabel := widget.NewText(
+		widget.TextOpts.Text("Press SPACE to restart", fontFace, color.RGBA{255, 255, 255, 1}),
+	)
+	container.AddChild(restartLabel)
+
+	container.GetWidget().Visibility = widget.Visibility_Hide
+	root.AddChild(container)
+	return container
+}
+
 func (h *GameHUD) Draw(screen *ebiten.Image) {
 	h.ui.Draw(screen)
 }
@@ -223,6 +266,7 @@ func (h *GameHUD) Update() {
 	h.updateCreepProgress()
 	h.updateCastleHealth()
 	h.updateGold()
+	h.updateGameOver()
 }
 
 func (h *GameHUD) updateCreepProgress() {
@@ -242,4 +286,12 @@ func (h *GameHUD) updateCastleHealth() {
 
 func (h *GameHUD) updateGold() {
 	h.goldLabel.Label = fmt.Sprintf("Gold: %d", h.game.Balance())
+}
+
+func (h *GameHUD) updateGameOver() {
+	visibility := widget.Visibility_Hide
+	if h.game.world.IsOver() {
+		visibility = widget.Visibility_Show
+	}
+	h.gameOverContainer.GetWidget().Visibility = visibility
 }
