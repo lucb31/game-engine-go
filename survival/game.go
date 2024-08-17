@@ -35,8 +35,8 @@ func (g *SurvivalGame) Layout(outsideWidth, outsideHeight int) (int, int) {
 
 // Initialize all parts of the game world that need to be reset on restart
 func (game *SurvivalGame) initialize() error {
-	worldHeight := int64(1600)
-	worldWidth := int64(2024)
+	worldHeight := int64(2112)
+	worldWidth := int64(2944)
 
 	fmt.Println("Initializing game")
 	// Init game world
@@ -46,11 +46,11 @@ func (game *SurvivalGame) initialize() error {
 	}
 	am := w.AssetManager
 	// Initialize map
-	tileset, err := am.Tileset("plains")
+	tileset, err := am.Tileset("grounds")
 	if err != nil {
 		return err
 	}
-	w.WorldMap, err = engine.NewWorldMap(worldWidth, worldHeight, assets.LargeMapCSV, tileset)
+	w.WorldMap, err = engine.NewWorldMap(worldWidth, worldHeight, assets.MapTDCSV, tileset)
 	if err != nil {
 		return err
 	}
