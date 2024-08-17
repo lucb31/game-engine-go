@@ -48,15 +48,10 @@ func (w *GameWorld) Draw(screen *ebiten.Image) {
 	if w.player != nil {
 		w.player.Draw(w.camera)
 	}
-	// Render entities
+	// Render entities that are visible in the camera viewport
 	for _, obj := range w.objects {
-		// TODO: Check visibility
-		obj.Draw(w.camera)
-		continue
 		if w.camera.IsVisible(obj) {
 			obj.Draw(w.camera)
-		} else {
-			fmt.Println("Skipping out of camera vision obj", obj)
 		}
 	}
 	w.drawCombatLog(screen)
