@@ -8,12 +8,13 @@ import (
 	"github.com/jakecoffman/cp"
 	"github.com/lucb31/game-engine-go/assets"
 	"github.com/lucb31/game-engine-go/engine"
+	"github.com/lucb31/game-engine-go/engine/hud"
 )
 
 type TDGame struct {
 	world                     *engine.GameWorld
 	screenWidth, screenHeight int
-	creepManager              *CreepManager
+	creepManager              *engine.CreepManager
 	towerManager              *TowerManager
 	goldManager               engine.GoldManager
 	scoreBoard                engine.ScoreBoard
@@ -118,7 +119,7 @@ func (game *TDGame) initialize() error {
 	if err != nil {
 		return fmt.Errorf("Cannot initialize creep management: Could not find npc asset")
 	}
-	game.creepManager, err = NewCreepManager(w, npcAsset, game.goldManager)
+	game.creepManager, err = engine.NewCreepManager(w, npcAsset, game.goldManager)
 	if err != nil {
 		return err
 	}
@@ -163,9 +164,9 @@ func NewTDGame(screenWidth, screenHeight int) (*TDGame, error) {
 	return game, nil
 }
 
-func (g *TDGame) GetCreepProgress() ProgressInfo { return g.creepManager.GetProgress() }
+func (g *TDGame) GetCreepProgress() hud.ProgressInfo { return g.creepManager.GetProgress() }
 
-func (g *TDGame) GetCastleHealth() ProgressInfo { return g.castle.GetHealthBar() }
+func (g *TDGame) GetCastleHealth() hud.ProgressInfo { return g.castle.GetHealthBar() }
 
 func (g *TDGame) GetSpeed() float64 { return g.world.GameSpeed }
 
@@ -174,7 +175,7 @@ func (g *TDGame) SetSpeed(speed float64) { g.world.GameSpeed = speed }
 func (g *TDGame) Balance() int64 { return g.goldManager.Balance() }
 
 func (g *TDGame) Score() engine.ScoreValue {
-	return engine.ScoreValue(float64(g.creepManager.goldManager.Revenue()))
+	return engine.ScoreValue(float64(g.goldManager.Revenue()))
 }
 
 func (g *TDGame) EndGame() {

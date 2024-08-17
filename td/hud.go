@@ -27,13 +27,6 @@ type GameHUD struct {
 	gameOverScore     *widget.Text
 }
 
-type ProgressInfo struct {
-	min     int
-	max     int
-	current int
-	label   string
-}
-
 func NewHUD(game *TDGame) (*GameHUD, error) {
 	hud := &GameHUD{game: game}
 	// This creates the root container for this UI.
@@ -282,17 +275,17 @@ func (h *GameHUD) Update() {
 
 func (h *GameHUD) updateCreepProgress() {
 	progress := h.game.GetCreepProgress()
-	h.creepProgress.Min = progress.min
-	h.creepProgress.Max = progress.max
-	h.creepProgress.SetCurrent(progress.current)
-	h.creepLabel.Label = progress.label
+	h.creepProgress.Min = progress.Min
+	h.creepProgress.Max = progress.Max
+	h.creepProgress.SetCurrent(progress.Current)
+	h.creepLabel.Label = progress.Label
 }
 
 func (h *GameHUD) updateCastleHealth() {
 	progress := h.game.GetCastleHealth()
-	h.castleHealth.Min = progress.min
-	h.castleHealth.Max = progress.max
-	h.castleHealth.SetCurrent(progress.current)
+	h.castleHealth.Min = progress.Min
+	h.castleHealth.Max = progress.Max
+	h.castleHealth.SetCurrent(progress.Current)
 }
 
 func (h *GameHUD) updateGold() {

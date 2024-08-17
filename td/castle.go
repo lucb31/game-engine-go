@@ -5,6 +5,7 @@ import (
 
 	"github.com/jakecoffman/cp"
 	"github.com/lucb31/game-engine-go/engine"
+	"github.com/lucb31/game-engine-go/engine/hud"
 )
 
 const startingHealth = float64(100.0)
@@ -69,6 +70,6 @@ func (e *CastleEntity) Id() engine.GameEntityId      { return e.id }
 func (e *CastleEntity) SetId(id engine.GameEntityId) { e.id = id }
 func (e *CastleEntity) Shape() *cp.Shape             { return e.shape }
 
-func (e *CastleEntity) GetHealthBar() ProgressInfo {
-	return ProgressInfo{0, int(startingHealth), int(e.health), "Castle health"}
+func (e *CastleEntity) GetHealthBar() hud.ProgressInfo {
+	return hud.ProgressInfo{0, int(startingHealth), int(e.health), "Castle health"}
 }
