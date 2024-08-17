@@ -1,6 +1,8 @@
 package engine
 
 import (
+	"fmt"
+
 	"github.com/jakecoffman/cp"
 )
 
@@ -14,6 +16,9 @@ type NpcAggro struct {
 }
 
 func NewNpcAggro(remover EntityRemover, target GameEntity, asset *CharacterAsset, opts NpcOpts) (*NpcAggro, error) {
+	if target == nil {
+		return nil, fmt.Errorf("Did not receive target")
+	}
 	base, err := NewNpc(remover, asset, opts)
 	if err != nil {
 		return nil, err

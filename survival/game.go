@@ -2,19 +2,17 @@ package survival
 
 import (
 	"fmt"
-	"image"
-	"math/rand"
-
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/jakecoffman/cp"
 	"github.com/lucb31/game-engine-go/assets"
 	"github.com/lucb31/game-engine-go/engine"
 	"github.com/lucb31/game-engine-go/engine/hud"
 )
 
 type SurvivalGame struct {
-	world  *engine.GameWorld
-	camera engine.Camera
+	world        *engine.GameWorld
+	camera       engine.Camera
+	goldManager  engine.GoldManager
+	creepManager *CreepManager
 
 	hud                       *hud.GameHUD
 	worldWidth, worldHeight   int
@@ -33,6 +31,9 @@ func (g *SurvivalGame) Update() error {
 		return nil
 	}
 	g.world.Update()
+	if err := g.creepManager.Update(); err != nil {
+		fmt.Println("Could not update creeps: ", err.Error())
+	}
 	g.hud.Update()
 
 	return nil
@@ -83,21 +84,22 @@ func (game *SurvivalGame) initialize() error {
 	}
 	game.world.SetCamera(camera)
 
-	// Add some npcs to test rendering
-	npcAsset, err := am.CharacterAsset("npc-torch")
+	// Setup gold management
+	game.goldManager, err = engine.NewInMemoryGoldManager()
 	if err != nil {
 		return err
 	}
-	for range 10 {
-		pos, err := calcCreepSpawnPosition()
-		if err != nil {
-			return err
-		}
-		npc, err := engine.NewNpcAggro(w, player, npcAsset, engine.NpcOpts{StartingPos: pos})
-		if err != nil {
-			return err
-		}
-		w.AddEntity(npc)
+	// Add starting gold
+	game.goldManager.Add(50)
+
+	// Setup creep management
+	npcAsset, err := w.AssetManager.CharacterAsset("npc-torch")
+	if err != nil {
+		return fmt.Errorf("Cannot initialize creep management: Could not find npc asset")
+	}
+	game.creepManager, err = NewCreepManager(w, player, npcAsset, game.goldManager)
+	if err != nil {
+		return err
 	}
 
 	// Init hud
@@ -106,26 +108,6 @@ func (game *SurvivalGame) initialize() error {
 		return err
 	}
 	return nil
-}
-
-// Creeps cannot spawn out of bounds
-// Creeps cannot spawn within the castle area
-func calcCreepSpawnPosition() (cp.Vector, error) {
-	// BOUNDS: 530, 402 - 2410,1710
-	// Castle 1140, 402 - 1815, 402
-	boundsMinX, boundsMinY, boundsMaxX, boundsMaxY := 530.0, 402.0, 2410.0, 1710.0
-	for tries := 0; tries < 10; tries++ {
-		randX := rand.Float64()*(boundsMaxX-boundsMinX) + boundsMinX
-		randY := rand.Float64()*(boundsMaxY-boundsMinY) + boundsMinY
-
-		castleArea := image.Rect(1140, 402, 1815, 1160)
-		spawnArea := image.Rect(int(randX), int(randY), int(randX)+1, int(randY)+1)
-		if !spawnArea.In(castleArea) {
-			return cp.Vector{X: randX, Y: randY}, nil
-		}
-		fmt.Println("Intruder in the castle. Retrying...", randX, randY)
-	}
-	return cp.Vector{}, fmt.Errorf("Could not find a spawn position. Max tries reached")
 }
 
 // Constructor: Initialize parts of game that are constant even after restarting
