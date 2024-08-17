@@ -65,8 +65,11 @@ func PlayerCollisionFilter() cp.ShapeFilter {
 }
 
 func (p *Player) Draw(screen *ebiten.Image) {
-	p.asset.DrawRectBoundingBox(screen, p.shape)
 	p.asset.Draw(screen, p.animation, p.shape)
+}
+
+func (p *Player) DrawOnCamera(cam Camera) {
+	p.asset.DrawOnCamera(cam, p.animation, p.shape)
 }
 
 func (p *Player) shoot() {
@@ -88,19 +91,19 @@ func (p *Player) calculateVelocity(body *cp.Body, gravity cp.Vector, damping flo
 	}
 	// Smoothen velocity
 	velocity := body.Velocity()
-	if ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
+	if ebiten.IsKeyPressed(ebiten.KeyW) {
 		velocity.Y = max(-playerVelocity, velocity.Y-playerVelocity*0.1)
 		p.orientation = North
-	} else if ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
+	} else if ebiten.IsKeyPressed(ebiten.KeyS) {
 		velocity.Y = min(playerVelocity, velocity.Y+playerVelocity*0.1)
 		p.orientation = South
 	} else {
 		velocity.Y = 0
 	}
-	if ebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
+	if ebiten.IsKeyPressed(ebiten.KeyA) {
 		velocity.X = -playerVelocity
 		p.orientation = West
-	} else if ebiten.IsKeyPressed(ebiten.KeyArrowRight) {
+	} else if ebiten.IsKeyPressed(ebiten.KeyD) {
 		velocity.X = playerVelocity
 		p.orientation = East
 	} else {

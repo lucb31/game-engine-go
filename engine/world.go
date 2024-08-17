@@ -12,7 +12,7 @@ import (
 type GameWorld struct {
 	// Entity management
 	objects      map[GameEntityId]GameEntity
-	player       GameEntity
+	player       *Player
 	nextObjectId GameEntityId
 	// Removing object from the world needs to be buffered towards the end of a timestep
 	objectIdsToDelete []GameEntityId
@@ -45,7 +45,7 @@ func (w *GameWorld) Draw(screen *ebiten.Image) {
 	}
 	// TODO: Left off here. INCOMPLETE!
 	if w.player != nil {
-		w.player.Draw(screen)
+		w.player.DrawOnCamera(w.camera)
 	}
 	return
 	// TODO: Currently drawing ALL objects. Fine as long as there is no camera movement

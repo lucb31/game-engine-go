@@ -2,9 +2,11 @@ package engine
 
 import (
 	"fmt"
+	"image/color"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hajimehoshi/ebiten/v2/vector"
 	"github.com/jakecoffman/cp"
 )
 
@@ -17,11 +19,12 @@ type Camera interface {
 	// Drawing entities
 	IsVisible(GameEntity) bool
 	// Transforms world coordinates to camera coordinates
-	ScreenPosition(cp.Vector) cp.Vector
+	AbsToRel(cp.Vector) cp.Vector
 
 	// General rendering
 	DrawImage(*ebiten.Image, *ebiten.DrawImageOptions)
 	DrawDebugInfo()
+	StrokeRect(x, y float64, width, height float32, strokeWidth float32, clr color.Color, antialias bool)
 	// Call at start of every draw cycle
 	SetScreen(*ebiten.Image)
 	// Returns coordinates of viewport top-left & bottom-right vectors in world coordinates
@@ -76,6 +79,15 @@ func (c *BaseCamera) DrawImage(im *ebiten.Image, op *ebiten.DrawImageOptions) {
 	c.screen.DrawImage(im, &opts)
 }
 
+// Draw stroked rectangle on provided absolute world position
+func (c *BaseCamera) StrokeRect(absX, absY float64, width, height float32, strokeWidth float32, clr color.Color, antialias bool) {
+	screen := c.screen
+	tL, _ := c.Viewport()
+	relX := float32(absX - tL.X)
+	relY := float32(absY - tL.Y)
+	vector.StrokeRect(screen, relX, relY, width, height, strokeWidth, clr, antialias)
+}
+
 func (c *BaseCamera) Viewport() (cp.Vector, cp.Vector) {
 	topLeft := cp.Vector{
 		X: c.Position().X - float64(c.viewportWidth/2),
@@ -100,6 +112,11 @@ func (c *BaseCamera) DrawDebugInfo() {
 	}
 	tl, br := c.Viewport()
 	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Camera Viewport: (%.1f, %.1f) - (%.1f, %.1f)", tl.X, tl.Y, br.X, br.Y), 10, 10)
+}
+
+func (c *BaseCamera) AbsToRel(absolutePos cp.Vector) cp.Vector {
+	topLeft, _ := c.Viewport()
+	return absolutePos.Sub(topLeft)
 }
 
 // ////////
