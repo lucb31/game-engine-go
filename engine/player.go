@@ -45,7 +45,7 @@ func NewPlayer(world GameEntityManager, asset *CharacterAsset, projectileAsset *
 	p := &Player{id: -1, world: world, asset: asset, orientation: South, projectileAsset: projectileAsset}
 	// Init player physics
 	playerBody := cp.NewBody(1, cp.INFINITY)
-	playerBody.SetPosition(cp.Vector{X: 530, Y: 402})
+	playerBody.SetPosition(cp.Vector{X: 1470, Y: 820})
 	playerBody.UserData = p
 	playerBody.SetVelocityUpdateFunc(p.calculateVelocity)
 
