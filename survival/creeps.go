@@ -156,7 +156,7 @@ func (c *CreepManager) creepsToSpawn() int {
 	return c.activeWave.CreepsToSpawn
 }
 
-func (c *CreepManager) GetProgress() hud.ProgressInfo {
+func (c *CreepManager) Progress() hud.ProgressInfo {
 	label := fmt.Sprintf("Wave %d", c.activeWave.Round)
 	return hud.ProgressInfo{Min: 0, Max: c.creepsToSpawn(), Current: c.creepsSpawned, Label: label}
 }

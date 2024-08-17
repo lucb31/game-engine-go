@@ -126,7 +126,7 @@ func (g *SurvivalGame) GameOver() bool                   { return g.world.IsOver
 func (g *SurvivalGame) Balance() int64                   { return 0 }
 func (g *SurvivalGame) Score() hud.ScoreValue            { return 0 }
 func (g *SurvivalGame) CastleProgress() hud.ProgressInfo { return hud.ProgressInfo{} }
-func (g *SurvivalGame) CreepProgress() hud.ProgressInfo  { return hud.ProgressInfo{} }
+func (g *SurvivalGame) CreepProgress() hud.ProgressInfo  { return g.creepManager.Progress() }
 
 func (g *SurvivalGame) EndGame() {
 	g.world.EndGame()
