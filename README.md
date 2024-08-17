@@ -2,7 +2,7 @@
 [Try it out](https://lucb31.github.io/game-engine-go/)
 
 # Engine
-TODO: Test player projectile shootin
+- Projectiles still seem to collide with ?? and get immediately removed
 ## Damage model
 - Add floating combat text
 - Add some randomization to demonstrate damage model (might remove / disable later) 

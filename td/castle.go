@@ -49,7 +49,9 @@ func (e *CastleEntity) OnNpcHit(npc *engine.NpcEntity) {
 	// TODO: Utilize damage model here
 	e.health -= 20
 	fmt.Printf("Castle has hit by npc %d. New health %f \n", npc.Id(), e.health)
-	npc.Destroy()
+	if err := npc.Destroy(); err != nil {
+		fmt.Println("Could not remove npc", err.Error())
+	}
 	if e.health <= 0 {
 		e.Destroy()
 	}

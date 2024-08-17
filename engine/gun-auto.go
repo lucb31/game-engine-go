@@ -5,7 +5,7 @@ import (
 )
 
 type AutoAimGun struct {
-	BasicGun
+	*BasicGun
 }
 
 func NewAutoAimGun(em GameEntityManager, owner GameEntity, proj *ProjectileAsset, opts BasicGunOpts) (*AutoAimGun, error) {
@@ -13,7 +13,7 @@ func NewAutoAimGun(em GameEntityManager, owner GameEntity, proj *ProjectileAsset
 	if err != nil {
 		return nil, err
 	}
-	gun := &AutoAimGun{BasicGun: *base}
+	gun := &AutoAimGun{BasicGun: base}
 	return gun, nil
 }
 

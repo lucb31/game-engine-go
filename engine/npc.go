@@ -96,14 +96,12 @@ func (n *NpcEntity) calculateVelocity(body *cp.Body, gravity cp.Vector, damping 
 		return
 	}
 	destination := n.wayPoints[n.currentWpIndex]
-	position := body.Position()
-	diff := destination.Sub(position)
-	diffNormalized := diff.Normalize()
+	distance := n.moveTowards(body, destination)
 
 	// Go to next waypoint if in close proximity to current WP
 	// ~Distance covered within next timestep
 	dx := n.velocity * dt
-	if diff.Length() < dx {
+	if distance < dx {
 		n.currentWpIndex++
 		if n.currentWpIndex > len(n.wayPoints)-1 {
 			if n.loopWaypoints {
@@ -115,9 +113,20 @@ func (n *NpcEntity) calculateVelocity(body *cp.Body, gravity cp.Vector, damping 
 			}
 		}
 	}
+
+}
+
+// Updates body velocity to move towards destination
+// Returns remaining distance
+func (n *NpcEntity) moveTowards(body *cp.Body, dest cp.Vector) float64 {
+	position := body.Position()
+	diff := dest.Sub(position)
+	diffNormalized := diff.Normalize()
+
 	vel := diffNormalized.Mult(n.velocity)
 	body.SetVelocityVector(vel)
 	// Update active animation & orientation
 	n.orientation = calculateOrientation(vel)
 	n.animation = calculateWalkingAnimation(vel, n.orientation)
+	return diff.Length()
 }

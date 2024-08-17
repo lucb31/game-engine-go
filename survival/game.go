@@ -81,7 +81,7 @@ func (game *SurvivalGame) initialize() error {
 		if err != nil {
 			return err
 		}
-		npc, err := engine.NewNpc(w, npcAsset, engine.NpcOpts{StartingPos: pos})
+		npc, err := engine.NewNpcAggro(w, player, npcAsset, engine.NpcOpts{StartingPos: pos})
 		if err != nil {
 			return err
 		}

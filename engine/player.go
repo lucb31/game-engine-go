@@ -33,7 +33,7 @@ type Player struct {
 }
 
 const (
-	playerVelocity = 500
+	playerVelocity = 150
 	playerWidth    = 32
 	playerHeight   = 32
 )
