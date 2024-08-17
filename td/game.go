@@ -129,6 +129,13 @@ func (game *TDGame) initialize() error {
 		return err
 	}
 
+	// Setup camera
+	cam, err := engine.NewBaseCamera(game.screenWidth, game.screenHeight)
+	if err != nil {
+		return err
+	}
+	game.world.SetCamera(cam)
+
 	return nil
 }
 

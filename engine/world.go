@@ -37,6 +37,9 @@ type GameWorld struct {
 }
 
 func (w *GameWorld) Draw(screen *ebiten.Image) {
+	if w.camera == nil {
+		panic("Camera missing!")
+	}
 	w.camera.SetScreen(screen)
 	w.WorldMap.Draw(w.camera)
 	w.camera.DrawDebugInfo()
@@ -54,6 +57,23 @@ func (w *GameWorld) Draw(screen *ebiten.Image) {
 			obj.Draw(w.camera)
 		}
 	}
+
+	// Debugging info for entities
+	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("# Objects: %d", len(w.objects)), 10, 30)
+	shapes := 0
+	projectiles := 0
+	npcs := 0
+	w.Space().EachShape(func(s *cp.Shape) {
+		if _, is := s.Body().UserData.(*Projectile); is {
+			projectiles++
+		} else if _, is := s.Body().UserData.(*NpcEntity); is {
+			npcs++
+		}
+		shapes++
+	})
+	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("# Shapes: %d", shapes), 10, 45)
+	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("# Projectiles: %d", projectiles), 10, 60)
+	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("# Npcs: %d", npcs), 10, 75)
 	w.drawCombatLog()
 }
 
