@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/jakecoffman/cp"
 	"github.com/lucb31/game-engine-go/engine/damage"
 )
@@ -11,7 +10,7 @@ type GameEntity interface {
 	Id() GameEntityId
 	SetId(GameEntityId)
 	Shape() *cp.Shape
-	Draw(*ebiten.Image)
+	Draw(RenderingTarget)
 	Destroy() error
 }
 

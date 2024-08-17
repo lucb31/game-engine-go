@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"image/color"
 
-	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/vector"
 	"github.com/jakecoffman/cp"
 	"github.com/lucb31/game-engine-go/engine"
 )
@@ -100,13 +98,13 @@ func (t *TowerEntity) Update(body *cp.Body, dt float64) {
 	t.gun.Shoot()
 }
 
-func (t *TowerEntity) Draw(screen *ebiten.Image) {
+func (t *TowerEntity) Draw(screen engine.RenderingTarget) {
 	t.asset.Draw(screen, t.animation, t.shape)
 	t.DrawRange(screen)
 }
 
-func (t *TowerEntity) DrawRange(screen *ebiten.Image) {
-	vector.StrokeCircle(screen, float32(t.shape.Body().Position().X), float32(t.shape.Body().Position().Y), float32(t.gun.FireRange()), 2.0, color.RGBA{255, 0, 0, 0}, false)
+func (t *TowerEntity) DrawRange(screen engine.RenderingTarget) {
+	screen.StrokeCircle(t.shape.Body().Position().X, t.shape.Body().Position().Y, float32(t.gun.FireRange()), 2.0, color.RGBA{255, 0, 0, 0}, false)
 }
 
 func (t *TowerEntity) Destroy() error               { return t.world.RemoveEntity(t) }

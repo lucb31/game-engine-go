@@ -40,7 +40,7 @@ type ProjectileAsset struct {
 
 const defaultProjectileSpeed = float64(300.0)
 
-func (a *ProjectileAsset) Draw(screen *ebiten.Image, position cp.Vector, angleInRad float64) error {
+func (a *ProjectileAsset) Draw(t RenderingTarget, position cp.Vector, angleInRad float64) error {
 	op := ebiten.DrawImageOptions{}
 	// Offset by half asset size to center position
 	op.GeoM.Translate(-float64(a.Image.Bounds().Dx())/2, -float64(a.Image.Bounds().Dy())/2)
@@ -55,7 +55,7 @@ func (a *ProjectileAsset) Draw(screen *ebiten.Image, position cp.Vector, angleIn
 
 	// Translate to physical position
 	op.GeoM.Translate(position.X, position.Y)
-	screen.DrawImage(a.Image, &op)
+	t.DrawImage(a.Image, &op)
 	return nil
 }
 
@@ -80,9 +80,9 @@ func NewProjectile(gun Gun, world GameEntityManager, asset *ProjectileAsset) (*P
 	return p, nil
 }
 
-func (p *Projectile) Draw(screen *ebiten.Image) {
+func (p *Projectile) Draw(t RenderingTarget) {
 	angle := p.Shape().Body().Position().Sub(p.direction).Neg().ToAngle()
-	p.asset.Draw(screen, p.shape.Body().Position(), angle)
+	p.asset.Draw(t, p.shape.Body().Position(), angle)
 }
 
 func (p *Projectile) Id() GameEntityId      { return p.id }

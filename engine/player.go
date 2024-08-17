@@ -64,12 +64,8 @@ func PlayerCollisionFilter() cp.ShapeFilter {
 	return cp.NewShapeFilter(0, PlayerCategory, PlayerCategory|NpcCategory|OuterWallsCategory|TowerCategory)
 }
 
-func (p *Player) Draw(screen *ebiten.Image) {
-	p.asset.Draw(screen, p.animation, p.shape)
-}
-
-func (p *Player) DrawOnCamera(cam Camera) {
-	p.asset.DrawOnCamera(cam, p.animation, p.shape)
+func (p *Player) Draw(t RenderingTarget) {
+	p.asset.Draw(t, p.animation, p.shape)
 }
 
 func (p *Player) shoot() {

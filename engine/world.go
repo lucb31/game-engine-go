@@ -43,15 +43,18 @@ func (w *GameWorld) Draw(screen *ebiten.Image) {
 	if w.gameOver {
 		return
 	}
-	// TODO: Left off here. INCOMPLETE!
+
+	// Render player
 	if w.player != nil {
-		w.player.DrawOnCamera(w.camera)
+		w.player.Draw(w.camera)
 	}
-	return
-	// TODO: Currently drawing ALL objects. Fine as long as there is no camera movement
+	// Render entities
 	for _, obj := range w.objects {
+		// TODO: Check visibility
+		obj.Draw(w.camera)
+		continue
 		if w.camera.IsVisible(obj) {
-			obj.Draw(screen)
+			obj.Draw(w.camera)
 		} else {
 			fmt.Println("Skipping out of camera vision obj", obj)
 		}

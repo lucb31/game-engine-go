@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/jakecoffman/cp"
 	"github.com/lucb31/game-engine-go/assets"
 	"github.com/lucb31/game-engine-go/engine"
 )
@@ -67,6 +68,19 @@ func (game *SurvivalGame) initialize() error {
 		return err
 	}
 	game.world.SetCamera(camera)
+
+	// Add some npcs to test rendering
+	npcAsset, err := am.CharacterAsset("npc-torch")
+	if err != nil {
+		return err
+	}
+	for i := range 10 {
+		npc, err := engine.NewNpc(w, npcAsset, engine.NpcOpts{StartingPos: cp.Vector{float64(i * 200), float64(i * 200)}})
+		if err != nil {
+			return err
+		}
+		w.AddEntity(npc)
+	}
 	return nil
 }
 

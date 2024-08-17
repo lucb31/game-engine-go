@@ -10,7 +10,15 @@ import (
 	"github.com/jakecoffman/cp"
 )
 
+type RenderingTarget interface {
+	DrawImage(*ebiten.Image, *ebiten.DrawImageOptions)
+	StrokeRect(x, y float64, width, height float32, strokeWidth float32, clr color.Color, antialias bool)
+	StrokeCircle(cx, cy float64, r, strokeWidth float32, clr color.Color, antialias bool)
+}
+
 type Camera interface {
+	RenderingTarget
+
 	// Physics
 	Position() cp.Vector
 	Body() *cp.Body
@@ -22,9 +30,7 @@ type Camera interface {
 	AbsToRel(cp.Vector) cp.Vector
 
 	// General rendering
-	DrawImage(*ebiten.Image, *ebiten.DrawImageOptions)
 	DrawDebugInfo()
-	StrokeRect(x, y float64, width, height float32, strokeWidth float32, clr color.Color, antialias bool)
 	// Call at start of every draw cycle
 	SetScreen(*ebiten.Image)
 	// Returns coordinates of viewport top-left & bottom-right vectors in world coordinates
@@ -86,6 +92,14 @@ func (c *BaseCamera) StrokeRect(absX, absY float64, width, height float32, strok
 	relX := float32(absX - tL.X)
 	relY := float32(absY - tL.Y)
 	vector.StrokeRect(screen, relX, relY, width, height, strokeWidth, clr, antialias)
+}
+
+func (c *BaseCamera) StrokeCircle(cx, cy float64, r, strokeWidth float32, clr color.Color, antialias bool) {
+	screen := c.screen
+	tL, _ := c.Viewport()
+	relX := float32(cx - tL.X)
+	relY := float32(cy - tL.Y)
+	vector.StrokeCircle(screen, relX, relY, r, strokeWidth, clr, antialias)
 }
 
 func (c *BaseCamera) Viewport() (cp.Vector, cp.Vector) {

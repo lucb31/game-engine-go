@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/jakecoffman/cp"
 )
 
@@ -29,6 +28,7 @@ type NpcEntity struct {
 
 type NpcOpts struct {
 	StartingHealth float64
+	StartingPos    cp.Vector
 }
 
 func NpcCollisionFilter() cp.ShapeFilter {
@@ -65,20 +65,22 @@ func NewNpc(remover EntityRemover, asset *CharacterAsset, opts NpcOpts) (*NpcEnt
 	}
 	npc.loopWaypoints = false
 	npc.velocity = 75.0
+	npc.health = 100.0
 	npc.animation = "idle_south"
 
 	// Parse opts
 	if opts.StartingHealth > 0 {
 		npc.health = opts.StartingHealth
-	} else {
-		npc.health = 100.0
+	}
+	if opts.StartingPos.Length() > 0 {
+		body.SetPosition(opts.StartingPos)
 	}
 
 	return npc, nil
 }
 
-func (n *NpcEntity) Draw(screen *ebiten.Image) {
-	n.asset.Draw(screen, n.animation, n.shape)
+func (n *NpcEntity) Draw(t RenderingTarget) {
+	n.asset.Draw(t, n.animation, n.shape)
 }
 
 func (n *NpcEntity) Destroy() error {

@@ -3,7 +3,6 @@ package td
 import (
 	"fmt"
 
-	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/jakecoffman/cp"
 	"github.com/lucb31/game-engine-go/engine"
 )
@@ -42,7 +41,7 @@ func NewCastle(world engine.EntityRemover, asset *engine.CharacterAsset, cb game
 	return c, nil
 }
 
-func (t *CastleEntity) Draw(screen *ebiten.Image) {
+func (t *CastleEntity) Draw(screen engine.RenderingTarget) {
 	t.asset.Draw(screen, t.animation, t.shape)
 }
 
