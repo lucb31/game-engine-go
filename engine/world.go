@@ -39,11 +39,15 @@ type GameWorld struct {
 func (w *GameWorld) Draw(screen *ebiten.Image) {
 	w.camera.SetScreen(screen)
 	w.WorldMap.Draw(w.camera)
-	// TODO: Left off here. INCOMPLETE!
-	return
+	w.camera.DrawDebugInfo()
 	if w.gameOver {
 		return
 	}
+	// TODO: Left off here. INCOMPLETE!
+	if w.player != nil {
+		w.player.Draw(screen)
+	}
+	return
 	// TODO: Currently drawing ALL objects. Fine as long as there is no camera movement
 	for _, obj := range w.objects {
 		if w.camera.IsVisible(obj) {
@@ -51,9 +55,6 @@ func (w *GameWorld) Draw(screen *ebiten.Image) {
 		} else {
 			fmt.Println("Skipping out of camera vision obj", obj)
 		}
-	}
-	if w.player != nil {
-		w.player.Draw(screen)
 	}
 	w.drawCombatLog(screen)
 }

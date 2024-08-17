@@ -1,7 +1,10 @@
 package engine
 
 import (
+	"fmt"
+
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/jakecoffman/cp"
 )
 
@@ -18,6 +21,7 @@ type Camera interface {
 
 	// General rendering
 	DrawImage(*ebiten.Image, *ebiten.DrawImageOptions)
+	DrawDebugInfo()
 	// Call at start of every draw cycle
 	SetScreen(*ebiten.Image)
 	// Returns coordinates of viewport top-left & bottom-right vectors in world coordinates
@@ -87,6 +91,16 @@ func (c *BaseCamera) Viewport() (cp.Vector, cp.Vector) {
 }
 
 func (c *BaseCamera) SetScreen(screen *ebiten.Image) { c.screen = screen }
+
+func (c *BaseCamera) DrawDebugInfo() {
+	screen := c.screen
+	if screen == nil {
+		fmt.Println("No screen!")
+		return
+	}
+	tl, br := c.Viewport()
+	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Camera Viewport: (%.1f, %.1f) - (%.1f, %.1f)", tl.X, tl.Y, br.X, br.Y), 10, 10)
+}
 
 // ////////
 // Getters
