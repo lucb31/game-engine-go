@@ -5,6 +5,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"strconv"
 
@@ -31,11 +32,18 @@ type WorldMap struct {
 	tileData [][]MapTile
 }
 
-func (b *WorldMap) Draw(screen *ebiten.Image) {
-	count := 0
-	// Drawing WHOLE map. This is ok because there is no camera movement right now
-	for row := range len(b.tileData) {
-		for col := range len(b.tileData[0]) {
+func (b *WorldMap) Draw(camera Camera) {
+	topLeft, bottomRight := camera.Viewport()
+	// We dont want to iterate over out of bounds rows and cols
+	startingRow := int(math.Max(topLeft.Y/mapTileSize, 0))
+	// + 1 to ensure that last row is included
+	endRow := int(math.Min(bottomRight.Y/mapTileSize+1, float64(len(b.tileData))))
+	startingCol := int(math.Max(topLeft.X/mapTileSize, 0))
+	// + 1 to ensure that last col is included
+	endCol := int(math.Min(bottomRight.X/mapTileSize+1, float64(len(b.tileData[0]))))
+
+	for row := startingRow; row < endRow; row++ {
+		for col := startingCol; col < endCol; col++ {
 			mapTile := b.tileData[row][col]
 			// Set tile position
 			op := ebiten.DrawImageOptions{}
@@ -48,7 +56,7 @@ func (b *WorldMap) Draw(screen *ebiten.Image) {
 					fmt.Println("Unable to draw background cell", err.Error())
 					return
 				}
-				screen.DrawImage(subIm, &op)
+				camera.DrawImage(subIm, &op)
 			}
 			if mapTile == Empty {
 				continue
@@ -59,8 +67,7 @@ func (b *WorldMap) Draw(screen *ebiten.Image) {
 				fmt.Println("Unable to draw world map cell", err.Error())
 				return
 			}
-			screen.DrawImage(subIm, &op)
-			count++
+			camera.DrawImage(subIm, &op)
 		}
 	}
 }
@@ -72,11 +79,14 @@ func NewWorldMap(width, height int64, mapCsv []byte, tileset *Tileset) (*WorldMa
 	if err != nil {
 		return nil, err
 	}
-	mapData := make([][]MapTile, height/mapTileSize)
+	// +2 to add one additional tile if width / height mod tilesize is not 0
+	cols := int64(width/mapTileSize) + 2
+	rows := int64(height/mapTileSize) + 2
+	mapData := make([][]MapTile, rows)
 	// Copy map data in & fill remaining cells with placeholder tile
-	for row := range height / mapTileSize {
-		mapData[row] = make([]MapTile, width/mapTileSize)
-		for col := range width / mapTileSize {
+	for row := range rows {
+		mapData[row] = make([]MapTile, cols)
+		for col := range cols {
 			if int64(len(csvMapData)) > row && int64(len(csvMapData[row])) > col {
 				mapData[row][col] = csvMapData[row][col]
 			} else {

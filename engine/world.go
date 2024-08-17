@@ -10,8 +10,16 @@ import (
 )
 
 type GameWorld struct {
-	objects  map[GameEntityId]GameEntity
-	player   GameEntity
+	// Entity management
+	objects      map[GameEntityId]GameEntity
+	player       GameEntity
+	nextObjectId GameEntityId
+	// Removing object from the world needs to be buffered towards the end of a timestep
+	objectIdsToDelete []GameEntityId
+
+	// Rendering
+	camera Camera
+
 	WorldMap *WorldMap
 	Width    int64
 	Height   int64
@@ -22,10 +30,6 @@ type GameWorld struct {
 	AssetManager AssetManager
 	space        *cp.Space
 
-	nextObjectId GameEntityId
-	// Removing object from the world needs to be buffered towards the end of a timestep
-	objectIdsToDelete []GameEntityId
-
 	// Game logic
 	gameOver    bool
 	GameSpeed   float64
@@ -33,13 +37,20 @@ type GameWorld struct {
 }
 
 func (w *GameWorld) Draw(screen *ebiten.Image) {
-	w.WorldMap.Draw(screen)
+	w.camera.SetScreen(screen)
+	w.WorldMap.Draw(w.camera)
+	// TODO: Left off here. INCOMPLETE!
+	return
 	if w.gameOver {
 		return
 	}
 	// TODO: Currently drawing ALL objects. Fine as long as there is no camera movement
 	for _, obj := range w.objects {
-		obj.Draw(screen)
+		if w.camera.IsVisible(obj) {
+			obj.Draw(screen)
+		} else {
+			fmt.Println("Skipping out of camera vision obj", obj)
+		}
 	}
 	if w.player != nil {
 		w.player.Draw(screen)
@@ -217,24 +228,30 @@ func NewWorld(width int64, height int64) (*GameWorld, error) {
 	return &w, nil
 }
 
-func initPlayer(w *GameWorld, am AssetManager) error {
+func (w *GameWorld) InitPlayer(am AssetManager) (*Player, error) {
 	// Initialize player (after world has been initialized to reference it)
 	playerAsset, err := am.CharacterAsset("player")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	projAsset, err := am.ProjectileAsset("bone")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	player, err := NewPlayer(w, playerAsset, projAsset)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	// Explicitly NOT adding the player to the object space via addObject.
 	// Might want to revisit this later
 	w.space.AddBody(player.Shape().Body())
 	w.space.AddShape(player.Shape())
 	w.player = player
-	return nil
+	return player, nil
+}
+
+func (w *GameWorld) SetCamera(camera Camera) {
+	w.camera = camera
+	w.space.AddBody(w.camera.Body())
+	w.space.AddShape(w.camera.Shape())
 }
