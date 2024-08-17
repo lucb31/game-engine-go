@@ -9,11 +9,14 @@ import (
 	"github.com/jakecoffman/cp"
 	"github.com/lucb31/game-engine-go/assets"
 	"github.com/lucb31/game-engine-go/engine"
+	"github.com/lucb31/game-engine-go/engine/hud"
 )
 
 type SurvivalGame struct {
-	world                     *engine.GameWorld
-	camera                    engine.Camera
+	world  *engine.GameWorld
+	camera engine.Camera
+
+	hud                       *hud.GameHUD
 	worldWidth, worldHeight   int
 	screenWidth, screenHeight int
 }
@@ -23,12 +26,14 @@ func (g *SurvivalGame) Update() error {
 		return nil
 	}
 	g.world.Update()
+	g.hud.Update()
 
 	return nil
 }
 
 func (g *SurvivalGame) Draw(screen *ebiten.Image) {
 	g.world.Draw(screen)
+	g.hud.Draw(screen)
 }
 
 func (g *SurvivalGame) Layout(outsideWidth, outsideHeight int) (int, int) {
@@ -87,6 +92,12 @@ func (game *SurvivalGame) initialize() error {
 		}
 		w.AddEntity(npc)
 	}
+
+	// Init hud
+	game.hud, err = hud.NewHUD(game)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -121,9 +132,12 @@ func NewSurvivalGame(screenWidth, screenHeight int) (*SurvivalGame, error) {
 	return game, nil
 }
 
-func (g *SurvivalGame) GetSpeed() float64 { return g.world.GameSpeed }
-
-func (g *SurvivalGame) SetSpeed(speed float64) { g.world.GameSpeed = speed }
+func (g *SurvivalGame) SetSpeed(speed float64)           { g.world.GameSpeed = speed }
+func (g *SurvivalGame) GameOver() bool                   { return g.world.IsOver() }
+func (g *SurvivalGame) Balance() int64                   { return 0 }
+func (g *SurvivalGame) Score() hud.ScoreValue            { return 0 }
+func (g *SurvivalGame) CastleProgress() hud.ProgressInfo { return hud.ProgressInfo{} }
+func (g *SurvivalGame) CreepProgress() hud.ProgressInfo  { return hud.ProgressInfo{} }
 
 func (g *SurvivalGame) EndGame() {
 	g.world.EndGame()

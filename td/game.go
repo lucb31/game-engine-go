@@ -2,7 +2,6 @@ package td
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/jakecoffman/cp"
@@ -17,8 +16,7 @@ type TDGame struct {
 	creepManager              *engine.CreepManager
 	towerManager              *TowerManager
 	goldManager               engine.GoldManager
-	scoreBoard                engine.ScoreBoard
-	hud                       *GameHUD
+	hud                       *hud.GameHUD
 	castle                    *CastleEntity
 }
 
@@ -125,7 +123,7 @@ func (game *TDGame) initialize() error {
 	}
 
 	// Setup HUD. Needs to be reset to initialize speed slider correctly
-	game.hud, err = NewHUD(game)
+	game.hud, err = hud.NewHUD(game)
 	if err != nil {
 		return err
 	}
@@ -143,19 +141,6 @@ func (game *TDGame) initialize() error {
 // Constructor: Initialize parts of game that are constant even after restarting
 func NewTDGame(screenWidth, screenHeight int) (*TDGame, error) {
 	game := &TDGame{screenWidth: screenWidth, screenHeight: screenHeight}
-	var err error
-
-	// Setup scoreboard: Use in memory in web env
-	_, err = os.Getwd()
-	if err != nil {
-		game.scoreBoard, err = engine.NewInMemoryScoreBoard()
-	} else {
-		game.scoreBoard, err = engine.NewCsvScoreKeeper("data/score.csv")
-	}
-
-	if err != nil {
-		return nil, err
-	}
 
 	// Initialize
 	if err := game.initialize(); err != nil {
@@ -164,18 +149,13 @@ func NewTDGame(screenWidth, screenHeight int) (*TDGame, error) {
 	return game, nil
 }
 
-func (g *TDGame) GetCreepProgress() hud.ProgressInfo { return g.creepManager.GetProgress() }
-
-func (g *TDGame) GetCastleHealth() hud.ProgressInfo { return g.castle.GetHealthBar() }
-
-func (g *TDGame) GetSpeed() float64 { return g.world.GameSpeed }
-
-func (g *TDGame) SetSpeed(speed float64) { g.world.GameSpeed = speed }
-
-func (g *TDGame) Balance() int64 { return g.goldManager.Balance() }
-
-func (g *TDGame) Score() engine.ScoreValue {
-	return engine.ScoreValue(float64(g.goldManager.Revenue()))
+func (g *TDGame) GameOver() bool                   { return g.world.IsOver() }
+func (g *TDGame) CreepProgress() hud.ProgressInfo  { return g.creepManager.GetProgress() }
+func (g *TDGame) CastleProgress() hud.ProgressInfo { return g.castle.GetHealthBar() }
+func (g *TDGame) SetSpeed(speed float64)           { g.world.GameSpeed = speed }
+func (g *TDGame) Balance() int64                   { return g.goldManager.Balance() }
+func (g *TDGame) Score() hud.ScoreValue {
+	return hud.ScoreValue(float64(g.goldManager.Revenue()))
 }
 
 func (g *TDGame) EndGame() {
@@ -183,18 +163,7 @@ func (g *TDGame) EndGame() {
 
 	// Keeping score
 	fmt.Printf("You've lost at wave %d \n", g.creepManager.Round())
-	score := g.Score()
-	fmt.Printf("You've earned a score of %f\n", score)
-	if g.scoreBoard.IsHighscore(score) {
-		fmt.Println("NEW HIGHSCORE!")
-	}
-	err := g.scoreBoard.Save(score)
-	if err != nil {
-		fmt.Println("Could not save score", err.Error())
-	}
-	if err = g.scoreBoard.Print(); err != nil {
-		fmt.Println("Could not print scoreboard", err.Error())
-	}
+	g.hud.SaveScore(g.Score())
 
 	fmt.Println("Waiting for restart...")
 }

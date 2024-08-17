@@ -1,9 +1,10 @@
-package td
+package hud
 
 import (
 	"fmt"
 	"image/color"
 	"log"
+	"os"
 
 	"golang.org/x/image/font/gofont/goregular"
 
@@ -14,9 +15,22 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
+type GameInfo interface {
+	CreepProgress() ProgressInfo
+	CastleProgress() ProgressInfo
+	// Interface for speed slider to set game speed
+	SetSpeed(float64)
+	// Current money
+	Balance() int64
+	// Game over will be displayed if true
+	GameOver() bool
+	// Current score
+	Score() ScoreValue
+}
+
 type GameHUD struct {
 	ui   *ebitenui.UI
-	game *TDGame
+	game GameInfo
 
 	creepProgress     *widget.ProgressBar
 	creepLabel        *widget.Text
@@ -25,10 +39,20 @@ type GameHUD struct {
 	goldLabel         *widget.Text
 	gameOverContainer *widget.Container
 	gameOverScore     *widget.Text
+
+	scoreBoard ScoreBoard
 }
 
-func NewHUD(game *TDGame) (*GameHUD, error) {
+func NewHUD(game GameInfo) (*GameHUD, error) {
 	hud := &GameHUD{game: game}
+	// Setup scoreboard: Use in memory in web env
+	_, err := os.Getwd()
+	if err != nil {
+		hud.scoreBoard, err = NewInMemoryScoreBoard()
+	} else {
+		hud.scoreBoard, err = NewCsvScoreKeeper("data/score.csv")
+	}
+
 	// This creates the root container for this UI.
 	// All other UI elements must be added to this container.
 	rootContainer := widget.NewContainer(widget.ContainerOpts.Layout(widget.NewAnchorLayout()))
@@ -45,6 +69,32 @@ func NewHUD(game *TDGame) (*GameHUD, error) {
 	}
 
 	return hud, nil
+}
+
+func (h *GameHUD) Draw(screen *ebiten.Image) {
+	h.ui.Draw(screen)
+}
+
+func (h *GameHUD) Update() {
+	h.ui.Update()
+	h.updateCreepProgress()
+	h.updateCastleHealth()
+	h.updateGold()
+	h.updateGameOver()
+}
+
+func (h *GameHUD) SaveScore(score ScoreValue) {
+	fmt.Printf("You've earned a score of %f\n", score)
+	if h.scoreBoard.IsHighscore(score) {
+		fmt.Println("NEW HIGHSCORE!")
+	}
+	err := h.scoreBoard.Save(score)
+	if err != nil {
+		fmt.Println("Could not save score", err.Error())
+	}
+	if err = h.scoreBoard.Print(); err != nil {
+		fmt.Println("Could not print scoreboard", err.Error())
+	}
 }
 
 func initCreepProgressBar(root *widget.Container) (*widget.ProgressBar, *widget.Text) {
@@ -261,20 +311,8 @@ func (hud *GameHUD) initGameOverContainer(root *widget.Container) *widget.Contai
 	return container
 }
 
-func (h *GameHUD) Draw(screen *ebiten.Image) {
-	h.ui.Draw(screen)
-}
-
-func (h *GameHUD) Update() {
-	h.ui.Update()
-	h.updateCreepProgress()
-	h.updateCastleHealth()
-	h.updateGold()
-	h.updateGameOver()
-}
-
 func (h *GameHUD) updateCreepProgress() {
-	progress := h.game.GetCreepProgress()
+	progress := h.game.CreepProgress()
 	h.creepProgress.Min = progress.Min
 	h.creepProgress.Max = progress.Max
 	h.creepProgress.SetCurrent(progress.Current)
@@ -282,7 +320,7 @@ func (h *GameHUD) updateCreepProgress() {
 }
 
 func (h *GameHUD) updateCastleHealth() {
-	progress := h.game.GetCastleHealth()
+	progress := h.game.CastleProgress()
 	h.castleHealth.Min = progress.Min
 	h.castleHealth.Max = progress.Max
 	h.castleHealth.SetCurrent(progress.Current)
@@ -294,17 +332,17 @@ func (h *GameHUD) updateGold() {
 
 func (h *GameHUD) updateGameOver() {
 	// Toggle visibility of game over container
-	if !h.game.world.IsOver() {
+	if !h.game.GameOver() {
 		h.gameOverContainer.GetWidget().Visibility = widget.Visibility_Hide
 		return
 	}
 	h.gameOverContainer.GetWidget().Visibility = widget.Visibility_Show
 
 	// Update final score
-	currentHighscore := h.game.scoreBoard.Highscore().Score
+	currentHighscore := h.scoreBoard.Highscore().Score
 	currentScore := h.game.Score()
 	newScoreLabel := fmt.Sprintf("Final score: %1.1f (BEST %1.1f)", currentScore, currentHighscore)
-	if h.game.scoreBoard.IsHighscore(currentScore) {
+	if h.scoreBoard.IsHighscore(currentScore) {
 		newScoreLabel = fmt.Sprintf("HIGHSCORE: %1.1f", currentScore)
 	}
 	h.gameOverScore.Label = newScoreLabel
