@@ -46,6 +46,7 @@ func (t *CastleEntity) Draw(screen engine.RenderingTarget) {
 }
 
 func (e *CastleEntity) OnNpcHit(npc *engine.NpcEntity) {
+	// TODO: Utilize damage model here
 	e.health -= 20
 	fmt.Printf("Castle has hit by npc %d. New health %f \n", npc.Id(), e.health)
 	npc.Destroy()

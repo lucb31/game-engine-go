@@ -7,7 +7,7 @@ import (
 )
 
 type DamageModel interface {
-	ApplyDamage(Attacker, Defender, float64) (*DamageRecord, error)
+	ApplyDamage(atk Attacker, def Defender, gameTime float64) (*DamageRecord, error)
 	DamageLog() DamageLog
 }
 

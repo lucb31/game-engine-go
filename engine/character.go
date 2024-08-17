@@ -8,7 +8,7 @@ import (
 	"github.com/jakecoffman/cp"
 )
 
-const DEBUG_RENDER_COLLISION_BOXES = true
+const DEBUG_RENDER_COLLISION_BOXES = false
 
 type GameAssetAnimation struct {
 	StartTile  int

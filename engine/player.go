@@ -2,7 +2,6 @@ package engine
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/jakecoffman/cp"
@@ -18,19 +17,23 @@ const (
 )
 
 type Player struct {
-	id                  GameEntityId
-	world               GameEntityManager
-	orientation         Orientation
-	shape               *cp.Shape
-	asset               *CharacterAsset
-	projectileAsset     *ProjectileAsset
-	lastProjectileFired time.Time
-	animation           string
-	gun                 Gun
+	id              GameEntityId
+	world           GameEntityManager
+	orientation     Orientation
+	shape           *cp.Shape
+	asset           *CharacterAsset
+	projectileAsset *ProjectileAsset
+	animation       string
+
+	// ATK
+	gun Gun
+
+	// DEF
+	health float64
 }
 
 const (
-	playerVelocity = 100
+	playerVelocity = 500
 	playerWidth    = 32
 	playerHeight   = 32
 )
@@ -51,6 +54,12 @@ func NewPlayer(world GameEntityManager, asset *CharacterAsset, projectileAsset *
 	p.shape.SetCollisionType(cp.CollisionType(PlayerCollision))
 	p.shape.SetFilter(PlayerCollisionFilter())
 
+	// Register npc collision handler
+	ch := world.Space().NewCollisionHandler(cp.CollisionType(PlayerCollision), cp.CollisionType(NpcCollision))
+	ch.BeginFunc = p.OnPlayerHit
+
+	// Game logic
+	p.health = 40
 	var err error
 	gunOpts := BasicGunOpts{FireRatePerSecond: 1.3, FireRange: 250.0}
 	p.gun, err = NewAutoAimGun(world, p, projectileAsset, gunOpts)
@@ -69,12 +78,33 @@ func (p *Player) Draw(t RenderingTarget) {
 }
 
 func (p *Player) Destroy() error {
-	return fmt.Errorf("ERROR: Cannot destroy player")
+	p.world.EndGame()
+	return nil
 }
 
-func (p *Player) Id() GameEntityId      { return p.id }
-func (p *Player) SetId(id GameEntityId) { p.id = id }
-func (p *Player) Shape() *cp.Shape      { return p.shape }
+func (p *Player) OnPlayerHit(arb *cp.Arbiter, space *cp.Space, userData interface{}) bool {
+	_, b := arb.Bodies()
+	npc, ok := b.UserData.(*NpcEntity)
+	if !ok {
+		fmt.Println("Collsion handler error: Expected npc but did not receive one")
+		return true
+	}
+	_, err := p.world.DamageModel().ApplyDamage(npc, p, p.world.GetIngameTime())
+	if err != nil {
+		fmt.Println("Error during player npc collision damage calc", err.Error())
+		return true
+	}
+	npc.Destroy()
+
+	return false
+}
+
+func (p *Player) Id() GameEntityId         { return p.id }
+func (p *Player) SetId(id GameEntityId)    { p.id = id }
+func (p *Player) Shape() *cp.Shape         { return p.shape }
+func (p *Player) Health() float64          { return p.health }
+func (p *Player) Armor() float64           { return 0 }
+func (p *Player) SetHealth(health float64) { p.health = health }
 
 func (p *Player) calculateVelocity(body *cp.Body, gravity cp.Vector, damping float64, dt float64) {
 	// Automatically shoot

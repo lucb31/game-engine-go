@@ -84,6 +84,7 @@ func (n *NpcEntity) SetId(id GameEntityId) { n.id = id }
 func (n *NpcEntity) Shape() *cp.Shape      { return n.shape }
 func (n *NpcEntity) Armor() float64        { return 0.0 }
 func (n *NpcEntity) Health() float64       { return n.health }
+func (n *NpcEntity) Power() float64        { return 20.0 }
 func (n *NpcEntity) SetHealth(h float64)   { n.health = h }
 
 // Calculate velocity based on simple pathfinding algorithm between waypoints
