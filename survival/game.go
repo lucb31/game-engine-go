@@ -57,13 +57,13 @@ func (game *SurvivalGame) initialize() error {
 	game.world = w
 
 	// Init player
-	_, err = game.world.InitPlayer(am)
+	player, err := game.world.InitPlayer(am)
 	if err != nil {
 		return err
 	}
 
 	// Init main camera
-	camera, err := engine.NewFreeMovementCamera(game.screenWidth, game.screenHeight)
+	camera, err := engine.NewFollowingCamera(game.screenWidth, game.screenHeight, player)
 	if err != nil {
 		return err
 	}
