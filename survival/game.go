@@ -23,6 +23,13 @@ type SurvivalGame struct {
 
 func (g *SurvivalGame) Update() error {
 	if g.world.IsOver() {
+		// Wait for restart
+		if ebiten.IsKeyPressed(ebiten.KeySpace) {
+			err := g.initialize()
+			if err != nil {
+				fmt.Println("Could not restart game: ", err.Error())
+			}
+		}
 		return nil
 	}
 	g.world.Update()
