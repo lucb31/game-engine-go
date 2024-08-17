@@ -74,6 +74,7 @@ func (w *GameWorld) Draw(screen *ebiten.Image) {
 	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("# Shapes: %d", shapes), 10, 45)
 	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("# Projectiles: %d", projectiles), 10, 60)
 	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("# Npcs: %d", npcs), 10, 75)
+	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Player pos: %s", w.player.shape.Body().Position()), 10, 90)
 	w.drawCombatLog()
 }
 
@@ -195,16 +196,20 @@ func createFences(am *AssetManager, space *cp.Space) ([]GameEntity, error) {
 	// return objects, nil
 }
 
-func initializeBoundingBox(space *cp.Space, width float64, height float64) {
-	offset := 0.0
+func (w *GameWorld) initializeBoundingBox(camera Camera) {
+	minX := float64(camera.ViewportWidth() / 2)
+	minY := float64(camera.ViewportHeight() / 2)
+	maxX := float64(w.Width) - minX
+	maxY := float64(w.Height) - minY
+
 	walls := []cp.Vector{
-		{offset, offset}, {offset, height},
-		{width, offset}, {width, height},
-		{offset, offset}, {width, offset},
-		{offset, height}, {width, height},
+		{minX, minY}, {minX, maxY},
+		{maxX, minY}, {maxX, maxY},
+		{minX, minY}, {maxX, minY},
+		{minX, maxY}, {maxX, maxY},
 	}
 	for i := 0; i < len(walls)-1; i += 2 {
-		shape := space.AddShape(cp.NewSegment(space.StaticBody, walls[i], walls[i+1], 2))
+		shape := w.space.AddShape(cp.NewSegment(w.space.StaticBody, walls[i], walls[i+1], 2))
 		shape.SetElasticity(1)
 		shape.SetFriction(1)
 		shape.SetFilter(BoundingBoxFilter())
@@ -228,7 +233,6 @@ func NewWorld(width int64, height int64) (*GameWorld, error) {
 	if err != nil {
 		return nil, err
 	}
-	initializeBoundingBox(space, float64(width), float64(height))
 	w := GameWorld{
 		gameTime:    &gameTime,
 		Width:       width,
@@ -274,4 +278,6 @@ func (w *GameWorld) SetCamera(camera Camera) {
 	w.camera = camera
 	w.space.AddBody(w.camera.Body())
 	w.space.AddShape(w.camera.Shape())
+
+	w.initializeBoundingBox(camera)
 }

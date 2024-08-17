@@ -40,7 +40,7 @@ func NewPlayer(world GameEntityManager, asset *CharacterAsset, projectileAsset *
 	p := &Player{id: -1, world: world, asset: asset, orientation: South, projectileAsset: projectileAsset}
 	// Init player physics
 	playerBody := cp.NewBody(1, cp.INFINITY)
-	playerBody.SetPosition(cp.Vector{X: 100, Y: 100})
+	playerBody.SetPosition(cp.Vector{X: 530, Y: 402})
 	playerBody.UserData = p
 	playerBody.SetVelocityUpdateFunc(p.calculateVelocity)
 
@@ -53,7 +53,7 @@ func NewPlayer(world GameEntityManager, asset *CharacterAsset, projectileAsset *
 
 	var err error
 	gunOpts := BasicGunOpts{FireRatePerSecond: 1.3, FireRange: 250.0}
-	p.gun, err = NewShotGun(world, p, projectileAsset, gunOpts)
+	p.gun, err = NewAutoAimGun(world, p, projectileAsset, gunOpts)
 	if err != nil {
 		return nil, err
 	}
