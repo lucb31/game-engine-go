@@ -64,7 +64,7 @@ func NewProjectile(gun Gun, world GameEntityManager, asset *ProjectileAsset) (*P
 		return nil, fmt.Errorf("Failed to instantiate projectile. No asset provided")
 	}
 	p := &Projectile{world: world, asset: asset}
-	body := cp.NewBody(1, cp.INFINITY)
+	body := cp.NewKinematicBody()
 	body.SetPosition(gun.Owner().Shape().Body().Position())
 	body.SetVelocityUpdateFunc(p.calculateVelocity)
 	body.UserData = p
@@ -105,15 +105,22 @@ func (p *Projectile) calculateVelocity(body *cp.Body, gravity cp.Vector, damping
 
 		p.direction = p.target.Shape().Body().Position()
 	}
+
 	// Remove projectile if fire range exceeded
 	distanceTravelled := p.shape.Body().Position().Distance(p.origin)
-	if distanceTravelled >= p.gun.FireRange() {
+	if math.IsNaN(distanceTravelled) || distanceTravelled >= p.gun.FireRange() {
 		p.Destroy()
 		return
 	}
 
+	// Remove projectile if destination reached
 	position := body.Position()
 	diff := p.direction.Sub(position)
+	if diff.Length() < 0.1 {
+		p.Destroy()
+		return
+	}
+
 	diffNormalized := diff.Normalize()
 	vel := diffNormalized.Mult(p.velocity)
 	body.SetVelocityVector(vel)

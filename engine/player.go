@@ -52,8 +52,8 @@ func NewPlayer(world GameEntityManager, asset *CharacterAsset, projectileAsset *
 	p.shape.SetFilter(PlayerCollisionFilter())
 
 	var err error
-	gunOpts := BasicGunOpts{FireRatePerSecond: 1.3, FireRange: 500.0}
-	p.gun, err = NewSimpleGun(world, p, projectileAsset, &p.orientation, gunOpts)
+	gunOpts := BasicGunOpts{FireRatePerSecond: 1.3, FireRange: 250.0}
+	p.gun, err = NewShotGun(world, p, projectileAsset, gunOpts)
 	if err != nil {
 		return nil, err
 	}
@@ -68,9 +68,6 @@ func (p *Player) Draw(t RenderingTarget) {
 	p.asset.Draw(t, p.animation, p.shape)
 }
 
-func (p *Player) shoot() {
-}
-
 func (p *Player) Destroy() error {
 	return fmt.Errorf("ERROR: Cannot destroy player")
 }
@@ -80,7 +77,8 @@ func (p *Player) SetId(id GameEntityId) { p.id = id }
 func (p *Player) Shape() *cp.Shape      { return p.shape }
 
 func (p *Player) calculateVelocity(body *cp.Body, gravity cp.Vector, damping float64, dt float64) {
-	if ebiten.IsKeyPressed(ebiten.KeySpace) && !p.gun.IsReloading() {
+	// Automatically shoot
+	if !p.gun.IsReloading() {
 		if err := p.gun.Shoot(); err != nil {
 			fmt.Println("Error when trying to shoot player gun", err.Error())
 		}
