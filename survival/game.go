@@ -123,8 +123,8 @@ func NewSurvivalGame(screenWidth, screenHeight int) (*SurvivalGame, error) {
 
 func (g *SurvivalGame) SetSpeed(speed float64)           { g.world.GameSpeed = speed }
 func (g *SurvivalGame) GameOver() bool                   { return g.world.IsOver() }
-func (g *SurvivalGame) Balance() int64                   { return 0 }
-func (g *SurvivalGame) Score() hud.ScoreValue            { return 0 }
+func (g *SurvivalGame) Balance() int64                   { return g.goldManager.Balance() }
+func (g *SurvivalGame) Score() hud.ScoreValue            { return hud.ScoreValue(g.goldManager.Revenue()) }
 func (g *SurvivalGame) CastleProgress() hud.ProgressInfo { return hud.ProgressInfo{} }
 func (g *SurvivalGame) CreepProgress() hud.ProgressInfo  { return g.creepManager.Progress() }
 
