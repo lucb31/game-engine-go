@@ -2,6 +2,7 @@ package engine
 
 import (
 	"fmt"
+	"image/color"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/jakecoffman/cp"
@@ -29,7 +30,8 @@ type Player struct {
 	gun Gun
 
 	// DEF
-	health float64
+	health    float64
+	maxHealth float64
 }
 
 const (
@@ -59,7 +61,8 @@ func NewPlayer(world GameEntityManager, asset *CharacterAsset, projectileAsset *
 	ch.BeginFunc = p.OnPlayerHit
 
 	// Game logic
-	p.health = 40
+	p.health = 100
+	p.maxHealth = 100
 	var err error
 	gunOpts := BasicGunOpts{FireRatePerSecond: 1.3, FireRange: 250.0}
 	p.gun, err = NewAutoAimGun(world, p, projectileAsset, gunOpts)
@@ -75,6 +78,35 @@ func PlayerCollisionFilter() cp.ShapeFilter {
 
 func (p *Player) Draw(t RenderingTarget) {
 	p.asset.Draw(t, p.animation, p.shape)
+	p.DrawHealthbar(t)
+}
+
+func (p *Player) DrawHealthbar(t RenderingTarget) {
+	shape := p.Shape()
+	width := shape.BB().R - shape.BB().L
+	height := shape.BB().T - shape.BB().B
+	// Outline
+	t.StrokeRect(
+		shape.Body().Position().X-width/2,
+		shape.Body().Position().Y-height/2-12,
+		float32(width),
+		6,
+		1,
+		color.RGBA{255, 255, 255, 255},
+		false,
+	)
+	// FILL
+	maxWidth := width - 4
+	filledWidth := float32(p.health / p.maxHealth * maxWidth)
+	t.StrokeRect(
+		shape.Body().Position().X-width/2+1,
+		shape.Body().Position().Y-height/2-10,
+		filledWidth,
+		2,
+		2,
+		color.RGBA{255, 0, 0, 255},
+		false,
+	)
 }
 
 func (p *Player) Destroy() error {
