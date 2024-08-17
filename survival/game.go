@@ -2,6 +2,8 @@ package survival
 
 import (
 	"fmt"
+	"image"
+	"math/rand"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/jakecoffman/cp"
@@ -74,14 +76,38 @@ func (game *SurvivalGame) initialize() error {
 	if err != nil {
 		return err
 	}
-	for i := range 10 {
-		npc, err := engine.NewNpc(w, npcAsset, engine.NpcOpts{StartingPos: cp.Vector{float64(i * 200), float64(i * 200)}})
+	for range 10 {
+		pos, err := calcCreepSpawnPosition()
+		if err != nil {
+			return err
+		}
+		npc, err := engine.NewNpc(w, npcAsset, engine.NpcOpts{StartingPos: pos})
 		if err != nil {
 			return err
 		}
 		w.AddEntity(npc)
 	}
 	return nil
+}
+
+// Creeps cannot spawn out of bounds
+// Creeps cannot spawn within the castle area
+func calcCreepSpawnPosition() (cp.Vector, error) {
+	// BOUNDS: 530, 402 - 2410,1710
+	// Castle 1140, 402 - 1815, 402
+	boundsMinX, boundsMinY, boundsMaxX, boundsMaxY := 530.0, 402.0, 2410.0, 1710.0
+	for tries := 0; tries < 10; tries++ {
+		randX := rand.Float64()*(boundsMaxX-boundsMinX) + boundsMinX
+		randY := rand.Float64()*(boundsMaxY-boundsMinY) + boundsMinY
+
+		castleArea := image.Rect(1140, 402, 1815, 1160)
+		spawnArea := image.Rect(int(randX), int(randY), int(randX)+1, int(randY)+1)
+		if !spawnArea.In(castleArea) {
+			return cp.Vector{X: randX, Y: randY}, nil
+		}
+		fmt.Println("Intruder in the castle. Retrying...", randX, randY)
+	}
+	return cp.Vector{}, fmt.Errorf("Could not find a spawn position. Max tries reached")
 }
 
 // Constructor: Initialize parts of game that are constant even after restarting
