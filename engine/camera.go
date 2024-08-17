@@ -14,6 +14,7 @@ type RenderingTarget interface {
 	DrawImage(*ebiten.Image, *ebiten.DrawImageOptions)
 	StrokeRect(x, y float64, width, height float32, strokeWidth float32, clr color.Color, antialias bool)
 	StrokeCircle(cx, cy float64, r, strokeWidth float32, clr color.Color, antialias bool)
+	Screen() *ebiten.Image
 }
 
 type Camera interface {
@@ -144,8 +145,9 @@ func (c *BaseCamera) AbsToRel(absolutePos cp.Vector) cp.Vector {
 // ////////
 // Getters
 // ////////
-func (c *BaseCamera) Position() cp.Vector { return c.shape.Body().Position() }
-func (c *BaseCamera) Body() *cp.Body      { return c.shape.Body() }
-func (c *BaseCamera) Shape() *cp.Shape    { return c.shape }
-func (c *BaseCamera) ViewportWidth() int  { return c.viewportWidth }
-func (c *BaseCamera) ViewportHeight() int { return c.viewportHeight }
+func (c *BaseCamera) Position() cp.Vector   { return c.shape.Body().Position() }
+func (c *BaseCamera) Body() *cp.Body        { return c.shape.Body() }
+func (c *BaseCamera) Shape() *cp.Shape      { return c.shape }
+func (c *BaseCamera) Screen() *ebiten.Image { return c.screen }
+func (c *BaseCamera) ViewportWidth() int    { return c.viewportWidth }
+func (c *BaseCamera) ViewportHeight() int   { return c.viewportHeight }

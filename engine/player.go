@@ -52,7 +52,7 @@ func NewPlayer(world GameEntityManager, asset *CharacterAsset, projectileAsset *
 	p.shape.SetFilter(PlayerCollisionFilter())
 
 	var err error
-	gunOpts := BasicGunOpts{FireRatePerSecond: 1.3}
+	gunOpts := BasicGunOpts{FireRatePerSecond: 1.3, FireRange: 500.0}
 	p.gun, err = NewSimpleGun(world, p, projectileAsset, &p.orientation, gunOpts)
 	if err != nil {
 		return nil, err

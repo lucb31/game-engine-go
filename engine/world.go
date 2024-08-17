@@ -54,10 +54,10 @@ func (w *GameWorld) Draw(screen *ebiten.Image) {
 			obj.Draw(w.camera)
 		}
 	}
-	w.drawCombatLog(screen)
+	w.drawCombatLog()
 }
 
-func (w *GameWorld) drawCombatLog(screen *ebiten.Image) {
+func (w *GameWorld) drawCombatLog() {
 	log := w.damageModel.DamageLog()
 	entries := log.Entries()
 	for idx, entry := range entries {
@@ -70,10 +70,11 @@ func (w *GameWorld) drawCombatLog(screen *ebiten.Image) {
 			}
 			return
 		}
-		x := int(entry.Pos.X)
 		// Animate to scroll upwards
-		y := int(entry.Pos.Y - timeDiff/maxTimeDiff*20)
-		ebitenutil.DebugPrintAt(screen, fmt.Sprintf("%.0f", entry.Damage), x, y)
+		absPos := entry.Pos.Add(cp.Vector{X: 0, Y: -timeDiff / maxTimeDiff * 20})
+		relPos := w.camera.AbsToRel(absPos)
+
+		ebitenutil.DebugPrintAt(w.camera.Screen(), fmt.Sprintf("%.0f", entry.Damage), int(relPos.X), int(relPos.Y))
 	}
 }
 
