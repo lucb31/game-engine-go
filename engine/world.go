@@ -50,6 +50,7 @@ func (w *GameWorld) Draw(screen *ebiten.Image) {
 	// Render player
 	if w.player != nil {
 		w.player.Draw(w.camera)
+		ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Player pos: %s", w.player.shape.Body().Position()), 10, 90)
 	}
 	// Render entities that are visible in the camera viewport
 	for _, obj := range w.objects {
@@ -74,7 +75,6 @@ func (w *GameWorld) Draw(screen *ebiten.Image) {
 	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("# Shapes: %d", shapes), 10, 45)
 	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("# Projectiles: %d", projectiles), 10, 60)
 	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("# Npcs: %d", npcs), 10, 75)
-	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Player pos: %s", w.player.shape.Body().Position()), 10, 90)
 	w.drawCombatLog()
 }
 

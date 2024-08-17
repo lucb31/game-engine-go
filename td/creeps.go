@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 
+	"github.com/jakecoffman/cp"
 	"github.com/lucb31/game-engine-go/engine"
 )
 
@@ -76,7 +77,20 @@ func calculateWaveOpts(round int) Wave {
 	wave.CreepsToSpawn = int(math.Exp(float64(round)/4) + 29)
 	wave.CreepSpawnRatePerSecond = 1.0
 	startingHealth := math.Pow(3.5*float64(round), 2) + 100
-	wave.CreepOpts = engine.NpcOpts{StartingHealth: startingHealth}
+	wave.CreepOpts = engine.NpcOpts{
+		StartingHealth: startingHealth,
+		Waypoints: []cp.Vector{
+			{X: 48, Y: 720},
+			{X: 976, Y: 720},
+			{X: 976, Y: 48},
+			{X: 208, Y: 48},
+			{X: 208, Y: 560},
+			{X: 816, Y: 560},
+			{X: 816, Y: 208},
+			{X: 368, Y: 208},
+			{X: 368, Y: 384},
+			{X: 640, Y: 384},
+		}}
 	return wave
 }
 

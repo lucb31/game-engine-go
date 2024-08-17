@@ -29,6 +29,7 @@ type NpcEntity struct {
 type NpcOpts struct {
 	StartingHealth float64
 	StartingPos    cp.Vector
+	Waypoints      []cp.Vector
 }
 
 func NpcCollisionFilter() cp.ShapeFilter {
@@ -51,18 +52,6 @@ func NewNpc(remover EntityRemover, asset *CharacterAsset, opts NpcOpts) (*NpcEnt
 	npc.shape.SetFilter(NpcCollisionFilter())
 
 	npc.asset = asset
-	npc.wayPoints = []cp.Vector{
-		{X: 48, Y: 720},
-		{X: 976, Y: 720},
-		{X: 976, Y: 48},
-		{X: 208, Y: 48},
-		{X: 208, Y: 560},
-		{X: 816, Y: 560},
-		{X: 816, Y: 208},
-		{X: 368, Y: 208},
-		{X: 368, Y: 384},
-		{X: 640, Y: 384},
-	}
 	npc.loopWaypoints = false
 	npc.velocity = 75.0
 	npc.health = 100.0
@@ -74,6 +63,9 @@ func NewNpc(remover EntityRemover, asset *CharacterAsset, opts NpcOpts) (*NpcEnt
 	}
 	if opts.StartingPos.Length() > 0 {
 		body.SetPosition(opts.StartingPos)
+	}
+	if len(opts.Waypoints) > 0 {
+		npc.wayPoints = opts.Waypoints
 	}
 
 	return npc, nil
@@ -97,7 +89,7 @@ func (n *NpcEntity) SetHealth(h float64)   { n.health = h }
 // Calculate velocity based on simple pathfinding algorithm between waypoints
 func (n *NpcEntity) calculateVelocity(body *cp.Body, gravity cp.Vector, damping float64, dt float64) {
 	// No movement if no active wayPoint
-	if n.currentWpIndex == -1 {
+	if n.currentWpIndex == -1 || n.currentWpIndex > len(n.wayPoints)-1 {
 		body.SetVelocityVector(cp.Vector{})
 		n.animation = calculateWalkingAnimation(body.Velocity(), n.orientation)
 		return
