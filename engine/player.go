@@ -2,7 +2,6 @@ package engine
 
 import (
 	"fmt"
-	"image/color"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/jakecoffman/cp"
@@ -77,36 +76,8 @@ func PlayerCollisionFilter() cp.ShapeFilter {
 }
 
 func (p *Player) Draw(t RenderingTarget) error {
-	p.DrawHealthbar(t)
+	p.asset.DrawHealthbar(t, p.shape, p.health, p.maxHealth)
 	return p.asset.Draw(t, p.animation, p.shape)
-}
-
-func (p *Player) DrawHealthbar(t RenderingTarget) {
-	shape := p.Shape()
-	width := shape.BB().R - shape.BB().L
-	height := shape.BB().T - shape.BB().B
-	// Outline
-	t.StrokeRect(
-		shape.Body().Position().X-width/2,
-		shape.Body().Position().Y-height/2-12,
-		float32(width),
-		6,
-		1,
-		color.RGBA{255, 255, 255, 255},
-		false,
-	)
-	// FILL
-	maxWidth := width - 4
-	filledWidth := float32(p.health / p.maxHealth * maxWidth)
-	t.StrokeRect(
-		shape.Body().Position().X-width/2+1,
-		shape.Body().Position().Y-height/2-10,
-		filledWidth,
-		2,
-		2,
-		color.RGBA{255, 0, 0, 255},
-		false,
-	)
 }
 
 func (p *Player) Destroy() error {

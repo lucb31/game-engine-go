@@ -9,7 +9,12 @@ type NpcEntity struct {
 	remover EntityRemover
 
 	// Logic
-	health float64
+	armor         float64
+	goldValue     int
+	health        float64
+	maxHealth     float64
+	movementSpeed float64
+	power         float64
 
 	// Rendering
 	asset       *CharacterAsset
@@ -17,8 +22,7 @@ type NpcEntity struct {
 	orientation Orientation
 
 	// Physics
-	shape    *cp.Shape
-	velocity float64
+	shape *cp.Shape
 
 	// Movement AI
 	wayPoints      []cp.Vector
@@ -27,9 +31,13 @@ type NpcEntity struct {
 }
 
 type NpcOpts struct {
-	StartingHealth float64
-	StartingPos    cp.Vector
-	Waypoints      []cp.Vector
+	StartingPos       cp.Vector
+	BaseArmor         float64
+	BasePower         float64
+	BaseHealth        float64
+	BaseMovementSpeed float64
+	GoldValue         int
+	Waypoints         []cp.Vector
 }
 
 func NpcCollisionFilter() cp.ShapeFilter {
@@ -51,15 +59,35 @@ func NewNpc(remover EntityRemover, asset *CharacterAsset, opts NpcOpts) (*NpcEnt
 	npc.shape.SetCollisionType(cp.CollisionType(NpcCollision))
 	npc.shape.SetFilter(NpcCollisionFilter())
 
+	// Asset
 	npc.asset = asset
-	npc.loopWaypoints = false
-	npc.velocity = 75.0
-	npc.health = 100.0
 	npc.animation = "idle_east"
 
+	// Logic
+	npc.armor = 0.0
+	npc.goldValue = 1.0
+	npc.maxHealth = 100.0
+	npc.movementSpeed = 75.0
+	npc.power = 20.0
+
+	// AI
+	npc.loopWaypoints = false
+
 	// Parse opts
-	if opts.StartingHealth > 0 {
-		npc.health = opts.StartingHealth
+	if opts.BaseArmor > 0 {
+		npc.armor = opts.BaseArmor
+	}
+	if opts.GoldValue > 0 {
+		npc.goldValue = opts.GoldValue
+	}
+	if opts.BaseHealth > 0 {
+		npc.maxHealth = opts.BaseHealth
+	}
+	if opts.BaseMovementSpeed > 0 {
+		npc.movementSpeed = opts.BaseMovementSpeed
+	}
+	if opts.BasePower > 0 {
+		npc.power = opts.BasePower
 	}
 	if opts.StartingPos.Length() > 0 {
 		body.SetPosition(opts.StartingPos)
@@ -68,10 +96,12 @@ func NewNpc(remover EntityRemover, asset *CharacterAsset, opts NpcOpts) (*NpcEnt
 		npc.wayPoints = opts.Waypoints
 	}
 
+	npc.health = npc.maxHealth
 	return npc, nil
 }
 
 func (n *NpcEntity) Draw(t RenderingTarget) error {
+	n.asset.DrawHealthbar(t, n.shape, n.health, n.maxHealth)
 	return n.asset.Draw(t, n.animation, n.shape)
 }
 
@@ -82,9 +112,9 @@ func (n *NpcEntity) Destroy() error {
 func (n *NpcEntity) Id() GameEntityId      { return n.id }
 func (n *NpcEntity) SetId(id GameEntityId) { n.id = id }
 func (n *NpcEntity) Shape() *cp.Shape      { return n.shape }
-func (n *NpcEntity) Armor() float64        { return 0.0 }
+func (n *NpcEntity) Armor() float64        { return n.armor }
 func (n *NpcEntity) Health() float64       { return n.health }
-func (n *NpcEntity) Power() float64        { return 20.0 }
+func (n *NpcEntity) Power() float64        { return n.power }
 func (n *NpcEntity) SetHealth(h float64)   { n.health = h }
 
 // Calculate velocity based on simple pathfinding algorithm between waypoints
@@ -100,7 +130,7 @@ func (n *NpcEntity) calculateVelocity(body *cp.Body, gravity cp.Vector, damping 
 
 	// Go to next waypoint if in close proximity to current WP
 	// ~Distance covered within next timestep
-	dx := n.velocity * dt
+	dx := n.movementSpeed * dt
 	if distance < dx {
 		n.currentWpIndex++
 		if n.currentWpIndex > len(n.wayPoints)-1 {
@@ -123,7 +153,7 @@ func (n *NpcEntity) moveTowards(body *cp.Body, dest cp.Vector) float64 {
 	diff := dest.Sub(position)
 	diffNormalized := diff.Normalize()
 
-	vel := diffNormalized.Mult(n.velocity)
+	vel := diffNormalized.Mult(n.movementSpeed)
 	body.SetVelocityVector(vel)
 	// Update active animation & orientation
 	n.orientation = calculateOrientation(vel)

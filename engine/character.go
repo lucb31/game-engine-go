@@ -67,6 +67,33 @@ func (a *CharacterAsset) DrawRectBoundingBox(t RenderingTarget, shape *cp.Shape)
 	return nil
 }
 
+func (a *CharacterAsset) DrawHealthbar(t RenderingTarget, shape *cp.Shape, health, maxHealth float64) {
+	width := shape.BB().R - shape.BB().L
+	height := shape.BB().T - shape.BB().B
+	// Outline
+	t.StrokeRect(
+		shape.Body().Position().X-width/2,
+		shape.Body().Position().Y-height/2-12,
+		float32(width),
+		6,
+		1,
+		color.RGBA{255, 255, 255, 255},
+		false,
+	)
+	// FILL
+	maxWidth := width - 4
+	filledWidth := float32(health / maxHealth * maxWidth)
+	t.StrokeRect(
+		shape.Body().Position().X-width/2+1,
+		shape.Body().Position().Y-height/2-10,
+		filledWidth,
+		2,
+		2,
+		color.RGBA{255, 0, 0, 255},
+		false,
+	)
+}
+
 func calculateWalkingAnimation(vel cp.Vector, orientation Orientation) string {
 	animation := "idle_"
 	if vel.Length() > 5.0 {

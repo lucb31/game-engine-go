@@ -119,7 +119,7 @@ func calculateWaveOpts(round int) Wave {
 	wave.CreepsToSpawn = int(math.Exp(float64(round)/4) + 29)
 	wave.CreepSpawnRatePerSecond = 1.0
 	startingHealth := math.Pow(3.5*float64(round), 2) + 100
-	wave.CreepOpts = NpcOpts{StartingHealth: startingHealth}
+	wave.CreepOpts = NpcOpts{BaseHealth: startingHealth}
 	return wave
 }
 

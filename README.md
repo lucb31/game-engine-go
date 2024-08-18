@@ -1,7 +1,18 @@
 # LIVE
 [Try it out](https://lucb31.github.io/game-engine-go/)
 
+# Survival game
+## Todos
+- Add different stats to npc types
+    - Movement speed
+    - Health
+    - Damage 
+
+## Open points
+- Should the player be able to shoot from within the castle? Or pacified?
+
 # Engine
+
 ## Damage model
 - Add some randomization to demonstrate damage model (might remove / disable later) 
 

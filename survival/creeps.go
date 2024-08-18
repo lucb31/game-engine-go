@@ -56,12 +56,12 @@ func (p *SurvCreepProvider) NextNpc(remover engine.EntityRemover, opts engine.Np
 // TODO: Creeps cannot spawn too close to the player
 func calcCreepSpawnPosition() (cp.Vector, error) {
 	// BOUNDS: 530, 402 - 2410,1710
-	// Castle 1140, 402 - 1815, 402
 	boundsMinX, boundsMinY, boundsMaxX, boundsMaxY := 530.0, 402.0, 2410.0, 1710.0
 	for tries := 0; tries < 10; tries++ {
 		randX := rand.Float64()*(boundsMaxX-boundsMinX) + boundsMinX
 		randY := rand.Float64()*(boundsMaxY-boundsMinY) + boundsMinY
 
+		// Castle 1140, 402 - 1815, 402
 		castleArea := image.Rect(1140, 402, 1815, 1160)
 		spawnArea := image.Rect(int(randX), int(randY), int(randX)+1, int(randY)+1)
 		if !spawnArea.In(castleArea) {
