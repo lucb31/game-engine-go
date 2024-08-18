@@ -49,7 +49,7 @@ func (a *CharacterAsset) Draw(t RenderingTarget, activeAnimation string, shape *
 	}
 	subIm, err := a.GetTile(activeAnimation)
 	if err != nil {
-		return fmt.Errorf("Error animating player: %s", err.Error())
+		return fmt.Errorf("Error animating character: %s", err.Error())
 	}
 	op := ebiten.DrawImageOptions{}
 	// Offset to make sure asset is drawn centered on current position
@@ -76,14 +76,7 @@ func calculateWalkingAnimation(vel cp.Vector, orientation Orientation) string {
 }
 
 func calculateOrientation(vel cp.Vector) Orientation {
-	if vel.Y > 5 {
-		return South
-	} else if vel.Y < -5 {
-		return North
-	}
-	if vel.X > 5 {
-		return East
-	} else if vel.X < -5 {
+	if vel.X < 0 {
 		return West
 	}
 	return East

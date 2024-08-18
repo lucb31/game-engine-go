@@ -80,9 +80,9 @@ func NewProjectile(gun Gun, world GameEntityManager, asset *ProjectileAsset) (*P
 	return p, nil
 }
 
-func (p *Projectile) Draw(t RenderingTarget) {
+func (p *Projectile) Draw(t RenderingTarget) error {
 	angle := p.Shape().Body().Position().Sub(p.direction).Neg().ToAngle()
-	p.asset.Draw(t, p.shape.Body().Position(), angle)
+	return p.asset.Draw(t, p.shape.Body().Position(), angle)
 }
 
 func (p *Projectile) Id() GameEntityId      { return p.id }

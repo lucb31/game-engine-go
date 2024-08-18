@@ -10,7 +10,7 @@ type GameEntity interface {
 	Id() GameEntityId
 	SetId(GameEntityId)
 	Shape() *cp.Shape
-	Draw(RenderingTarget)
+	Draw(RenderingTarget) error
 	Destroy() error
 }
 

@@ -55,7 +55,9 @@ func (w *GameWorld) Draw(screen *ebiten.Image) {
 	// Render entities that are visible in the camera viewport
 	for _, obj := range w.objects {
 		if w.camera.IsVisible(obj) {
-			obj.Draw(w.camera)
+			if err := obj.Draw(w.camera); err != nil {
+				fmt.Printf("Error drawing object %d: %s \n", obj.Id(), err.Error())
+			}
 		}
 	}
 

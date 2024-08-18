@@ -98,9 +98,9 @@ func (t *TowerEntity) Update(body *cp.Body, dt float64) {
 	t.gun.Shoot()
 }
 
-func (t *TowerEntity) Draw(screen engine.RenderingTarget) {
-	t.asset.Draw(screen, t.animation, t.shape)
+func (t *TowerEntity) Draw(screen engine.RenderingTarget) error {
 	t.DrawRange(screen)
+	return t.asset.Draw(screen, t.animation, t.shape)
 }
 
 func (t *TowerEntity) DrawRange(screen engine.RenderingTarget) {

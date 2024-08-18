@@ -71,8 +71,8 @@ func NewNpc(remover EntityRemover, asset *CharacterAsset, opts NpcOpts) (*NpcEnt
 	return npc, nil
 }
 
-func (n *NpcEntity) Draw(t RenderingTarget) {
-	n.asset.Draw(t, n.animation, n.shape)
+func (n *NpcEntity) Draw(t RenderingTarget) error {
+	return n.asset.Draw(t, n.animation, n.shape)
 }
 
 func (n *NpcEntity) Destroy() error {

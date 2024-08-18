@@ -112,7 +112,7 @@ func (game *SurvivalGame) initialize() error {
 	game.goldManager.Add(50)
 
 	// Setup creep management
-	npcAsset, err := w.AssetManager.CharacterAsset("npc-torch")
+	npcAsset, err := w.AssetManager.CharacterAsset("npc-orc")
 	if err != nil {
 		return fmt.Errorf("Cannot initialize creep management: Could not find npc asset")
 	}

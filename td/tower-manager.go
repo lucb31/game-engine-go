@@ -94,9 +94,10 @@ func (t *TowerManager) Update() {
 	}
 }
 
-func (t *TowerManager) Draw(screen *ebiten.Image) {
+func (t *TowerManager) Draw(screen *ebiten.Image) error {
 	ebitenutil.DebugPrintAt(screen, "Use left mouse click to add towers", 20, 680)
 	ebitenutil.DebugPrintAt(screen, "Use right mouse click to remove towers", 20, 700)
+	return nil
 }
 
 func (t *TowerManager) AddTower(cursorPos cp.Vector) error {

@@ -76,9 +76,9 @@ func PlayerCollisionFilter() cp.ShapeFilter {
 	return cp.NewShapeFilter(0, PlayerCategory, PlayerCategory|NpcCategory|OuterWallsCategory|TowerCategory)
 }
 
-func (p *Player) Draw(t RenderingTarget) {
-	p.asset.Draw(t, p.animation, p.shape)
+func (p *Player) Draw(t RenderingTarget) error {
 	p.DrawHealthbar(t)
+	return p.asset.Draw(t, p.animation, p.shape)
 }
 
 func (p *Player) DrawHealthbar(t RenderingTarget) {
