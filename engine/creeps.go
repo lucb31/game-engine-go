@@ -29,8 +29,8 @@ type BaseCreepManager struct {
 type Wave struct {
 	Round                   int
 	CreepsToSpawn           int
-	CreepOpts               NpcOpts
 	CreepSpawnRatePerSecond float64
+	HealthScalingFunc       func(baseHealth float64) float64
 }
 
 const goldPerKill = int64(2)
@@ -100,7 +100,7 @@ func (c *BaseCreepManager) spawnCreep() error {
 	}
 
 	// Initialize an npc
-	npc, err := c.creepProvider.NextNpc(c, c.activeWave.CreepOpts)
+	npc, err := c.creepProvider.NextNpc(c, *c.activeWave)
 	if err != nil {
 		return err
 	}
@@ -118,8 +118,7 @@ func calculateWaveOpts(round int) Wave {
 	wave := Wave{Round: round}
 	wave.CreepsToSpawn = int(math.Exp(float64(round)/4) + 29)
 	wave.CreepSpawnRatePerSecond = 1.0
-	startingHealth := math.Pow(3.5*float64(round), 2) + 100
-	wave.CreepOpts = NpcOpts{BaseHealth: startingHealth}
+	wave.HealthScalingFunc = func(baseHealth float64) float64 { return math.Pow(3.5*float64(round-1), 2) + baseHealth }
 	return wave
 }
 

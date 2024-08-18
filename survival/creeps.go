@@ -9,6 +9,18 @@ import (
 	"github.com/lucb31/game-engine-go/engine"
 )
 
+type NpcType struct {
+	assetName string
+	opts      engine.NpcOpts
+}
+
+// TODO: Config file
+var availableNpcs = []NpcType{
+	{"npc-torch", engine.NpcOpts{BasePower: 30, BaseHealth: 60, BaseMovementSpeed: 75.0}},
+	{"npc-orc", engine.NpcOpts{BasePower: 15, BaseHealth: 90, BaseMovementSpeed: 50.0}},
+	{"npc-slime", engine.NpcOpts{BasePower: 50, BaseHealth: 30, BaseMovementSpeed: 25.0}},
+}
+
 func NewSurvCreepManager(em engine.GameEntityManager, target engine.GameEntity, am engine.AssetManager, goldManager engine.GoldManager) (*engine.BaseCreepManager, error) {
 	cm, err := engine.NewBaseCreepManager(em, goldManager)
 	if err != nil {
@@ -35,15 +47,23 @@ func NewSurvCreepProvider(am engine.AssetManager, t engine.GameEntity) (*SurvCre
 	return &SurvCreepProvider{assetManager: am, target: t}, nil
 }
 
-func (p *SurvCreepProvider) NextNpc(remover engine.EntityRemover, opts engine.NpcOpts) (engine.GameEntity, error) {
-	npcAsset, err := p.calcCreepAsset()
+func (p *SurvCreepProvider) NextNpc(remover engine.EntityRemover, wave engine.Wave) (engine.GameEntity, error) {
+	npcType := p.nextNpcType()
+	// Load asset
+	npcAsset, err := p.assetManager.CharacterAsset(npcType.assetName)
 	if err != nil {
 		return nil, err
 	}
+	// Load opts & calculate starting position
+	opts := npcType.opts
 	opts.StartingPos, err = calcCreepSpawnPosition()
 	if err != nil {
 		return nil, err
 	}
+	// Apply scaling
+	opts.BaseHealth = wave.HealthScalingFunc(opts.BaseHealth)
+
+	// Init npc
 	npc, err := engine.NewNpcAggro(remover, p.target, npcAsset, opts)
 	if err != nil {
 		return nil, err
@@ -72,8 +92,8 @@ func calcCreepSpawnPosition() (cp.Vector, error) {
 	return cp.Vector{}, fmt.Errorf("Could not find a spawn position. Max tries reached")
 }
 
-func (p *SurvCreepProvider) calcCreepAsset() (*engine.CharacterAsset, error) {
-	availableAssets := []string{"npc-torch", "npc-orc", "npc-slime"}
-	idx := rand.IntN(len(availableAssets))
-	return p.assetManager.CharacterAsset(availableAssets[idx])
+// Choose a random npc type to spawn next
+func (p *SurvCreepProvider) nextNpcType() NpcType {
+	idx := rand.IntN(len(availableNpcs))
+	return availableNpcs[idx]
 }

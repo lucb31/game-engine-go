@@ -3,7 +3,7 @@ package engine
 import "github.com/jakecoffman/cp"
 
 type CreepProvider interface {
-	NextNpc(remover EntityRemover, opts NpcOpts) (GameEntity, error)
+	NextNpc(remover EntityRemover, wave Wave) (GameEntity, error)
 }
 
 type DefaultCreepProvider struct {
@@ -30,10 +30,8 @@ func NewDefaultCreepProvider(asset *CharacterAsset) (*DefaultCreepProvider, erro
 	return &DefaultCreepProvider{asset: asset, opts: &opts}, nil
 }
 
-func (p *DefaultCreepProvider) NextNpc(remover EntityRemover, opts NpcOpts) (GameEntity, error) {
-	// TODO: Not optimal. Better would be a "merge options" utility method here
-	opts.Waypoints = p.opts.Waypoints
-	npc, err := NewNpc(remover, p.asset, opts)
+func (p *DefaultCreepProvider) NextNpc(remover EntityRemover, wave Wave) (GameEntity, error) {
+	npc, err := NewNpc(remover, p.asset, *p.opts)
 	if err != nil {
 		return nil, err
 	}
