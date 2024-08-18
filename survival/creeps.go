@@ -9,39 +9,46 @@ import (
 	"github.com/lucb31/game-engine-go/engine"
 )
 
-type SurvCreepProvider struct {
-	asset  *engine.CharacterAsset
-	target engine.GameEntity
-}
-
-func NewSurvCreepProvider(asset *engine.CharacterAsset, t engine.GameEntity) (*SurvCreepProvider, error) {
-	return &SurvCreepProvider{asset: asset, target: t}, nil
-}
-
-func (p *SurvCreepProvider) NextNpc(remover engine.EntityRemover, opts engine.NpcOpts) (engine.GameEntity, error) {
-	var err error
-	opts.StartingPos, err = calcCreepSpawnPosition()
+func NewSurvCreepManager(em engine.GameEntityManager, target engine.GameEntity, am engine.AssetManager, goldManager engine.GoldManager) (*engine.BaseCreepManager, error) {
+	cm, err := engine.NewBaseCreepManager(em, goldManager)
 	if err != nil {
 		return nil, err
 	}
-	npc, err := engine.NewNpcAggro(remover, p.target, p.asset, opts)
-	if err != nil {
-		return nil, err
-	}
-	return npc, nil
-}
-
-func NewSurvCreepManager(em engine.GameEntityManager, target engine.GameEntity, asset *engine.CharacterAsset, goldManager engine.GoldManager) (*engine.CreepManager, error) {
-	cm, err := engine.NewCreepManager(em, asset, goldManager)
-	if err != nil {
-		return nil, err
-	}
-	provider, err := NewSurvCreepProvider(asset, target)
+	provider, err := NewSurvCreepProvider(am, target)
 	if err != nil {
 		return nil, err
 	}
 	cm.SetProvider(provider)
+	err = cm.NextWave()
+	if err != nil {
+		return nil, err
+	}
 	return cm, nil
+}
+
+type SurvCreepProvider struct {
+	assetManager engine.AssetManager
+	target       engine.GameEntity
+}
+
+func NewSurvCreepProvider(am engine.AssetManager, t engine.GameEntity) (*SurvCreepProvider, error) {
+	return &SurvCreepProvider{assetManager: am, target: t}, nil
+}
+
+func (p *SurvCreepProvider) NextNpc(remover engine.EntityRemover, opts engine.NpcOpts) (engine.GameEntity, error) {
+	npcAsset, err := p.calcCreepAsset()
+	if err != nil {
+		return nil, err
+	}
+	opts.StartingPos, err = calcCreepSpawnPosition()
+	if err != nil {
+		return nil, err
+	}
+	npc, err := engine.NewNpcAggro(remover, p.target, npcAsset, opts)
+	if err != nil {
+		return nil, err
+	}
+	return npc, nil
 }
 
 // Creeps cannot spawn out of bounds
@@ -63,4 +70,10 @@ func calcCreepSpawnPosition() (cp.Vector, error) {
 		fmt.Println("Intruder in the castle. Retrying...", randX, randY)
 	}
 	return cp.Vector{}, fmt.Errorf("Could not find a spawn position. Max tries reached")
+}
+
+func (p *SurvCreepProvider) calcCreepAsset() (*engine.CharacterAsset, error) {
+	availableAssets := []string{"npc-torch", "npc-orc"}
+	idx := rand.IntN(len(availableAssets))
+	return p.assetManager.CharacterAsset(availableAssets[idx])
 }

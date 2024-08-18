@@ -13,7 +13,7 @@ import (
 type TDGame struct {
 	world                     *engine.GameWorld
 	screenWidth, screenHeight int
-	creepManager              *engine.CreepManager
+	creepManager              engine.CreepManager
 	towerManager              *TowerManager
 	goldManager               engine.GoldManager
 	hud                       *hud.GameHUD
@@ -117,7 +117,7 @@ func (game *TDGame) initialize() error {
 	if err != nil {
 		return fmt.Errorf("Cannot initialize creep management: Could not find npc asset")
 	}
-	game.creepManager, err = engine.NewCreepManager(w, npcAsset, game.goldManager)
+	game.creepManager, err = engine.NewDefaultCreepManager(w, npcAsset, game.goldManager)
 	if err != nil {
 		return err
 	}
