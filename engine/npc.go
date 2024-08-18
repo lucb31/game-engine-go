@@ -10,11 +10,11 @@ type NpcEntity struct {
 
 	// Logic
 	armor         float64
-	goldValue     int
 	health        float64
 	maxHealth     float64
 	movementSpeed float64
 	power         float64
+	loot          *LootTable
 
 	// Rendering
 	asset       *CharacterAsset
@@ -36,7 +36,7 @@ type NpcOpts struct {
 	BasePower         float64
 	BaseHealth        float64
 	BaseMovementSpeed float64
-	GoldValue         int
+	GoldValue         int64
 	Waypoints         []cp.Vector
 }
 
@@ -65,10 +65,10 @@ func NewNpc(remover EntityRemover, asset *CharacterAsset, opts NpcOpts) (*NpcEnt
 
 	// Logic
 	npc.armor = 0.0
-	npc.goldValue = 1.0
 	npc.maxHealth = 100.0
 	npc.movementSpeed = 75.0
 	npc.power = 20.0
+	npc.loot = EmptyLootTable()
 
 	// AI
 	npc.loopWaypoints = false
@@ -76,9 +76,6 @@ func NewNpc(remover EntityRemover, asset *CharacterAsset, opts NpcOpts) (*NpcEnt
 	// Parse opts
 	if opts.BaseArmor > 0 {
 		npc.armor = opts.BaseArmor
-	}
-	if opts.GoldValue > 0 {
-		npc.goldValue = opts.GoldValue
 	}
 	if opts.BaseHealth > 0 {
 		npc.maxHealth = opts.BaseHealth
@@ -88,6 +85,9 @@ func NewNpc(remover EntityRemover, asset *CharacterAsset, opts NpcOpts) (*NpcEnt
 	}
 	if opts.BasePower > 0 {
 		npc.power = opts.BasePower
+	}
+	if opts.GoldValue > 0 {
+		npc.loot.Gold = opts.GoldValue
 	}
 	if opts.StartingPos.Length() > 0 {
 		body.SetPosition(opts.StartingPos)
@@ -115,6 +115,7 @@ func (n *NpcEntity) Shape() *cp.Shape      { return n.shape }
 func (n *NpcEntity) Armor() float64        { return n.armor }
 func (n *NpcEntity) Health() float64       { return n.health }
 func (n *NpcEntity) Power() float64        { return n.power }
+func (n *NpcEntity) LootTable() *LootTable { return n.loot }
 func (n *NpcEntity) SetHealth(h float64)   { n.health = h }
 
 // Calculate velocity based on simple pathfinding algorithm between waypoints

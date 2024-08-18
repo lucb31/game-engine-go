@@ -16,9 +16,9 @@ type NpcType struct {
 
 // TODO: Config file
 var availableNpcs = []NpcType{
-	{"npc-torch", engine.NpcOpts{BasePower: 30, BaseHealth: 60, BaseMovementSpeed: 75.0}},
-	{"npc-orc", engine.NpcOpts{BasePower: 15, BaseHealth: 90, BaseMovementSpeed: 50.0}},
-	{"npc-slime", engine.NpcOpts{BasePower: 50, BaseHealth: 30, BaseMovementSpeed: 25.0}},
+	{"npc-torch", engine.NpcOpts{BasePower: 30, BaseHealth: 60, BaseMovementSpeed: 75.0, GoldValue: 2}},
+	{"npc-orc", engine.NpcOpts{BasePower: 15, BaseHealth: 90, BaseMovementSpeed: 50.0, GoldValue: 3}},
+	{"npc-slime", engine.NpcOpts{BasePower: 50, BaseHealth: 30, BaseMovementSpeed: 25.0, GoldValue: 1}},
 }
 
 func NewSurvCreepManager(em engine.GameEntityManager, target engine.GameEntity, am engine.AssetManager, goldManager engine.GoldManager) (*engine.BaseCreepManager, error) {

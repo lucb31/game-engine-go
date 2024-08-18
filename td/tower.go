@@ -111,3 +111,4 @@ func (t *TowerEntity) Destroy() error               { return t.world.RemoveEntit
 func (n *TowerEntity) Id() engine.GameEntityId      { return n.id }
 func (n *TowerEntity) SetId(id engine.GameEntityId) { n.id = id }
 func (n *TowerEntity) Shape() *cp.Shape             { return n.shape }
+func (n *TowerEntity) LootTable() *engine.LootTable { return engine.EmptyLootTable() }

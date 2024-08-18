@@ -107,6 +107,7 @@ func (p *Player) SetId(id GameEntityId)    { p.id = id }
 func (p *Player) Shape() *cp.Shape         { return p.shape }
 func (p *Player) Health() float64          { return p.health }
 func (p *Player) Armor() float64           { return 0 }
+func (p *Player) LootTable() *LootTable    { return EmptyLootTable() }
 func (p *Player) SetHealth(health float64) { p.health = health }
 
 func (p *Player) calculateVelocity(body *cp.Body, gravity cp.Vector, damping float64, dt float64) {

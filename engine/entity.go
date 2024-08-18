@@ -12,6 +12,7 @@ type GameEntity interface {
 	Shape() *cp.Shape
 	Draw(RenderingTarget) error
 	Destroy() error
+	LootTable() *LootTable
 }
 
 type EntityRemover interface {

@@ -33,8 +33,6 @@ type Wave struct {
 	HealthScalingFunc       func(baseHealth float64) float64
 }
 
-const goldPerKill = int64(2)
-
 func NewBaseCreepManager(em GameEntityManager, goldManager GoldManager) (*BaseCreepManager, error) {
 	cm := &BaseCreepManager{entityManager: em, goldManager: goldManager}
 	return cm, nil
@@ -73,13 +71,14 @@ func (c *BaseCreepManager) Update() error {
 }
 
 func (c *BaseCreepManager) RemoveEntity(entity GameEntity) error {
+	loot := *entity.LootTable()
 	// Remove npc from game world
 	if err := c.entityManager.RemoveEntity(entity); err != nil {
 		return err
 	}
 	c.creepsAlive--
 	// Add gold for kill
-	_, err := c.goldManager.Add(goldPerKill)
+	_, err := c.goldManager.Add(loot.Gold)
 	return err
 }
 
