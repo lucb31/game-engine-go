@@ -14,6 +14,10 @@ type NpcType struct {
 	opts      engine.NpcOpts
 }
 
+const (
+	boundsMinX, boundsMinY, boundsMaxX, boundsMaxY = 530.0, 402.0, 2410.0, 1710.0
+)
+
 // TODO: Config file
 var availableNpcs = []NpcType{
 	{"npc-torch", engine.NpcOpts{BasePower: 30, BaseHealth: 60, BaseMovementSpeed: 75.0, GoldValue: 2}},
@@ -21,12 +25,12 @@ var availableNpcs = []NpcType{
 	{"npc-slime", engine.NpcOpts{BasePower: 50, BaseHealth: 30, BaseMovementSpeed: 25.0, GoldValue: 1}},
 }
 
-func NewSurvCreepManager(em engine.GameEntityManager, target engine.GameEntity, am engine.AssetManager, goldManager engine.GoldManager) (*engine.BaseCreepManager, error) {
+func NewSurvCreepManager(em engine.GameEntityManager, target engine.GameEntity, cam engine.Camera, am engine.AssetManager, goldManager engine.GoldManager) (*engine.BaseCreepManager, error) {
 	cm, err := engine.NewBaseCreepManager(em, goldManager)
 	if err != nil {
 		return nil, err
 	}
-	provider, err := NewSurvCreepProvider(am, target)
+	provider, err := NewSurvCreepProvider(am, target, cam)
 	if err != nil {
 		return nil, err
 	}
@@ -41,10 +45,12 @@ func NewSurvCreepManager(em engine.GameEntityManager, target engine.GameEntity, 
 type SurvCreepProvider struct {
 	assetManager engine.AssetManager
 	target       engine.GameEntity
+	// Required to not spawn within current viewport
+	camera engine.Camera
 }
 
-func NewSurvCreepProvider(am engine.AssetManager, t engine.GameEntity) (*SurvCreepProvider, error) {
-	return &SurvCreepProvider{assetManager: am, target: t}, nil
+func NewSurvCreepProvider(am engine.AssetManager, t engine.GameEntity, cam engine.Camera) (*SurvCreepProvider, error) {
+	return &SurvCreepProvider{assetManager: am, target: t, camera: cam}, nil
 }
 
 func (p *SurvCreepProvider) NextNpc(remover engine.EntityRemover, wave engine.Wave) (engine.GameEntity, error) {
@@ -56,7 +62,7 @@ func (p *SurvCreepProvider) NextNpc(remover engine.EntityRemover, wave engine.Wa
 	}
 	// Load opts & calculate starting position
 	opts := npcType.opts
-	opts.StartingPos, err = calcCreepSpawnPosition()
+	opts.StartingPos, err = calcCreepSpawnPosition(p.camera)
 	if err != nil {
 		return nil, err
 	}
@@ -73,21 +79,30 @@ func (p *SurvCreepProvider) NextNpc(remover engine.EntityRemover, wave engine.Wa
 
 // Creeps cannot spawn out of bounds
 // Creeps cannot spawn within the castle area
-// TODO: Creeps cannot spawn too close to the player
-func calcCreepSpawnPosition() (cp.Vector, error) {
-	// BOUNDS: 530, 402 - 2410,1710
-	boundsMinX, boundsMinY, boundsMaxX, boundsMaxY := 530.0, 402.0, 2410.0, 1710.0
+// Creeps cannot spawn within visble camera viewport
+// TODO: Smarter algorithm that defines valid spawn areas first and then places a point within them
+func calcCreepSpawnPosition(cam engine.Camera) (cp.Vector, error) {
 	for tries := 0; tries < 10; tries++ {
+		// Generate random coordinates within bounds
 		randX := rand.Float64()*(boundsMaxX-boundsMinX) + boundsMinX
 		randY := rand.Float64()*(boundsMaxY-boundsMinY) + boundsMinY
-
-		// Castle 1140, 402 - 1815, 402
-		castleArea := image.Rect(1140, 402, 1815, 1160)
 		spawnArea := image.Rect(int(randX), int(randY), int(randX)+1, int(randY)+1)
-		if !spawnArea.In(castleArea) {
-			return cp.Vector{X: randX, Y: randY}, nil
+
+		// Check if within camera viewport
+		topLeft, bottomRight := cam.Viewport()
+		cameraArea := image.Rect(int(topLeft.X), int(topLeft.Y), int(bottomRight.X), int(bottomRight.Y))
+		if spawnArea.In(cameraArea) {
+			fmt.Println("Position within viewport. Retrying...", randX, randY, topLeft, bottomRight)
+			continue
 		}
-		fmt.Println("Intruder in the castle. Retrying...", randX, randY)
+
+		// Check if within castle area
+		castleArea := image.Rect(1140, 402, 1815, 1160)
+		if spawnArea.In(castleArea) {
+			fmt.Println("Position within castle. Retrying...", randX, randY)
+			continue
+		}
+		return cp.Vector{X: randX, Y: randY}, nil
 	}
 	return cp.Vector{}, fmt.Errorf("Could not find a spawn position. Max tries reached")
 }

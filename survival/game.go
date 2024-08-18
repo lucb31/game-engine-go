@@ -112,7 +112,7 @@ func (game *SurvivalGame) initialize() error {
 	game.goldManager.Add(50)
 
 	// Setup creep management
-	game.creepManager, err = NewSurvCreepManager(w, player, w.AssetManager, game.goldManager)
+	game.creepManager, err = NewSurvCreepManager(w, player, camera, w.AssetManager, game.goldManager)
 	if err != nil {
 		return err
 	}
