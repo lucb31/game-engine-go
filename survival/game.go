@@ -48,6 +48,20 @@ func (g *SurvivalGame) Layout(outsideWidth, outsideHeight int) (int, int) {
 	return g.screenWidth, g.screenHeight
 }
 
+// Initialize map layers from CSV data
+func initMap(worldWidth, worldHeight int64, am engine.AssetManager) (*engine.WorldMap, error) {
+	// Base layer
+	baseTiles, err := am.Tileset("grounds")
+	if err != nil {
+		return nil, err
+	}
+	worldMap, err := engine.NewWorldMap(worldWidth, worldHeight, assets.MapTDCSV, baseTiles)
+	if err != nil {
+		return nil, err
+	}
+	return worldMap, nil
+}
+
 // Initialize all parts of the game world that need to be reset on restart
 func (game *SurvivalGame) initialize() error {
 	worldHeight := int64(2112)
@@ -60,15 +74,9 @@ func (game *SurvivalGame) initialize() error {
 		return err
 	}
 	am := w.AssetManager
+
 	// Initialize map
-	tileset, err := am.Tileset("grounds")
-	if err != nil {
-		return err
-	}
-	w.WorldMap, err = engine.NewWorldMap(worldWidth, worldHeight, assets.MapTDCSV, tileset)
-	if err != nil {
-		return err
-	}
+	w.WorldMap, err = initMap(worldWidth, worldHeight, w.AssetManager)
 	game.world = w
 
 	// Init player
