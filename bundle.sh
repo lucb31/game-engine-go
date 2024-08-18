@@ -2,6 +2,9 @@
 
 shopt -s globstar
 
+# Setup bin directory
+mkdir -p bin/assets
+
 # Convert PNG assets
 for file in assets/*.png
 do
