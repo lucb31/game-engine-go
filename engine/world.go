@@ -125,7 +125,11 @@ func (w *GameWorld) AddCollisionLayer(mapData []byte, tileset *Tileset) error {
 	if err := w.WorldMap.AddLayer(mapData, tileset); err != nil {
 		return err
 	}
-	walls := CalcHorizontalWallSegments(w.WorldMap.layers[len(w.WorldMap.layers)-1].MapData())
+
+	// Register wall segments to physical space
+	tileData := w.WorldMap.layers[len(w.WorldMap.layers)-1].TileData()
+	walls := CalcHorizontalWallSegments(tileData)
+	walls = append(walls, CalcVerticalWallSegments(tileData)...)
 	for _, wall := range walls {
 		RegisterWallSegmentToSpace(w.space, wall)
 	}

@@ -22,10 +22,8 @@ func TestCsvParse(t *testing.T) {
 		t.Fatalf("Invalid number of horizontal segments. Expected %d, but recevied %d", expectedHorizontalSegments, len(hSegments))
 	}
 
-	// TODO: Next: Vertical walls
-	return
 	expectedVerticalSegments := 6
-	vSegments := engine.CalcHorizontalWallSegments(mapData)
+	vSegments := engine.CalcVerticalWallSegments(mapData)
 	fmt.Println("Vertical segments", vSegments)
 	if len(vSegments) != expectedVerticalSegments {
 		t.Fatalf("Invalid number of veritcal segments. Expected %d, but recevied %d", expectedHorizontalSegments, len(hSegments))

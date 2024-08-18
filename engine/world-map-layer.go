@@ -99,7 +99,7 @@ func (l *MapLayer) TileAt(worldPos cp.Vector) (MapTile, error) {
 	}
 	return l.tileData[row][col], nil
 }
-func (l *MapLayer) MapData() [][]MapTile { return l.tileData }
+func (l *MapLayer) TileData() [][]MapTile { return l.tileData }
 
 func ReadCsvFromBinary(data []byte) ([][]MapTile, error) {
 	reader := bytes.NewReader(data)
