@@ -12,7 +12,7 @@ type SurvivalGame struct {
 	world        *engine.GameWorld
 	camera       engine.Camera
 	goldManager  engine.GoldManager
-	creepManager *CreepManager
+	creepManager *engine.CreepManager
 
 	hud                       *hud.GameHUD
 	worldWidth, worldHeight   int
@@ -97,7 +97,7 @@ func (game *SurvivalGame) initialize() error {
 	if err != nil {
 		return fmt.Errorf("Cannot initialize creep management: Could not find npc asset")
 	}
-	game.creepManager, err = NewCreepManager(w, player, npcAsset, game.goldManager)
+	game.creepManager, err = NewSurvCreepManager(w, player, npcAsset, game.goldManager)
 	if err != nil {
 		return err
 	}
