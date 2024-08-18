@@ -52,6 +52,9 @@ func NewHUD(game GameInfo) (*GameHUD, error) {
 	} else {
 		hud.scoreBoard, err = NewCsvScoreKeeper("data/score.csv")
 	}
+	if err != nil {
+		return nil, err
+	}
 
 	// This creates the root container for this UI.
 	// All other UI elements must be added to this container.
@@ -339,11 +342,12 @@ func (h *GameHUD) updateGameOver() {
 	h.gameOverContainer.GetWidget().Visibility = widget.Visibility_Show
 
 	// Update final score
-	currentHighscore := h.scoreBoard.Highscore().Score
 	currentScore := h.game.Score()
-	newScoreLabel := fmt.Sprintf("Final score: %1.1f (BEST %1.1f)", currentScore, currentHighscore)
+	var newScoreLabel string
 	if h.scoreBoard.IsHighscore(currentScore) {
 		newScoreLabel = fmt.Sprintf("HIGHSCORE: %1.1f", currentScore)
+	} else {
+		newScoreLabel = fmt.Sprintf("Final score: %1.1f (BEST %1.1f)", currentScore, h.scoreBoard.Highscore().Score)
 	}
 	h.gameOverScore.Label = newScoreLabel
 }
