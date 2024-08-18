@@ -55,7 +55,7 @@ func NewNpc(remover EntityRemover, asset *CharacterAsset, opts NpcOpts) (*NpcEnt
 	npc.loopWaypoints = false
 	npc.velocity = 75.0
 	npc.health = 100.0
-	npc.animation = "idle_south"
+	npc.animation = "idle_east"
 
 	// Parse opts
 	if opts.StartingHealth > 0 {

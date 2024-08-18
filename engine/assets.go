@@ -158,6 +158,20 @@ var characterResources []characterResource = []characterResource{
 		1.2,
 	},
 	{
+		"npc-slime",
+		assets.Slime,
+		24,
+		map[string]GameAssetAnimation{
+			"walk_east": {StartTile: 0, FrameCount: 2},
+			"walk_west": {StartTile: 0, FrameCount: 2, Flip: true},
+			"idle_east": {StartTile: 0, FrameCount: 2},
+			"idle_west": {StartTile: 0, FrameCount: 2, Flip: true},
+		},
+		-16,
+		-16,
+		1.5,
+	},
+	{
 		"tower-blue",
 		assets.TowerBlue,
 		256,

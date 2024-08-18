@@ -73,7 +73,7 @@ func calcCreepSpawnPosition() (cp.Vector, error) {
 }
 
 func (p *SurvCreepProvider) calcCreepAsset() (*engine.CharacterAsset, error) {
-	availableAssets := []string{"npc-torch", "npc-orc"}
+	availableAssets := []string{"npc-torch", "npc-orc", "npc-slime"}
 	idx := rand.IntN(len(availableAssets))
 	return p.assetManager.CharacterAsset(availableAssets[idx])
 }

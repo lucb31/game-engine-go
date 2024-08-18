@@ -42,7 +42,7 @@ const (
 
 func NewPlayer(world GameEntityManager, asset *CharacterAsset, projectileAsset *ProjectileAsset) (*Player, error) {
 	// Assigning static id -1 to player object
-	p := &Player{id: -1, world: world, asset: asset, orientation: South, projectileAsset: projectileAsset}
+	p := &Player{id: -1, world: world, asset: asset, orientation: East, projectileAsset: projectileAsset}
 	// Init player physics
 	playerBody := cp.NewBody(1, cp.INFINITY)
 	playerBody.SetPosition(cp.Vector{X: 1470, Y: 820})
@@ -149,10 +149,8 @@ func (p *Player) calculateVelocity(body *cp.Body, gravity cp.Vector, damping flo
 	velocity := body.Velocity()
 	if ebiten.IsKeyPressed(ebiten.KeyW) {
 		velocity.Y = max(-playerVelocity, velocity.Y-playerVelocity*0.1)
-		p.orientation = North
 	} else if ebiten.IsKeyPressed(ebiten.KeyS) {
 		velocity.Y = min(playerVelocity, velocity.Y+playerVelocity*0.1)
-		p.orientation = South
 	} else {
 		velocity.Y = 0
 	}
