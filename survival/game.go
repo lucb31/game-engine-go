@@ -3,7 +3,7 @@ package survival
 import (
 	"fmt"
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/lucb31/game-engine-go/assets"
+	"github.com/lucb31/game-engine-go/bin/assets"
 	"github.com/lucb31/game-engine-go/engine"
 	"github.com/lucb31/game-engine-go/engine/hud"
 )

@@ -10,7 +10,7 @@ do
       continue
   fi
   noExtension="${file/.png/}"
-  output="$noExtension.go"
+  output="bin/$noExtension.go"
   variable="${noExtension/assets\//}"
   # Convert to PascalCase
   variablePascal=$(echo "$variable" | sed -r 's/(^|_)(.)/\U\2/g')
@@ -27,7 +27,7 @@ do
       continue
   fi
   noExtension="${file/.csv/_CSV}"
-  output="$noExtension.go"
+  output="bin/$noExtension.go"
   variable="${noExtension/assets\//}"
   # Convert to PascalCase
   variablePascal=$(echo "$variable" | sed -r 's/(^|_)(.)/\U\2/g')

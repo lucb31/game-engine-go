@@ -8,7 +8,7 @@ import (
 	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/lucb31/game-engine-go/assets"
+	"github.com/lucb31/game-engine-go/bin/assets"
 )
 
 type AssetManager interface {
