@@ -87,6 +87,7 @@ type tileResource struct {
 var tileResources []tileResource = []tileResource{
 	{"plains", assets.Plains, 16},
 	{"grounds", assets.Grounds, 16},
+	{"fences", assets.Fences, 16},
 }
 
 // Load tilesets for static resources

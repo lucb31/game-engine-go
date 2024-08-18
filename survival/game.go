@@ -55,10 +55,17 @@ func initMap(worldWidth, worldHeight int64, am engine.AssetManager) (*engine.Wor
 	if err != nil {
 		return nil, err
 	}
-	worldMap, err := engine.NewWorldMap(worldWidth, worldHeight, assets.MapTDCSV, baseTiles)
+	worldMap, err := engine.NewWorldMap(worldWidth, worldHeight, assets.MapTDBaseGroundCSV, baseTiles)
 	if err != nil {
 		return nil, err
 	}
+
+	// Inner walls layer
+	wallTiles, err := am.Tileset("fences")
+	if err != nil {
+		return nil, err
+	}
+	worldMap.AddLayer(assets.MapTDBaseWallsCSV, wallTiles)
 	return worldMap, nil
 }
 
