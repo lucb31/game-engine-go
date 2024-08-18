@@ -31,7 +31,7 @@ type MapLayer struct {
 // Generate new map layer for widht & height dimensions IN PX
 func NewMapLayer(width, height int64, mapCsv []byte, tileset *Tileset) (*MapLayer, error) {
 	// Read map data from provided path
-	csvMapData, err := readCsvFromBinary(mapCsv)
+	csvMapData, err := ReadCsvFromBinary(mapCsv)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +73,8 @@ func (l *MapLayer) Draw(camera Camera) {
 
 			// Set tile position
 			op := ebiten.DrawImageOptions{}
-			op.GeoM.Translate(float64(col*mapTileSize), float64(row*mapTileSize))
+			x, y := GridPosToWorldPos(col, row)
+			op.GeoM.Translate(x, y)
 			// Select correct tile from tileset
 			subIm, err := l.tileset.GetTile(int(mapTile))
 			if err != nil {
@@ -98,8 +99,9 @@ func (l *MapLayer) TileAt(worldPos cp.Vector) (MapTile, error) {
 	}
 	return l.tileData[row][col], nil
 }
+func (l *MapLayer) MapData() [][]MapTile { return l.tileData }
 
-func readCsvFromBinary(data []byte) ([][]MapTile, error) {
+func ReadCsvFromBinary(data []byte) ([][]MapTile, error) {
 	reader := bytes.NewReader(data)
 	return readCsv(reader)
 }

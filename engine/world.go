@@ -78,27 +78,6 @@ func (w *GameWorld) Draw(screen *ebiten.Image) {
 	w.drawCombatLog()
 }
 
-func (w *GameWorld) drawCombatLog() {
-	log := w.damageModel.DamageLog()
-	entries := log.Entries()
-	for idx, entry := range entries {
-		// Cleanup: Remove entries older than X seconds
-		maxTimeDiff := 1.5
-		timeDiff := w.GetIngameTime() - entry.GameTime
-		if timeDiff > maxTimeDiff {
-			if err := log.RemoveByIdx(idx); err != nil {
-				fmt.Println("Could not remove log entry", entry, err.Error())
-			}
-			return
-		}
-		// Animate to scroll upwards
-		absPos := entry.Pos.Add(cp.Vector{X: 0, Y: -timeDiff / maxTimeDiff * 20})
-		relPos := w.camera.AbsToRel(absPos)
-
-		ebitenutil.DebugPrintAt(w.camera.Screen(), fmt.Sprintf("%.0f", entry.Damage), int(relPos.X), int(relPos.Y))
-	}
-}
-
 func (w *GameWorld) Update() {
 	// Stop updating if game over
 	if w.gameOver {
@@ -142,12 +121,44 @@ func (w *GameWorld) RemoveEntity(object GameEntity) error {
 	return nil
 }
 
+func (w *GameWorld) AddCollisionLayer(mapData []byte, tileset *Tileset) error {
+	if err := w.WorldMap.AddLayer(mapData, tileset); err != nil {
+		return err
+	}
+	walls := CalcHorizontalWallSegments(w.WorldMap.layers[len(w.WorldMap.layers)-1].MapData())
+	for _, wall := range walls {
+		RegisterWallSegmentToSpace(w.space, wall)
+	}
+	return nil
+}
+
 func (w *GameWorld) GetEntities() *map[GameEntityId]GameEntity { return &w.objects }
 func (w *GameWorld) EndGame()                                  { w.gameOver = true }
 func (w *GameWorld) Space() *cp.Space                          { return w.space }
 func (w *GameWorld) GetIngameTime() float64                    { return *w.gameTime }
 func (w *GameWorld) IsOver() bool                              { return w.gameOver }
 func (w *GameWorld) DamageModel() damage.DamageModel           { return w.damageModel }
+
+func (w *GameWorld) drawCombatLog() {
+	log := w.damageModel.DamageLog()
+	entries := log.Entries()
+	for idx, entry := range entries {
+		// Cleanup: Remove entries older than X seconds
+		maxTimeDiff := 1.5
+		timeDiff := w.GetIngameTime() - entry.GameTime
+		if timeDiff > maxTimeDiff {
+			if err := log.RemoveByIdx(idx); err != nil {
+				fmt.Println("Could not remove log entry", entry, err.Error())
+			}
+			return
+		}
+		// Animate to scroll upwards
+		absPos := entry.Pos.Add(cp.Vector{X: 0, Y: -timeDiff / maxTimeDiff * 20})
+		relPos := w.camera.AbsToRel(absPos)
+
+		ebitenutil.DebugPrintAt(w.camera.Screen(), fmt.Sprintf("%.0f", entry.Damage), int(relPos.X), int(relPos.Y))
+	}
+}
 
 // Actually remove a game entity from physics & object space
 func (w *GameWorld) removeObject(id GameEntityId) {
@@ -161,58 +172,20 @@ func (w *GameWorld) removeObject(id GameEntityId) {
 	delete(w.objects, id)
 }
 
-func createFences(am *AssetManager, space *cp.Space) ([]GameEntity, error) {
-	fenceData := [][]int{
-		{-1, -1, -1, -1, -1, -1, -1, -1},
-		{-1, -1, -1, -1, 1, 14, 14, 3},
-		{-1, -1, -1, -1, 4, -1, -1, 4},
-		{-1, -1, -1, -1, 4, -1, -1, 4},
-		{-1, -1, -1, -1, 9, 14, 14, 10},
-	}
-	_ = fenceData
-	objects := []GameEntity{}
-	// Temporary disable fence
-	return objects, nil
-	// for row, rowData := range fenceData {
-	// 	for col, tileIdx := range rowData {
-	// 		if tileIdx > -1 {
-	// 			im, err := am.GetTile("fences", tileIdx)
-	// 			if err != nil {
-	// 				return nil, err
-	// 			}
-	// 			body := cp.NewStaticBody()
-	// 			body.SetPosition(cp.Vector{X: float64(mapTileSize * col), Y: float64(mapTileSize * row)})
-	// 			shape := cp.NewBox(body, 16, 16, 0)
-	// 			//shape := cp.NewCircle(body, 8, cp.Vector{})
-
-	// 			shape.SetFriction(1)
-	// 			shape.SetElasticity(0)
-	// 			space.AddBody(body)
-	// 			space.AddShape(shape)
-	// 			objects = append(objects, &StaticGameEntity{shape: shape, Image: im})
-	// 		}
-	// 	}
-	// }
-	// return objects, nil
-}
-
-func (w *GameWorld) initializeBoundingBox(camera Camera) {
+func (w *GameWorld) initializeOuterWallBoundingBox(camera Camera) {
 	minX := float64(camera.ViewportWidth() / 2)
 	minY := float64(camera.ViewportHeight() / 2)
 	maxX := float64(w.Width) - minX
 	maxY := float64(w.Height) - minY
 
-	walls := []cp.Vector{
-		{minX, minY}, {minX, maxY},
-		{maxX, minY}, {maxX, maxY},
-		{minX, minY}, {maxX, minY},
-		{minX, maxY}, {maxX, maxY},
+	walls := []WallSegment{
+		{cp.Vector{minX, minY}, cp.Vector{minX, maxY}},
+		{cp.Vector{maxX, minY}, cp.Vector{maxX, maxY}},
+		{cp.Vector{minX, minY}, cp.Vector{maxX, minY}},
+		{cp.Vector{minX, maxY}, cp.Vector{maxX, maxY}},
 	}
-	for i := 0; i < len(walls)-1; i += 2 {
-		shape := w.space.AddShape(cp.NewSegment(w.space.StaticBody, walls[i], walls[i+1], 2))
-		shape.SetElasticity(1)
-		shape.SetFriction(1)
-		shape.SetFilter(BoundingBoxFilter())
+	for _, wall := range walls {
+		RegisterWallSegmentToSpace(w.space, wall)
 	}
 }
 
@@ -279,5 +252,5 @@ func (w *GameWorld) SetCamera(camera Camera) {
 	w.space.AddBody(w.camera.Body())
 	w.space.AddShape(w.camera.Shape())
 
-	w.initializeBoundingBox(camera)
+	w.initializeOuterWallBoundingBox(camera)
 }

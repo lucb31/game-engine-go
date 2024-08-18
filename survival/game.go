@@ -15,7 +15,7 @@ type SurvivalGame struct {
 	creepManager *engine.CreepManager
 
 	hud                       *hud.GameHUD
-	worldWidth, worldHeight   int
+	worldWidth, worldHeight   int64
 	screenWidth, screenHeight int
 }
 
@@ -49,42 +49,46 @@ func (g *SurvivalGame) Layout(outsideWidth, outsideHeight int) (int, int) {
 }
 
 // Initialize map layers from CSV data
-func initMap(worldWidth, worldHeight int64, am engine.AssetManager) (*engine.WorldMap, error) {
+func (game *SurvivalGame) initMap() error {
 	// Base layer
-	baseTiles, err := am.Tileset("grounds")
+	baseTiles, err := game.world.AssetManager.Tileset("grounds")
 	if err != nil {
-		return nil, err
+		return err
 	}
-	worldMap, err := engine.NewWorldMap(worldWidth, worldHeight, assets.MapTDBaseGroundCSV, baseTiles)
+	worldMap, err := engine.NewWorldMap(game.worldWidth, game.worldHeight, assets.MapTDBaseGroundCSV, baseTiles)
 	if err != nil {
-		return nil, err
+		return err
 	}
+	game.world.WorldMap = worldMap
 
 	// Inner walls layer
-	wallTiles, err := am.Tileset("fences")
+	wallTiles, err := game.world.AssetManager.Tileset("fences")
 	if err != nil {
-		return nil, err
+		return err
 	}
-	worldMap.AddLayer(assets.MapTDBaseWallsCSV, wallTiles)
-	return worldMap, nil
+	game.world.AddCollisionLayer(assets.MapTDBaseWallsCSV, wallTiles)
+
+	return nil
 }
 
 // Initialize all parts of the game world that need to be reset on restart
 func (game *SurvivalGame) initialize() error {
-	worldHeight := int64(2112)
-	worldWidth := int64(2944)
+	game.worldHeight = int64(2112)
+	game.worldWidth = int64(2944)
 
 	fmt.Println("Initializing game")
 	// Init game world
-	w, err := engine.NewWorld(worldWidth, worldHeight)
+	w, err := engine.NewWorld(game.worldWidth, game.worldHeight)
 	if err != nil {
 		return err
 	}
+	game.world = w
 	am := w.AssetManager
 
-	// Initialize map
-	w.WorldMap, err = initMap(worldWidth, worldHeight, w.AssetManager)
-	game.world = w
+	// Initialize game map
+	if err = game.initMap(); err != nil {
+		return err
+	}
 
 	// Init player
 	player, err := game.world.InitPlayer(am)

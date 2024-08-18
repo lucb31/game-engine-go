@@ -10,7 +10,7 @@ import (
 type CustomCollisionType cp.CollisionType
 
 const (
-	PlayerCollision CustomCollisionType = iota
+	PlayerCollision CustomCollisionType = iota + 1
 	ProjectileCollision
 	NpcCollision
 )
