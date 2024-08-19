@@ -28,6 +28,11 @@ type GameInfo interface {
 	Score() ScoreValue
 }
 
+type SubMenu interface {
+	Update()
+	SetUI(*ebitenui.UI)
+}
+
 type GameHUD struct {
 	ui   *ebitenui.UI
 	game GameInfo
@@ -41,6 +46,8 @@ type GameHUD struct {
 	gameOverScore     *widget.Text
 
 	scoreBoard ScoreBoard
+
+	subMenus []SubMenu
 }
 
 func NewHUD(game GameInfo) (*GameHUD, error) {
@@ -84,6 +91,16 @@ func (h *GameHUD) Update() {
 	h.updateCastleHealth()
 	h.updateGold()
 	h.updateGameOver()
+
+	// Draw submenus
+	for _, menu := range h.subMenus {
+		menu.Update()
+	}
+}
+
+func (h *GameHUD) AddSubMenu(menu SubMenu) {
+	h.subMenus = append(h.subMenus, menu)
+	menu.SetUI(h.ui)
 }
 
 func (h *GameHUD) SaveScore(score ScoreValue) {

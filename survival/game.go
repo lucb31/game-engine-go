@@ -122,6 +122,14 @@ func (game *SurvivalGame) initialize() error {
 	if err != nil {
 		return err
 	}
+
+	// Init shop
+	shop, err := NewShopMenu(game.goldManager)
+	if err != nil {
+		return err
+	}
+	game.hud.AddSubMenu(shop)
+
 	return nil
 }
 
