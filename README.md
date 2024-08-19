@@ -3,11 +3,13 @@
 
 # Survival game
 ## Priority
+- Different player asset incl
+    - Player shoot animation
+    - Player death animation
 - creeps sometimes still get stuck on the edge of a castle wall
 
 ## Open points
 - Should the player be able to shoot from within the castle? Or pacified?
-- Open: If npc should always move towards player, wps need to be reorderded by distance to player
 
 # Engine
 
