@@ -2,6 +2,7 @@ package engine
 
 import (
 	"fmt"
+	"math/rand"
 	"slices"
 
 	"github.com/RyanCarrier/dijkstra/v2"
@@ -138,6 +139,7 @@ func (n *NpcAggro) nextWaypointWithDijkstra(srcShape *cp.Shape, dst cp.Vector) (
 	// NOTE: Do not need to calculate arcs to target, because that was already covered in early exit
 	// NOTE: Need to consider bounding box dimensions here
 	staticGraph.AddEmptyVertex(SRC_NODE_IDX)
+	visibleWaypoints := 0
 	for toIdx, toWp := range n.wayPoints {
 		// Define bounding box edges. Only if path from all edges is clear, wp will be selected
 		dist, visible := n.calcVisibleDistanceUsingBB(srcShape, toWp)
@@ -148,6 +150,14 @@ func (n *NpcAggro) nextWaypointWithDijkstra(srcShape *cp.Shape, dst cp.Vector) (
 		// Add bidirectional arc
 		staticGraph.AddArc(SRC_NODE_IDX, toIdx, dist)
 		staticGraph.AddArc(toIdx, SRC_NODE_IDX, dist)
+		visibleWaypoints++
+	}
+	// If we cannot see any way points (and we cannot see the player which we checked earlier)
+	// We're going to have a problem. Dijkstra cannot help us here either
+	// Current solution is to perform some random movements, hoping that will unstuck the entity
+	if visibleWaypoints == 0 {
+		fmt.Println("NPC stuck! Trying to unstuck with random movement")
+		return srcShape.Body().Position().Add(cp.Vector{X: rand.Float64() * 5, Y: rand.Float64() * 5}), nil
 	}
 
 	// Apply dijkstra to get path
