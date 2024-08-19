@@ -3,6 +3,7 @@ module github.com/lucb31/game-engine-go
 go 1.22.5
 
 require (
+	github.com/RyanCarrier/dijkstra/v2 v2.0.2
 	github.com/ebitenui/ebitenui v0.5.8
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/hajimehoshi/ebiten/v2 v2.7.8

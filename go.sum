@@ -1,3 +1,5 @@
+github.com/RyanCarrier/dijkstra/v2 v2.0.2 h1:DIOg/a7XDR+KmlDkNSX9ggDY6sNLrG+EBGvZUjfgi+A=
+github.com/RyanCarrier/dijkstra/v2 v2.0.2/go.mod h1:XwpYN7nC1LPwL3HkaavzB+VGaHRndSsZy/whsFy1AEI=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/ebitengine/gomobile v0.0.0-20240518074828-e86332849895 h1:48bCqKTuD7Z0UovDfvpCn7wZ0GUZ+yosIteNDthn3FU=
