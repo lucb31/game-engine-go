@@ -27,10 +27,11 @@ type BaseCreepManager struct {
 }
 
 type Wave struct {
-	Round                   int
-	CreepsToSpawn           int
-	CreepSpawnRatePerSecond float64
-	HealthScalingFunc       func(baseHealth float64) float64
+	Round              int
+	TotalCreepsToSpawn int
+	WaveTicksPerSecond float64
+	CreepsPerTick      int
+	HealthScalingFunc  func(baseHealth float64) float64
 }
 
 func NewBaseCreepManager(em GameEntityManager, goldManager GoldManager) (*BaseCreepManager, error) {
@@ -59,7 +60,7 @@ func NewDefaultCreepManager(em GameEntityManager, asset *CharacterAsset, goldMan
 
 func (c *BaseCreepManager) Update() error {
 	// Check if creeps to spawn left
-	if c.creepsSpawned < c.creepsToSpawn() {
+	if c.creepsSpawned < c.activeWave.TotalCreepsToSpawn {
 		if err := c.spawnCreep(); err != nil {
 			return err
 		}
@@ -84,7 +85,7 @@ func (c *BaseCreepManager) RemoveEntity(entity GameEntity) error {
 
 func (c *BaseCreepManager) Progress() hud.ProgressInfo {
 	label := fmt.Sprintf("Wave %d", c.activeWave.Round)
-	return hud.ProgressInfo{Min: 0, Max: c.creepsToSpawn(), Current: c.creepsSpawned, Label: label}
+	return hud.ProgressInfo{Min: 0, Max: c.activeWave.TotalCreepsToSpawn, Current: c.creepsSpawned, Label: label}
 }
 
 func (c *BaseCreepManager) Round() int                  { return c.activeWave.Round }
@@ -94,29 +95,32 @@ func (c *BaseCreepManager) spawnCreep() error {
 	// Timeout until creep spawn timer over
 	now := c.entityManager.GetIngameTime()
 	diff := now - c.lastCreepSpawnedTime
-	if diff < 1/c.creepSpawnRatePerSecond() {
+	if diff < 1/c.activeWave.WaveTicksPerSecond {
 		return nil
 	}
 
 	// Initialize an npc
-	npc, err := c.creepProvider.NextNpc(c, *c.activeWave)
-	if err != nil {
-		return err
+	for i := 0; i < c.activeWave.CreepsPerTick && c.creepsSpawned < c.activeWave.TotalCreepsToSpawn; i++ {
+		npc, err := c.creepProvider.NextNpc(c, *c.activeWave)
+		if err != nil {
+			return err
+		}
+		c.entityManager.AddEntity(npc)
+		c.creepsAlive++
+		c.creepsSpawned++
 	}
-	c.entityManager.AddEntity(npc)
 
 	// Update metrics
 	c.lastCreepSpawnedTime = now
-	c.creepsAlive++
-	c.creepsSpawned++
 	return nil
 }
 
 // Wave scaling
 func calculateWaveOpts(round int) Wave {
 	wave := Wave{Round: round}
-	wave.CreepsToSpawn = int(math.Exp(float64(round)/4) + 29)
-	wave.CreepSpawnRatePerSecond = 1.0
+	wave.TotalCreepsToSpawn = int(math.Exp(float64(round)/4) + 29)
+	wave.WaveTicksPerSecond = 0.5
+	wave.CreepsPerTick = 5
 	wave.HealthScalingFunc = func(baseHealth float64) float64 { return math.Pow(3.5*float64(round-1), 2) + baseHealth }
 	return wave
 }
@@ -132,12 +136,4 @@ func (c *BaseCreepManager) NextWave() error {
 	c.creepsSpawned = 0
 	fmt.Printf("Wave cleared! Starting wave %v...\n", c.activeWave)
 	return nil
-}
-
-func (c *BaseCreepManager) creepSpawnRatePerSecond() float64 {
-	return c.activeWave.CreepSpawnRatePerSecond
-}
-
-func (c *BaseCreepManager) creepsToSpawn() int {
-	return c.activeWave.CreepsToSpawn
 }
