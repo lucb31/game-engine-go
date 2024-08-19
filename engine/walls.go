@@ -20,8 +20,8 @@ func CalcHorizontalWallSegments(tileData [][]MapTile) []WallSegment {
 				// If empty cell, end current segment
 				if currentSegment.Start.Length() > 0 {
 					// Set end to bottom left world coordinates (left because we're at the next tile here)
-					x, y := GridPosToWorldPos(col, row)
-					currentSegment.End = cp.Vector{x, y + mapTileSize}
+					x, y := GridPosToCenterWorldPos(col-1, row)
+					currentSegment.End = cp.Vector{x, y}
 					// Ignore 1 tile segments
 					// NOTE: Perpendicular: mapTileSize^2 + mapTileSize^2 = dist^2
 					dist := currentSegment.Start.DistanceSq(currentSegment.End)
@@ -34,7 +34,7 @@ func CalcHorizontalWallSegments(tileData [][]MapTile) []WallSegment {
 				// If occupied cell and no active segment, start new segment
 				if currentSegment.Start.Length() == 0 {
 					// Set start to top left world coordinates
-					x, y := GridPosToWorldPos(col, row)
+					x, y := GridPosToCenterWorldPos(col, row)
 					currentSegment.Start = cp.Vector{x, y}
 				}
 			}
@@ -54,8 +54,8 @@ func CalcVerticalWallSegments(tileData [][]MapTile) []WallSegment {
 				// If empty cell, end current segment
 				if currentSegment.Start.Length() > 0 {
 					// Set end to top right world coordinates (right because we're at the next tile here)
-					x, y := GridPosToWorldPos(col, row)
-					currentSegment.End = cp.Vector{x + mapTileSize, y}
+					x, y := GridPosToCenterWorldPos(col, row-1)
+					currentSegment.End = cp.Vector{x, y}
 					// Ignore 1 tile segments
 					// NOTE: Perpendicular: mapTileSize^2 + mapTileSize^2 = dist^2
 					dist := currentSegment.Start.DistanceSq(currentSegment.End)
@@ -68,7 +68,7 @@ func CalcVerticalWallSegments(tileData [][]MapTile) []WallSegment {
 				// If occupied cell and no active segment, start new segment
 				if currentSegment.Start.Length() == 0 {
 					// Set start to top left world coordinates
-					x, y := GridPosToWorldPos(col, row)
+					x, y := GridPosToCenterWorldPos(col, row)
 					currentSegment.Start = cp.Vector{x, y}
 				}
 			}
@@ -85,6 +85,11 @@ func RegisterWallSegmentToSpace(space *cp.Space, segment WallSegment) {
 }
 
 // Returns TOP LEFT position of tile in world coordinate system
-func GridPosToWorldPos(col, row int) (float64, float64) {
+func GridPosToTopLeftWorldPos(col, row int) (float64, float64) {
 	return float64(col * mapTileSize), float64(row * mapTileSize)
+}
+
+// Returns TOP LEFT position of tile in world coordinate system
+func GridPosToCenterWorldPos(col, row int) (float64, float64) {
+	return float64(col*mapTileSize) + 0.5*mapTileSize, float64(row*mapTileSize) + 0.5*mapTileSize
 }

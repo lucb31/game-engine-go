@@ -73,7 +73,7 @@ func (l *MapLayer) Draw(camera Camera) {
 
 			// Set tile position
 			op := ebiten.DrawImageOptions{}
-			x, y := GridPosToWorldPos(col, row)
+			x, y := GridPosToTopLeftWorldPos(col, row)
 			op.GeoM.Translate(x, y)
 			// Select correct tile from tileset
 			subIm, err := l.tileset.GetTile(int(mapTile))

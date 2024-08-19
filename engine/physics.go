@@ -45,6 +45,26 @@ func TowerCollisionFilter() cp.ShapeFilter {
 	return cp.NewShapeFilter(0, TowerCategory, PlayerCategory|NpcCategory|OuterWallsCategory|InnerWallsCategory|TowerCategory)
 }
 
+// Calculate Bounding box top left corner position
+func TopLeftBBPosition(shape *cp.Shape) cp.Vector {
+	width := shape.BB().R - shape.BB().L
+	height := shape.BB().T - shape.BB().B
+	return cp.Vector{
+		X: shape.Body().Position().X - width/2,
+		Y: shape.Body().Position().Y - height/2,
+	}
+}
+
+// Calculate Bounding box top left corner position
+func BottomRightBBPosition(shape *cp.Shape) cp.Vector {
+	width := shape.BB().R - shape.BB().L
+	height := shape.BB().T - shape.BB().B
+	return cp.Vector{
+		X: shape.Body().Position().X + width/2,
+		Y: shape.Body().Position().Y + height/2,
+	}
+}
+
 func removeProjectile(arb *cp.Arbiter, space *cp.Space, userData interface{}) {
 	a, b := arb.Bodies()
 
