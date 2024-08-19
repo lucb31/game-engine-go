@@ -2,6 +2,7 @@ package engine
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/jakecoffman/cp"
 )
@@ -49,21 +50,28 @@ func (n *NpcAggro) waypointAlgorithmWithCollisionDetection(body *cp.Body) {
 		BottomLeftBBPosition(n.shape),
 		BottomRightBBPosition(n.shape),
 	}
+	targetPosition := n.target.Shape().Body().Position()
+	// Reorder waypoints by proximity to target
+	// This ensures that the npc always tries to reach the target instead of being stuck on wp 0
+	slices.SortFunc(n.wayPoints, func(a, b cp.Vector) int {
+		return int(a.Distance(targetPosition) - b.Distance(targetPosition))
+	})
+
 	// Iterate over all waypoints PLUS trying to move towards target first
 	for idx := -1; idx < len(n.wayPoints); idx++ {
 		// On first iteration try to move towards target
-		var targetPosition cp.Vector
+		var wpPosition cp.Vector
 		if idx == -1 {
-			targetPosition = n.target.Shape().Body().Position()
+			wpPosition = targetPosition
 		} else {
-			targetPosition = n.wayPoints[idx]
+			wpPosition = n.wayPoints[idx]
 		}
 
 		// Check if the path between any BB edge and the target position is blocked by a wall
 		pathBlocked := false
 		for _, edge := range npcEdgesToCheck {
 			// NOTE: No idea what the "radius" attribute of that query method is supposed to do. Results did not change at all
-			query := n.Shape().Space().SegmentQueryFirst(edge, targetPosition, 0.0, cp.NewShapeFilter(cp.NO_GROUP, NpcCategory, OuterWallsCategory))
+			query := n.Shape().Space().SegmentQueryFirst(edge, wpPosition, 0.0, cp.NewShapeFilter(cp.NO_GROUP, NpcCategory, OuterWallsCategory))
 			if query.Shape != nil {
 				pathBlocked = true
 				break
@@ -75,7 +83,7 @@ func (n *NpcAggro) waypointAlgorithmWithCollisionDetection(body *cp.Body) {
 		}
 
 		// Path is clear. Initiate movement
-		n.moveTowards(body, targetPosition)
+		n.moveTowards(body, wpPosition)
 		return
 	}
 
