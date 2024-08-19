@@ -2,11 +2,22 @@ package engine
 
 import (
 	"fmt"
+	"image/color"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hajimehoshi/ebiten/v2/vector"
 	"github.com/jakecoffman/cp"
 	"github.com/lucb31/game-engine-go/engine/damage"
+)
+
+// ///////////////
+// DEBUG SETTINGS
+// ///////////////
+const (
+	DEBUG_CAMERA_POS       = false
+	DEBUG_DRAW_STATIC_BODY = false
+	DEBUG_ENTITY_STATS     = true
 )
 
 type GameWorld struct {
@@ -42,7 +53,16 @@ func (w *GameWorld) Draw(screen *ebiten.Image) {
 	}
 	w.camera.SetScreen(screen)
 	w.WorldMap.Draw(w.camera)
-	w.camera.DrawDebugInfo()
+	// Debugging options
+	if DEBUG_CAMERA_POS {
+		w.camera.DrawDebugInfo()
+	}
+	if DEBUG_DRAW_STATIC_BODY {
+		w.drawDebugBoundingBoxes(screen)
+	}
+	if DEBUG_ENTITY_STATS {
+		w.drawEntityDebugInfo(screen)
+	}
 	if w.gameOver {
 		return
 	}
@@ -61,22 +81,6 @@ func (w *GameWorld) Draw(screen *ebiten.Image) {
 		}
 	}
 
-	// Debugging info for entities
-	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("# Objects: %d", len(w.objects)), 10, 30)
-	shapes := 0
-	projectiles := 0
-	npcs := 0
-	w.Space().EachShape(func(s *cp.Shape) {
-		if _, is := s.Body().UserData.(*Projectile); is {
-			projectiles++
-		} else if _, is := s.Body().UserData.(*NpcEntity); is {
-			npcs++
-		}
-		shapes++
-	})
-	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("# Shapes: %d", shapes), 10, 45)
-	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("# Projectiles: %d", projectiles), 10, 60)
-	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("# Npcs: %d", npcs), 10, 75)
 	w.drawCombatLog()
 }
 
@@ -193,6 +197,38 @@ func (w *GameWorld) initializeOuterWallBoundingBox(camera Camera) {
 	for _, wall := range walls {
 		RegisterWallSegmentToSpace(w.space, wall)
 	}
+}
+
+// Draw static bounding boxes for debugging purposes
+func (w *GameWorld) drawDebugBoundingBoxes(screen *ebiten.Image) {
+	w.Space().EachShape(func(shape *cp.Shape) {
+		if shape.Body().GetType() == cp.BODY_STATIC {
+			absStartPos := cp.Vector{shape.BB().L, shape.BB().B}
+			relStartPos := w.camera.AbsToRel(absStartPos)
+			absEndPos := cp.Vector{shape.BB().R, shape.BB().T}
+			relEndPos := w.camera.AbsToRel(absEndPos)
+			vector.StrokeLine(screen, float32(relStartPos.X), float32(relStartPos.Y), float32(relEndPos.X), float32(relEndPos.Y), 2.0, color.White, false)
+		}
+	})
+}
+
+// Debugging info for entities
+func (w *GameWorld) drawEntityDebugInfo(screen *ebiten.Image) {
+	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("# Objects: %d", len(w.objects)), 10, 30)
+	shapes := 0
+	projectiles := 0
+	npcs := 0
+	w.Space().EachShape(func(s *cp.Shape) {
+		if _, is := s.Body().UserData.(*Projectile); is {
+			projectiles++
+		} else if _, is := s.Body().UserData.(*NpcEntity); is {
+			npcs++
+		}
+		shapes++
+	})
+	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("# Shapes: %d", shapes), 10, 45)
+	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("# Projectiles: %d", projectiles), 10, 60)
+	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("# Npcs: %d", npcs), 10, 75)
 }
 
 func BoundingBoxFilter() cp.ShapeFilter {

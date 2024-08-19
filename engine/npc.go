@@ -49,7 +49,7 @@ func NewNpc(remover EntityRemover, asset *CharacterAsset, opts NpcOpts) (*NpcEnt
 	// Physics model
 	body := cp.NewBody(1, cp.INFINITY)
 	body.SetPosition(cp.Vector{X: 48, Y: 16})
-	body.SetVelocityUpdateFunc(npc.calculateVelocity)
+	body.SetVelocityUpdateFunc(npc.defaultMovementAI)
 	body.UserData = npc
 
 	// Collision model
@@ -118,8 +118,12 @@ func (n *NpcEntity) Power() float64        { return n.power }
 func (n *NpcEntity) LootTable() *LootTable { return n.loot }
 func (n *NpcEntity) SetHealth(h float64)   { n.health = h }
 
+func (n *NpcEntity) defaultMovementAI(body *cp.Body, gravity cp.Vector, damping float64, dt float64) {
+	n.simpleWaypointAlgorithm(body, dt)
+}
+
 // Calculate velocity based on simple pathfinding algorithm between waypoints
-func (n *NpcEntity) calculateVelocity(body *cp.Body, gravity cp.Vector, damping float64, dt float64) {
+func (n *NpcEntity) simpleWaypointAlgorithm(body *cp.Body, dt float64) {
 	// No movement if no active wayPoint
 	if n.currentWpIndex == -1 || n.currentWpIndex > len(n.wayPoints)-1 {
 		body.SetVelocityVector(cp.Vector{})

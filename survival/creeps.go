@@ -14,15 +14,26 @@ type NpcType struct {
 	opts      engine.NpcOpts
 }
 
+// ////////
+// CONFIG
+// ////////
 const (
 	boundsMinX, boundsMinY, boundsMaxX, boundsMaxY = 530.0, 402.0, 2410.0, 1710.0
 )
 
+// Map waypoints used to unstuck creeps
+var aiWaypoints = []cp.Vector{
+	{1465, 1000},
+	{1465, 1185},
+	{1140, 1185},
+	{1810, 1185},
+}
+
 // TODO: Config file
 var availableNpcs = []NpcType{
-	{"npc-torch", engine.NpcOpts{BasePower: 30, BaseHealth: 60, BaseMovementSpeed: 75.0, GoldValue: 2}},
-	{"npc-orc", engine.NpcOpts{BasePower: 15, BaseHealth: 90, BaseMovementSpeed: 50.0, GoldValue: 3}},
-	{"npc-slime", engine.NpcOpts{BasePower: 50, BaseHealth: 30, BaseMovementSpeed: 25.0, GoldValue: 1}},
+	{"npc-torch", engine.NpcOpts{BasePower: 30, BaseHealth: 60, BaseMovementSpeed: 75.0, GoldValue: 2, Waypoints: aiWaypoints}},
+	{"npc-orc", engine.NpcOpts{BasePower: 15, BaseHealth: 90, BaseMovementSpeed: 50.0, GoldValue: 3, Waypoints: aiWaypoints}},
+	{"npc-slime", engine.NpcOpts{BasePower: 50, BaseHealth: 30, BaseMovementSpeed: 25.0, GoldValue: 1, Waypoints: aiWaypoints}},
 }
 
 func NewSurvCreepManager(em engine.GameEntityManager, target engine.GameEntity, cam engine.Camera, am engine.AssetManager, goldManager engine.GoldManager) (*engine.BaseCreepManager, error) {
