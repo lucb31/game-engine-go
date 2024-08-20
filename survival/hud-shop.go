@@ -15,15 +15,16 @@ import (
 )
 
 type ShopMenu struct {
-	goldManager engine.GoldManager
 	ui          *ebitenui.UI
+	goldManager engine.GoldManager
+	playerStats engine.GameEntityStatReadWriter
 
 	shopContainer *widget.Container
 	visible       bool
 }
 
-func NewShopMenu(goldManager engine.GoldManager) (*ShopMenu, error) {
-	return &ShopMenu{goldManager: goldManager}, nil
+func NewShopMenu(goldManager engine.GoldManager, playerStats engine.GameEntityStatReadWriter) (*ShopMenu, error) {
+	return &ShopMenu{goldManager: goldManager, playerStats: playerStats}, nil
 }
 
 func (s *ShopMenu) Update() {
@@ -39,8 +40,13 @@ func (s *ShopMenu) Update() {
 }
 
 type ShopItem struct {
-	Price       int64
-	Description string
+	Price           int64
+	Description     string
+	ApplyItemEffect func(p engine.GameEntityStatReadWriter) error
+}
+
+func defaultApplyItemEffect(p engine.GameEntityStatReadWriter) error {
+	return fmt.Errorf("Missing implementation")
 }
 
 func (s *ShopMenu) SetUI(ui *ebitenui.UI) {
@@ -71,12 +77,15 @@ func (s *ShopMenu) SetUI(ui *ebitenui.UI) {
 	)
 
 	items := []ShopItem{
-		{10, "2% movement speed"},
-		{10, "10% damage"},
-		{10, "10 max hp"},
-		{10, "2% movement speed"},
-		{10, "2% movement speed"},
-		{10, "2% movement speed"},
+		{9999, "2% movement speed", defaultApplyItemEffect},
+		{9999, "2% movement speed", defaultApplyItemEffect},
+		{9999, "2% movement speed", defaultApplyItemEffect},
+		{9999, "max hp", defaultApplyItemEffect},
+		{9999, "2% movement speed", defaultApplyItemEffect},
+		{50, "+10 power", func(p engine.GameEntityStatReadWriter) error {
+			p.SetPower(p.Power() + 10.0)
+			return nil
+		}},
 	}
 	ttfFont, err := truetype.Parse(goregular.TTF)
 	if err != nil {
@@ -119,7 +128,22 @@ func (s *ShopMenu) SetUI(ui *ebitenui.UI) {
 				Idle: color.RGBA{255, 255, 255, 1},
 			}),
 			widget.ButtonOpts.ClickedHandler(func(args *widget.ButtonClickedEventArgs) {
-				fmt.Println("Buying item", item)
+				if !s.goldManager.CanAfford(item.Price) {
+					fmt.Println("Cannot afford item", item)
+					return
+				}
+				newBalance, err := s.goldManager.Remove(item.Price)
+				if err != nil {
+					fmt.Println("Error removing item cost", err.Error())
+					return
+				}
+				err = item.ApplyItemEffect(s.playerStats)
+				if err != nil {
+					fmt.Println("Error applying item effect", err.Error())
+					return
+				}
+
+				fmt.Printf("Bought item %v, new balance %d\n", item, newBalance)
 			}),
 		)
 		itemContainer.AddChild(buyButton)

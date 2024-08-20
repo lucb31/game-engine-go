@@ -124,7 +124,7 @@ func (game *SurvivalGame) initialize() error {
 	}
 
 	// Init shop
-	shop, err := NewShopMenu(game.goldManager)
+	shop, err := NewShopMenu(game.goldManager, player)
 	if err != nil {
 		return err
 	}

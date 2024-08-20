@@ -40,6 +40,27 @@ type GameEntityStats struct {
 	power         float64
 }
 
+type GameEntityStatReader interface {
+	Armor() float64
+	Health() float64
+	MaxHealth() float64
+	Power() float64
+	MovementSpeed() float64
+}
+
+type GameEntityStatWriter interface {
+	SetArmor(v float64)
+	SetHealth(h float64)
+	SetPower(v float64)
+	SetMaxHealth(v float64)
+	SetMovementSpeed(v float64)
+}
+
+type GameEntityStatReadWriter interface {
+	GameEntityStatReader
+	GameEntityStatWriter
+}
+
 func (s *GameEntityStats) Armor() float64         { return s.armor }
 func (s *GameEntityStats) Health() float64        { return s.health }
 func (s *GameEntityStats) MaxHealth() float64     { return s.maxHealth }
