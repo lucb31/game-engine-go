@@ -2,7 +2,9 @@ package survival
 
 import (
 	"fmt"
+
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/lucb31/game-engine-go/bin/assets"
 	"github.com/lucb31/game-engine-go/engine"
 	"github.com/lucb31/game-engine-go/engine/hud"
@@ -24,7 +26,7 @@ func (g *SurvivalGame) Update() error {
 	g.hud.Update()
 	if g.world.IsOver() {
 		// Wait for restart
-		if ebiten.IsKeyPressed(ebiten.KeySpace) {
+		if inpututil.IsKeyJustPressed(ebiten.KeySpace) {
 			err := g.initialize()
 			if err != nil {
 				fmt.Println("Could not restart game: ", err.Error())
