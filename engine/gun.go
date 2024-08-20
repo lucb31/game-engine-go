@@ -62,21 +62,20 @@ func (g *BasicGun) chooseTarget() GameEntity {
 
 func NewBasicGun(em GameEntityManager, owner GameEntity, proj *ProjectileAsset, opts BasicGunOpts) (*BasicGun, error) {
 	gun := &BasicGun{em: em, owner: owner, projectileAsset: proj}
+	// Init defaults
+	gun.damage = 30
+	gun.fireRatePerSecond = 1.5
+	gun.fireRange = 100
+
 	// Parse opts
 	if opts.FireRatePerSecond > 0 {
 		gun.fireRatePerSecond = opts.FireRatePerSecond
-	} else {
-		gun.fireRatePerSecond = 1.5
 	}
 	if opts.FireRange > 0 {
 		gun.fireRange = opts.FireRange
-	} else {
-		gun.fireRange = 100
 	}
 	if opts.Damage > 0 {
 		gun.damage = opts.Damage
-	} else {
-		gun.damage = 30
 	}
 	return gun, nil
 }

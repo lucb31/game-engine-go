@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/jakecoffman/cp"
 )
 
@@ -28,15 +29,32 @@ type Player struct {
 	// ATK
 	gun Gun
 
-	// DEF
-	health    float64
-	maxHealth float64
+	GameEntityStats
 }
 
+type GameEntityStats struct {
+	armor         float64
+	health        float64
+	maxHealth     float64
+	movementSpeed float64
+	power         float64
+}
+
+func (s *GameEntityStats) Armor() float64         { return s.armor }
+func (s *GameEntityStats) Health() float64        { return s.health }
+func (s *GameEntityStats) MaxHealth() float64     { return s.maxHealth }
+func (s *GameEntityStats) Power() float64         { return s.power }
+func (s *GameEntityStats) MovementSpeed() float64 { return s.movementSpeed }
+
+func (s *GameEntityStats) SetArmor(v float64)         { s.armor = v }
+func (s *GameEntityStats) SetHealth(h float64)        { s.health = h }
+func (s *GameEntityStats) SetPower(v float64)         { s.power = v }
+func (s *GameEntityStats) SetMaxHealth(v float64)     { s.maxHealth = v }
+func (s *GameEntityStats) SetMovementSpeed(v float64) { s.movementSpeed = v }
+
 const (
-	playerVelocity = 150
-	playerWidth    = 32
-	playerHeight   = 32
+	playerWidth  = 32
+	playerHeight = 32
 )
 
 func NewPlayer(world GameEntityManager, asset *CharacterAsset, projectileAsset *ProjectileAsset) (*Player, error) {
@@ -59,9 +77,11 @@ func NewPlayer(world GameEntityManager, asset *CharacterAsset, projectileAsset *
 	ch := world.Space().NewCollisionHandler(cp.CollisionType(PlayerCollision), cp.CollisionType(NpcCollision))
 	ch.BeginFunc = p.OnPlayerHit
 
-	// Game logic
-	p.health = 100
+	// Init stats
+	p.movementSpeed = 150
 	p.maxHealth = 100
+	p.health = p.maxHealth
+	// Init gun
 	var err error
 	gunOpts := BasicGunOpts{FireRatePerSecond: 1.3, FireRange: 250.0}
 	p.gun, err = NewAutoAimGun(world, p, projectileAsset, gunOpts)
@@ -77,7 +97,20 @@ func PlayerCollisionFilter() cp.ShapeFilter {
 
 func (p *Player) Draw(t RenderingTarget) error {
 	p.asset.DrawHealthbar(t, p.shape, p.health, p.maxHealth)
+	if err := p.DrawPlayerStats(t); err != nil {
+		return err
+	}
 	return p.asset.Draw(t, p.animation, p.shape)
+}
+
+func (p *Player) DrawPlayerStats(t RenderingTarget) error {
+	ebitenutil.DebugPrintAt(t.Screen(), "Player stats", t.Screen().Bounds().Dx()-125, 20)
+	ebitenutil.DebugPrintAt(t.Screen(), fmt.Sprintf("Power %.2f", p.Power()), t.Screen().Bounds().Dx()-125, 35)
+	ebitenutil.DebugPrintAt(t.Screen(), fmt.Sprintf("Health %.2f", p.Health()), t.Screen().Bounds().Dx()-125, 50)
+	ebitenutil.DebugPrintAt(t.Screen(), fmt.Sprintf("Max Health %.2f", p.MaxHealth()), t.Screen().Bounds().Dx()-125, 65)
+	ebitenutil.DebugPrintAt(t.Screen(), fmt.Sprintf("Speed %.2f", p.MovementSpeed()), t.Screen().Bounds().Dx()-125, 80)
+	ebitenutil.DebugPrintAt(t.Screen(), fmt.Sprintf("Armor %.2f", p.Armor()), t.Screen().Bounds().Dx()-125, 95)
+	return nil
 }
 
 func (p *Player) Destroy() error {
@@ -102,13 +135,10 @@ func (p *Player) OnPlayerHit(arb *cp.Arbiter, space *cp.Space, userData interfac
 	return false
 }
 
-func (p *Player) Id() GameEntityId         { return p.id }
-func (p *Player) SetId(id GameEntityId)    { p.id = id }
-func (p *Player) Shape() *cp.Shape         { return p.shape }
-func (p *Player) Health() float64          { return p.health }
-func (p *Player) Armor() float64           { return 0 }
-func (p *Player) LootTable() *LootTable    { return EmptyLootTable() }
-func (p *Player) SetHealth(health float64) { p.health = health }
+func (p *Player) Id() GameEntityId      { return p.id }
+func (p *Player) SetId(id GameEntityId) { p.id = id }
+func (p *Player) Shape() *cp.Shape      { return p.shape }
+func (p *Player) LootTable() *LootTable { return EmptyLootTable() }
 
 func (p *Player) calculateVelocity(body *cp.Body, gravity cp.Vector, damping float64, dt float64) {
 	// Automatically shoot
@@ -118,6 +148,7 @@ func (p *Player) calculateVelocity(body *cp.Body, gravity cp.Vector, damping flo
 		}
 	}
 	// Smoothen velocity
+	playerVelocity := p.MovementSpeed()
 	velocity := body.Velocity()
 	if ebiten.IsKeyPressed(ebiten.KeyW) {
 		velocity.Y = max(-playerVelocity, velocity.Y-playerVelocity*0.1)
