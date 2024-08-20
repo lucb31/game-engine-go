@@ -15,16 +15,34 @@ import (
 )
 
 type ShopMenu struct {
+	// Dependencies
 	ui          *ebitenui.UI
 	goldManager engine.GoldManager
 	playerStats engine.GameEntityStatReadWriter
 
+	// UI
 	shopContainer *widget.Container
 	visible       bool
+
+	// Logic
+	items []*ShopItem
 }
 
 func NewShopMenu(goldManager engine.GoldManager, playerStats engine.GameEntityStatReadWriter) (*ShopMenu, error) {
-	return &ShopMenu{goldManager: goldManager, playerStats: playerStats}, nil
+	shop := &ShopMenu{goldManager: goldManager, playerStats: playerStats}
+	// Setup some static testing items
+	shop.items = []*ShopItem{
+		{Price: 9999, Description: "2% movement speed", ApplyItemEffect: defaultApplyItemEffect},
+		{Price: 9999, Description: "2% movement speed", ApplyItemEffect: defaultApplyItemEffect},
+		{Price: 9999, Description: "2% movement speed", ApplyItemEffect: defaultApplyItemEffect},
+		{Price: 9999, Description: "2% movement speed", ApplyItemEffect: defaultApplyItemEffect},
+		{Price: 9999, Description: "2% movement speed", ApplyItemEffect: defaultApplyItemEffect},
+		{Price: 50, Description: "+10 power", ApplyItemEffect: func(p engine.GameEntityStatReadWriter) error {
+			p.SetPower(p.Power() + 10.0)
+			return nil
+		}},
+	}
+	return shop, nil
 }
 
 func (s *ShopMenu) Update() {
@@ -37,12 +55,21 @@ func (s *ShopMenu) Update() {
 	} else {
 		s.shopContainer.GetWidget().Visibility = widget.Visibility_Hide
 	}
+
+	// Enable/disable buttons depending on affordability
+	for _, item := range s.items {
+		if item.buyButton == nil {
+			continue
+		}
+		item.buyButton.GetWidget().Disabled = !s.goldManager.CanAfford(item.Price)
+	}
 }
 
 type ShopItem struct {
 	Price           int64
 	Description     string
 	ApplyItemEffect func(p engine.GameEntityStatReadWriter) error
+	buyButton       *widget.Button
 }
 
 func defaultApplyItemEffect(p engine.GameEntityStatReadWriter) error {
@@ -76,17 +103,6 @@ func (s *ShopMenu) SetUI(ui *ebitenui.UI) {
 		),
 	)
 
-	items := []ShopItem{
-		{9999, "2% movement speed", defaultApplyItemEffect},
-		{9999, "2% movement speed", defaultApplyItemEffect},
-		{9999, "2% movement speed", defaultApplyItemEffect},
-		{9999, "max hp", defaultApplyItemEffect},
-		{9999, "2% movement speed", defaultApplyItemEffect},
-		{50, "+10 power", func(p engine.GameEntityStatReadWriter) error {
-			p.SetPower(p.Power() + 10.0)
-			return nil
-		}},
-	}
 	ttfFont, err := truetype.Parse(goregular.TTF)
 	if err != nil {
 		fmt.Println("Error Parsing Font", err)
@@ -98,7 +114,7 @@ func (s *ShopMenu) SetUI(ui *ebitenui.UI) {
 	if err != nil {
 		fmt.Println("Could not load button image", err.Error())
 	}
-	for _, item := range items {
+	for _, item := range s.items {
 		itemContainer := widget.NewContainer(
 			widget.ContainerOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{66, 66, 66, 255})),
 			widget.ContainerOpts.Layout(widget.NewGridLayout(
@@ -146,6 +162,7 @@ func (s *ShopMenu) SetUI(ui *ebitenui.UI) {
 				fmt.Printf("Bought item %v, new balance %d\n", item, newBalance)
 			}),
 		)
+		item.buyButton = buyButton
 		itemContainer.AddChild(buyButton)
 
 		rootContainer.AddChild(itemContainer)
@@ -156,15 +173,15 @@ func (s *ShopMenu) SetUI(ui *ebitenui.UI) {
 }
 
 func loadButtonImage() (*widget.ButtonImage, error) {
-	idle := image.NewNineSliceColor(color.NRGBA{R: 170, G: 170, B: 180, A: 255})
-
+	idle := image.NewNineSliceColor(color.NRGBA{R: 0, G: 170, B: 0, A: 255})
+	disabled := image.NewNineSliceColor(color.NRGBA{R: 170, G: 170, B: 180, A: 255})
 	hover := image.NewNineSliceColor(color.NRGBA{R: 130, G: 130, B: 150, A: 255})
-
 	pressed := image.NewNineSliceColor(color.NRGBA{R: 100, G: 100, B: 120, A: 255})
 
 	return &widget.ButtonImage{
-		Idle:    idle,
-		Hover:   hover,
-		Pressed: pressed,
+		Idle:     idle,
+		Hover:    hover,
+		Pressed:  pressed,
+		Disabled: disabled,
 	}, nil
 }
