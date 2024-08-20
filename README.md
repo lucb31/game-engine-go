@@ -16,6 +16,7 @@
     - Quick win: Static graph
 
 - eye frames during dash
+- Dash cooldown not working correctly
 
 ## Open points
 - Should the player be able to shoot from within the castle? Or pacified?
