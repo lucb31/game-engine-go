@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"fmt"
 	"math"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -11,6 +12,9 @@ import (
 // Parses user input and translates into player movement
 type PlayerController interface {
 	CalcVelocity(max, t float64) cp.Vector
+	Orientation() Orientation
+	// Returns currently active animation key
+	Animation() string
 }
 
 type KeyboardPlayerController struct {
@@ -20,6 +24,14 @@ type KeyboardPlayerController struct {
 	movingSouthSince float64
 
 	dashingSince float64
+	orientation  Orientation
+	animation    string
+}
+
+func NewKeyboardPlayerController() (*KeyboardPlayerController, error) {
+	c := &KeyboardPlayerController{}
+	c.orientation = East
+	return c, nil
 }
 
 const (
@@ -27,8 +39,8 @@ const (
 	rampUpTimeInSeconds = 0.5
 
 	// DASH
-	dashDurationInSeconds = 0.3
-	dashVelocity          = 600.0
+	dashDurationInSeconds = 0.2
+	dashDistance          = 200.0
 	dashCooldownInSeconds = 2.0
 )
 
@@ -72,10 +84,25 @@ func (c *KeyboardPlayerController) CalcVelocity(maxVelocity, gameTime float64) c
 		Y: smoothenVel(c.movingSouthSince, gameTime, maxVelocity) - smoothenVel(c.movingNorthSince, gameTime, maxVelocity),
 	}
 
+	// Add up velocity from walking & dashing
 	totalVel := vel.Add(c.calcVelFromDash(gameTime))
+
+	// Update orientation
+	if totalVel.Length() > 0.0 {
+		c.orientation = calculateOrientation(totalVel)
+	}
+
+	// Update animation
+	if c.dashingSince > 0 {
+		c.animation = fmt.Sprintf("dash_%s", c.orientation)
+	} else {
+		c.animation = calculateWalkingAnimation(totalVel, c.orientation)
+	}
 
 	return totalVel
 }
+func (c *KeyboardPlayerController) Orientation() Orientation { return c.orientation }
+func (c *KeyboardPlayerController) Animation() string        { return c.animation }
 
 func (c *KeyboardPlayerController) calcVelFromDash(gameTime float64) cp.Vector {
 	diff := gameTime - c.dashingSince
@@ -98,6 +125,7 @@ func (c *KeyboardPlayerController) calcVelFromDash(gameTime float64) cp.Vector {
 	}
 	progressInRampUp := diff / dashDurationInSeconds
 	smoothenedProgress := easeInOutCubic(progressInRampUp)
+	dashVelocity := dashDistance / dashDurationInSeconds
 	smoothenedVelocity := smoothenedProgress * dashVelocity
 	// FIX: Dash direction (mising S & N + not working when standing still)
 	if c.movingWestSince > 0 {
@@ -140,8 +168,4 @@ func easeInOutCubic(x float64) float64 {
 		return 4 * x * x * x
 	}
 	return 1 - math.Pow(-2*x+2, 3)/2
-}
-
-func NewKeyboardPlayerController() (*KeyboardPlayerController, error) {
-	return &KeyboardPlayerController{}, nil
 }

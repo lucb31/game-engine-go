@@ -20,11 +20,9 @@ const (
 type Player struct {
 	id              GameEntityId
 	world           GameEntityManager
-	orientation     Orientation
 	shape           *cp.Shape
 	asset           *CharacterAsset
 	projectileAsset *ProjectileAsset
-	animation       string
 
 	// ATK
 	gun Gun
@@ -82,13 +80,12 @@ const (
 
 func NewPlayer(world GameEntityManager, asset *CharacterAsset, projectileAsset *ProjectileAsset) (*Player, error) {
 	// Assigning static id -1 to player object
-	p := &Player{id: -1, world: world, asset: asset, orientation: East, projectileAsset: projectileAsset}
+	p := &Player{id: -1, world: world, asset: asset, projectileAsset: projectileAsset}
 	// Init player physics
 	playerBody := cp.NewBody(1, cp.INFINITY)
 	playerBody.SetPosition(cp.Vector{X: 1470, Y: 820})
 	playerBody.UserData = p
 	playerBody.SetVelocityUpdateFunc(p.calculateVelocity)
-	p.orientation = East
 
 	// Collision model
 	p.shape = cp.NewBox(playerBody, playerWidth, playerHeight, 0)
@@ -132,7 +129,7 @@ func (p *Player) Draw(t RenderingTarget) error {
 	if err := p.DrawPlayerStats(t); err != nil {
 		return err
 	}
-	return p.asset.Draw(t, p.animation, p.shape)
+	return p.asset.Draw(t, p.controller.Animation(), p.shape)
 }
 
 func (p *Player) DrawPlayerStats(t RenderingTarget) error {
@@ -182,9 +179,4 @@ func (p *Player) calculateVelocity(body *cp.Body, gravity cp.Vector, damping flo
 	velocity := p.controller.CalcVelocity(p.MovementSpeed(), p.world.GetIngameTime())
 	body.SetVelocityVector(velocity)
 
-	// Update orientation
-	if velocity.Length() > 0.0 {
-		p.orientation = calculateOrientation(velocity)
-	}
-	p.animation = calculateWalkingAnimation(velocity, p.orientation)
 }

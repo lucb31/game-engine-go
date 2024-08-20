@@ -15,6 +15,8 @@
 - Performance optimization for pathfinding algorithm
     - Quick win: Static graph
 
+- eye frames during dash
+
 ## Open points
 - Should the player be able to shoot from within the castle? Or pacified?
 
@@ -22,6 +24,7 @@
 
 ## Damage model
 - Add some randomization to demonstrate damage model (might remove / disable later) 
+- Better armor model
 
 ### Optional
 - Nr of alive creeps
