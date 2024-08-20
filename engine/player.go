@@ -135,6 +135,13 @@ func (p *Player) Draw(t RenderingTarget) error {
 	if err := p.DrawPlayerStats(t); err != nil {
 		return err
 	}
+	// Play death animation loop when dead
+	if p.health <= 0 {
+		err := p.animationManager.Loop("dead")
+		if err != nil {
+			fmt.Println("could not loop death animation", err.Error())
+		}
+	}
 	return p.animationManager.Draw(t, p.shape)
 }
 
@@ -149,6 +156,17 @@ func (p *Player) DrawPlayerStats(t RenderingTarget) error {
 }
 
 func (p *Player) Destroy() error {
+	// Play dying animation
+	dieAnimation := "die_east"
+	if p.controller.Orientation()&West == 0 {
+		dieAnimation = "die_west"
+	}
+	err := p.animationManager.Play(dieAnimation, 5)
+	if err != nil {
+		fmt.Println("Could not play dying animation", err.Error())
+	}
+
+	// Trigger game over
 	p.world.EndGame()
 	return nil
 }

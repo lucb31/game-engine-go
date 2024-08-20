@@ -85,7 +85,7 @@ func (a *CharacterAsset) DrawHealthbar(t RenderingTarget, shape *cp.Shape, healt
 	)
 	// FILL
 	maxWidth := width - 4
-	filledWidth := float32(health / maxHealth * maxWidth)
+	filledWidth := float32(math.Max(0, health/maxHealth*maxWidth))
 	t.StrokeRect(
 		shape.Body().Position().X-width/2+1,
 		shape.Body().Position().Y-height/2-10,

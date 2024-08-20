@@ -68,7 +68,6 @@ func (a *BaseAnimationManager) Draw(t RenderingTarget, shape *cp.Shape) error {
 	if diff < int64(totalAnimationFrames) {
 		// Calculate current animation tile
 		currentAnimationTile := int(diff / int64(animationSpeed))
-		fmt.Printf("diff %v, total %d, current %d\n", diff, totalAnimationFrames, currentAnimationTile)
 		return a.asset.DrawAnimationTile(t, animation, int(currentAnimationTile), shape)
 	}
 

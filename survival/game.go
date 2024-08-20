@@ -20,6 +20,8 @@ type SurvivalGame struct {
 }
 
 func (g *SurvivalGame) Update() error {
+	g.world.Update()
+	g.hud.Update()
 	if g.world.IsOver() {
 		// Wait for restart
 		if ebiten.IsKeyPressed(ebiten.KeySpace) {
@@ -30,11 +32,9 @@ func (g *SurvivalGame) Update() error {
 		}
 		return nil
 	}
-	g.world.Update()
 	if err := g.creepManager.Update(); err != nil {
 		fmt.Println("Could not update creeps: ", err.Error())
 	}
-	g.hud.Update()
 
 	return nil
 }

@@ -64,16 +64,17 @@ func (w *GameWorld) Draw(screen *ebiten.Image) {
 	if DEBUG_ENTITY_STATS {
 		w.drawEntityDebugInfo(screen)
 	}
-	if w.gameOver {
-		return
-	}
-
 	// Render player
 	if w.player != nil {
 		if err := w.player.Draw(w.camera); err != nil {
 			fmt.Println("Error drawing player: ", err.Error())
 		}
 		ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Player pos: %s", w.player.shape.Body().Position()), 10, 90)
+	}
+
+	// Stop here if game is no longer running
+	if w.gameOver {
+		return
 	}
 	// Render entities that are visible in the camera viewport
 	for _, obj := range w.objects {
@@ -88,11 +89,11 @@ func (w *GameWorld) Draw(screen *ebiten.Image) {
 }
 
 func (w *GameWorld) Update() {
+	w.FrameCount++
 	// Stop updating if game over
 	if w.gameOver {
 		return
 	}
-	w.FrameCount++
 	dt := w.GameSpeed / 60.0
 	*w.gameTime += dt
 	w.space.Step(dt)
