@@ -1,6 +1,8 @@
 package engine
 
 import (
+	"math"
+
 	"github.com/jakecoffman/cp"
 )
 
@@ -116,7 +118,7 @@ func (n *NpcEntity) Armor() float64        { return n.armor }
 func (n *NpcEntity) Health() float64       { return n.health }
 func (n *NpcEntity) Power() float64        { return n.power }
 func (n *NpcEntity) LootTable() *LootTable { return n.loot }
-func (n *NpcEntity) SetHealth(h float64)   { n.health = h }
+func (n *NpcEntity) SetHealth(h float64)   { n.health = math.Min(h, n.maxHealth) }
 
 func (n *NpcEntity) defaultMovementAI(body *cp.Body, gravity cp.Vector, damping float64, dt float64) {
 	n.simpleWaypointAlgorithm(body, dt)

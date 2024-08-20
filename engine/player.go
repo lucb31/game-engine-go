@@ -2,6 +2,7 @@ package engine
 
 import (
 	"fmt"
+	"math"
 
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/jakecoffman/cp"
@@ -69,7 +70,7 @@ func (s *GameEntityStats) Power() float64         { return s.power }
 func (s *GameEntityStats) MovementSpeed() float64 { return s.movementSpeed }
 
 func (s *GameEntityStats) SetArmor(v float64)         { s.armor = v }
-func (s *GameEntityStats) SetHealth(h float64)        { s.health = h }
+func (s *GameEntityStats) SetHealth(h float64)        { s.health = math.Min(h, s.maxHealth) }
 func (s *GameEntityStats) SetPower(v float64)         { s.power = v }
 func (s *GameEntityStats) SetMaxHealth(v float64)     { s.maxHealth = v }
 func (s *GameEntityStats) SetMovementSpeed(v float64) { s.movementSpeed = v }

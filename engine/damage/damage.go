@@ -36,7 +36,13 @@ func NewBasicDamageModel() (*BasicDamageModel, error) {
 }
 
 func (m *BasicDamageModel) CalculateDamage(atk Attacker, def Defender) (float64, error) {
+	// TODO: Percentage based armor
 	damage := atk.Power() - def.Armor()
+	// Fix to never return negative damage
+	if damage < 0 {
+		fmt.Println("Warning: Negative damage, this should not happen")
+		return 0, nil
+	}
 	return damage, nil
 }
 
