@@ -115,7 +115,15 @@ func (c *KeyboardPlayerController) calcVelFromDash(vel cp.Vector, gameTime float
 		// Timeout
 		if diff > dashCooldownInSeconds {
 			c.dashingSince = gameTime
-			c.dashDirection = vel.Normalize()
+			// While moving, dash in direction of movement
+			// While standing still, dash in direction of last horizontal movement
+			if vel.Length() > 0 {
+				c.dashDirection = vel.Normalize()
+			} else if c.orientation&West == 0 {
+				c.dashDirection = cp.Vector{X: -1, Y: 0}
+			} else {
+				c.dashDirection = cp.Vector{X: 1, Y: 0}
+			}
 			diff = 0
 		}
 	}
