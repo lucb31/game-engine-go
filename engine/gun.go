@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/jakecoffman/cp"
+	"github.com/lucb31/game-engine-go/engine/damage"
 )
 
 type Gun interface {
@@ -34,8 +35,15 @@ type BasicGun struct {
 	damage            float64
 }
 
+// Determine power of owner entity. If not available use gun damage
+func (g *BasicGun) Power() float64 {
+	if atk, isAttacker := g.owner.(damage.Attacker); isAttacker {
+		return atk.Power()
+	}
+	return g.damage
+}
+
 func (g *BasicGun) Owner() GameEntity  { return g.owner }
-func (g *BasicGun) Power() float64     { return g.damage }
 func (g *BasicGun) FireRange() float64 { return g.fireRange }
 
 func (g *BasicGun) IsReloading() bool {

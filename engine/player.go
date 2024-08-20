@@ -80,6 +80,7 @@ func NewPlayer(world GameEntityManager, asset *CharacterAsset, projectileAsset *
 	// Init stats
 	p.movementSpeed = 150
 	p.maxHealth = 100
+	p.power = 30
 	p.health = p.maxHealth
 	// Init gun
 	var err error
