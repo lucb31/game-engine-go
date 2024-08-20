@@ -57,19 +57,19 @@ func (game *SurvivalGame) initMap() error {
 	if err != nil {
 		return err
 	}
-	worldMap, err := engine.NewWorldMap(game.worldWidth, game.worldHeight, assets.MapDarkBGGroundCSV, baseTiles)
+	worldMap, err := engine.NewWorldMap(game.worldWidth, game.worldHeight, assets.MapDarkDarkGroundCSV, baseTiles)
 	if err != nil {
 		return err
 	}
 	game.world.WorldMap = worldMap
 
 	// Inner walls layer
-	if err := game.world.AddCollisionLayer(assets.MapDarkBGWallsCSV); err != nil {
+	if err := game.world.AddCollisionLayer(assets.MapDarkLogicWallsCSV); err != nil {
 		return err
 	}
 
 	// Castle front layer
-	if err := game.world.AddLayer(assets.MapDarkCastleCastleFrontCSV, baseTiles); err != nil {
+	if err := game.world.AddLayer(assets.MapDarkDarkCastleWallsCSV, baseTiles); err != nil {
 		return err
 	}
 
@@ -78,12 +78,12 @@ func (game *SurvivalGame) initMap() error {
 	if err != nil {
 		return err
 	}
-	if err := game.world.AddLayer(assets.MapDarkCastlePropsCSV, propTiles); err != nil {
+	if err := game.world.AddLayer(assets.MapDarkPropsPropsCSV, propTiles); err != nil {
 		return err
 	}
 
 	// Outside layer
-	if err := game.world.AddLayer(assets.MapDarkOutsideCSV, baseTiles); err != nil {
+	if err := game.world.AddLayer(assets.MapDarkDarkOutsidePropsCSV, baseTiles); err != nil {
 		return err
 	}
 
