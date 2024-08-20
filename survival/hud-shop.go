@@ -65,6 +65,10 @@ var availableItems = []GameItem{
 		p.SetPower(p.Power() + 10.0)
 		return nil
 	}},
+	{Price: 50, Description: "+0.2 Atk speed", ApplyItemEffect: func(p engine.GameEntityStatReadWriter) error {
+		p.SetAtkSpeed(p.AtkSpeed() + 0.2)
+		return nil
+	}},
 }
 
 const (
