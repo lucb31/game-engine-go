@@ -178,7 +178,7 @@ func (p *Player) calculateVelocity(body *cp.Body, gravity cp.Vector, damping flo
 			fmt.Println("Error when trying to shoot player gun", err.Error())
 		}
 	}
-	velocity := p.controller.CalcVelocity(body.Velocity(), p.MovementSpeed())
+	velocity := p.controller.CalcVelocity(p.MovementSpeed(), p.world.GetIngameTime())
 	body.SetVelocityVector(velocity)
 
 	// Update orientation
