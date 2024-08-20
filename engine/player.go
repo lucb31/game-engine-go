@@ -113,11 +113,15 @@ func NewPlayer(world GameEntityManager, asset *CharacterAsset, projectileAsset *
 
 	// Init gun
 	var err error
-	gunOpts := BasicGunOpts{FireRatePerSecond: 1.3, FireRange: 250.0}
+	gunOpts := BasicGunOpts{FireRange: 250.0}
 	p.gun, err = NewAutoAimGun(world, p, projectileAsset, gunOpts)
 	if err != nil {
 		return nil, err
 	}
+	// Play shooting animation when gun shoots
+	p.gun.SetShootingAnimationCallback(func(f float64, orientation Orientation) {
+		p.animationManager.Play("shoot", 2, orientation)
+	})
 
 	// Init animation controller
 	p.animationManager, err = NewAnimationManager(p.asset)
@@ -145,7 +149,7 @@ func (p *Player) Draw(t RenderingTarget) error {
 	}
 	// Play death animation loop when dead
 	if p.health <= 0 {
-		err := p.animationManager.Loop("dead")
+		err := p.animationManager.Loop("dead", p.controller.Orientation())
 		if err != nil {
 			fmt.Println("could not loop death animation", err.Error())
 		}
@@ -166,11 +170,7 @@ func (p *Player) DrawPlayerStats(t RenderingTarget) error {
 
 func (p *Player) Destroy() error {
 	// Play dying animation
-	dieAnimation := "die_east"
-	if p.controller.Orientation()&West == 0 {
-		dieAnimation = "die_west"
-	}
-	err := p.animationManager.Play(dieAnimation, 5)
+	err := p.animationManager.Play("die", 5, p.controller.Orientation())
 	if err != nil {
 		fmt.Println("Could not play dying animation", err.Error())
 	}
@@ -194,11 +194,7 @@ func (p *Player) OnPlayerHit(arb *cp.Arbiter, space *cp.Space, userData interfac
 	}
 
 	// Play on hit animation
-	hitAnimation := "hit_east"
-	if p.controller.Orientation()&West == 0 {
-		hitAnimation = "hit_west"
-	}
-	err = p.animationManager.Play(hitAnimation, 5)
+	err = p.animationManager.Play("hit", 5, p.controller.Orientation())
 	if err != nil {
 		fmt.Println("Could not play on hit animation", err.Error())
 	}

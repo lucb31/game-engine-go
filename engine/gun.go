@@ -7,6 +7,7 @@ import (
 	"github.com/lucb31/game-engine-go/engine/damage"
 )
 
+type ShootingAnimationCallback func(float64, Orientation)
 type Gun interface {
 	Shoot() error
 	FireRange() float64
@@ -14,7 +15,10 @@ type Gun interface {
 	FireRate() float64
 	Power() float64
 	IsReloading() bool
+	// Returns game tick of next round to be shot. Required to sync shooting animation
+	RemainingReloadTime() float64
 	Owner() GameEntity
+	SetShootingAnimationCallback(ShootingAnimationCallback)
 }
 
 type BasicGunOpts struct {
@@ -35,6 +39,9 @@ type BasicGun struct {
 	fireRatePerSecond float64
 	fireRange         float64
 	damage            float64
+
+	// Callback to play shooting animation
+	playShootAnimation ShootingAnimationCallback
 }
 
 // Determine power of owner entity. If not available use gun damage
@@ -56,14 +63,18 @@ func (g *BasicGun) FireRate() float64 {
 func (g *BasicGun) Owner() GameEntity  { return g.owner }
 func (g *BasicGun) FireRange() float64 { return g.fireRange }
 
-func (g *BasicGun) IsReloading() bool {
+func (g *BasicGun) RemainingReloadTime() float64 {
+	nextBulletAt := g.lastProjectileFired + 1/g.FireRate()
 	now := g.em.GetIngameTime()
-	diff := now - g.lastProjectileFired
-	fmt.Println("fire rate ", g.FireRate())
-	if diff < 1/g.FireRate() {
-		return true
-	}
-	return false
+	return nextBulletAt - now
+}
+
+func (g *BasicGun) IsReloading() bool {
+	return g.RemainingReloadTime() > 0
+}
+
+func (g *BasicGun) SetShootingAnimationCallback(playShootAnimation ShootingAnimationCallback) {
+	g.playShootAnimation = playShootAnimation
 }
 
 func (g *BasicGun) chooseTarget() GameEntity {

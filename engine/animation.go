@@ -7,8 +7,8 @@ import (
 )
 
 type AnimationController interface {
-	Play(string, int) error
-	Loop(string) error
+	Play(animation string, animationSpeed int, orientation Orientation) error
+	Loop(animation string, orientation Orientation) error
 	Draw(RenderingTarget, *cp.Shape) error
 }
 
@@ -31,7 +31,12 @@ func NewAnimationManager(asset *CharacterAsset) (*BaseAnimationManager, error) {
 }
 
 // Play the given animation once with given speed
-func (a *BaseAnimationManager) Play(animation string, speed int) error {
+func (a *BaseAnimationManager) Play(baseAnimation string, speed int, orientation Orientation) error {
+	orientationAffix := "_east"
+	if orientation&West == 0 {
+		orientationAffix = "_west"
+	}
+	animation := baseAnimation + orientationAffix
 	_, ok := a.asset.Animations[animation]
 	if !ok {
 		return fmt.Errorf("Unknown animation: %s", animation)
@@ -43,7 +48,12 @@ func (a *BaseAnimationManager) Play(animation string, speed int) error {
 	return nil
 }
 
-func (a *BaseAnimationManager) Loop(animation string) error {
+func (a *BaseAnimationManager) Loop(baseAnimation string, orientation Orientation) error {
+	orientationAffix := "_east"
+	if orientation&West == 0 {
+		orientationAffix = "_west"
+	}
+	animation := baseAnimation + orientationAffix
 	_, ok := a.asset.Animations[animation]
 	if !ok {
 		return fmt.Errorf("Unknown animation: %s", animation)

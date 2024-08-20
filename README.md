@@ -11,13 +11,11 @@
     - C to bring up player stats
     - D to bring up debugging menu
 
-- Different player asset incl
-    - Player shoot animation
-    - Player death animation
 - Performance optimization for pathfinding algorithm
     - Quick win: Static graph
 
 - eye frames during dash
+- eye frames after being hit
 
 ## Open points
 - Should the player be able to shoot from within the castle? Or pacified?
