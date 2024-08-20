@@ -72,8 +72,8 @@ func (s *GameEntityStats) SetMaxHealth(v float64)     { s.maxHealth = v }
 func (s *GameEntityStats) SetMovementSpeed(v float64) { s.movementSpeed = v }
 
 const (
-	playerWidth  = 32
-	playerHeight = 32
+	playerWidth  = 40
+	playerHeight = 40
 )
 
 func NewPlayer(world GameEntityManager, asset *CharacterAsset, projectileAsset *ProjectileAsset) (*Player, error) {

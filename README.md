@@ -2,6 +2,8 @@
 [Try it out](https://lucb31.github.io/game-engine-go/)
 
 # Survival game
+# Bugs
+- Dash cooldown not working correctly
 ## Priority
 - Add tutorial HUD menu
     - WASD to move
@@ -16,7 +18,6 @@
     - Quick win: Static graph
 
 - eye frames during dash
-- Dash cooldown not working correctly
 
 ## Open points
 - Should the player be able to shoot from within the castle? Or pacified?

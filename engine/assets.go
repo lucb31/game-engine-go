@@ -133,6 +133,23 @@ var characterResources []characterResource = []characterResource{
 		1.8,
 	},
 	{
+		"ranger",
+		assets.Ranger,
+		288,
+		128,
+		map[string]GameAssetAnimation{
+			"walk_east": {StartTile: 22, FrameCount: 10},
+			"walk_west": {StartTile: 22, FrameCount: 10, Flip: true},
+			"idle_east": {StartTile: 0, FrameCount: 12},
+			"idle_west": {StartTile: 0, FrameCount: 12, Flip: true},
+			"dash_east": {StartTile: 198, FrameCount: 11},
+			"dash_west": {StartTile: 198, FrameCount: 11, Flip: true},
+		},
+		-115,
+		-85,
+		0.8,
+	},
+	{
 		"npc-torch",
 		assets.NpcTorch,
 		192,
@@ -264,7 +281,7 @@ func loadProjectileAssets(frameCount *int64) (map[string]ProjectileAsset, error)
 		return nil, err
 	}
 	projectiles["arrow"] = ProjectileAsset{
-		Image:          ScaleImg(ebiten.NewImageFromImage(im), 0.5),
+		Image:          ScaleImg(ebiten.NewImageFromImage(im), 0.3),
 		currentFrame:   frameCount,
 		animationSpeed: 0,
 	}

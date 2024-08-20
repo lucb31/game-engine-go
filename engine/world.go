@@ -272,7 +272,7 @@ func NewWorld(width int64, height int64) (*GameWorld, error) {
 
 func (w *GameWorld) InitPlayer(am AssetManager) (*Player, error) {
 	// Initialize player (after world has been initialized to reference it)
-	playerAsset, err := am.CharacterAsset("player")
+	playerAsset, err := am.CharacterAsset("ranger")
 	if err != nil {
 		return nil, err
 	}
