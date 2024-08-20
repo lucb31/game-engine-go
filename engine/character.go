@@ -18,20 +18,15 @@ type GameAssetAnimation struct {
 type CharacterAsset struct {
 	Animations     map[string]GameAssetAnimation
 	Tileset        Tileset
-	animationSpeed int
+	animationSpeed float64
 	currentFrame   *int64
 	offsetX        float64
 	offsetY        float64
 }
 
-func (a *CharacterAsset) GetTile(activeAnimation string) (*ebiten.Image, error) {
-	// Get animation tile
-	animation, ok := a.Animations[activeAnimation]
-	if !ok {
-		return nil, fmt.Errorf("Unknown animation %s", activeAnimation)
-	}
-	animationFrame := int(*a.currentFrame/int64(a.animationSpeed)) % animation.FrameCount
-	tileIdx := animation.StartTile + animationFrame
+// Get animation tile
+func (a *CharacterAsset) GetTile(animation GameAssetAnimation, animationTile int) (*ebiten.Image, error) {
+	tileIdx := animation.StartTile + animationTile
 	subIm, err := a.Tileset.GetTile(tileIdx)
 	if err != nil {
 		return nil, err
@@ -42,11 +37,11 @@ func (a *CharacterAsset) GetTile(activeAnimation string) (*ebiten.Image, error) 
 	return subIm, nil
 }
 
-func (a *CharacterAsset) Draw(t RenderingTarget, activeAnimation string, shape *cp.Shape) error {
+func (a *CharacterAsset) DrawAnimationTile(t RenderingTarget, animation GameAssetAnimation, animationTile int, shape *cp.Shape) error {
 	if DEBUG_RENDER_COLLISION_BOXES {
 		a.DrawRectBoundingBox(t, shape)
 	}
-	subIm, err := a.GetTile(activeAnimation)
+	subIm, err := a.GetTile(animation, animationTile)
 	if err != nil {
 		return fmt.Errorf("Error animating character: %s", err.Error())
 	}
@@ -56,6 +51,15 @@ func (a *CharacterAsset) Draw(t RenderingTarget, activeAnimation string, shape *
 	op.GeoM.Translate(shape.Body().Position().X, shape.Body().Position().Y)
 	t.DrawImage(subIm, &op)
 	return nil
+}
+
+func (a *CharacterAsset) Draw(t RenderingTarget, activeAnimation string, shape *cp.Shape) error {
+	animation, ok := a.Animations[activeAnimation]
+	if !ok {
+		return fmt.Errorf("Unknown animation %s", activeAnimation)
+	}
+	animationFrame := int(float64(*a.currentFrame)/a.animationSpeed) % animation.FrameCount
+	return a.DrawAnimationTile(t, animation, animationFrame, shape)
 }
 
 // Draws Rect bounding box around shape position

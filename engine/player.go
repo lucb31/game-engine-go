@@ -25,7 +25,8 @@ type Player struct {
 	// ATK
 	gun Gun
 
-	controller PlayerController
+	controller       PlayerController
+	animationManager AnimationController
 
 	GameEntityStats
 }
@@ -110,11 +111,18 @@ func NewPlayer(world GameEntityManager, asset *CharacterAsset, projectileAsset *
 		return nil, err
 	}
 
-	// Init input controller
-	p.controller, err = NewKeyboardPlayerController()
+	// Init animation controller
+	p.animationManager, err = NewAnimationManager(p.asset)
 	if err != nil {
 		return nil, err
 	}
+
+	// Init input controller
+	p.controller, err = NewKeyboardPlayerController(p.animationManager)
+	if err != nil {
+		return nil, err
+	}
+
 	return p, nil
 }
 
@@ -127,7 +135,7 @@ func (p *Player) Draw(t RenderingTarget) error {
 	if err := p.DrawPlayerStats(t); err != nil {
 		return err
 	}
-	return p.asset.Draw(t, p.controller.Animation(), p.shape)
+	return p.animationManager.Draw(t, p.shape)
 }
 
 func (p *Player) DrawPlayerStats(t RenderingTarget) error {

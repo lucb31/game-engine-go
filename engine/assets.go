@@ -108,9 +108,9 @@ type characterResource struct {
 	ImageData            []byte
 	TileSizeX, TileSizeY int
 	Animations           map[string]GameAssetAnimation
-	OffsetX              float64
-	OffsetY              float64
+	OffsetX, OffsetY     float64
 	Scale                float64
+	AnimationSpeed       float64
 }
 
 // TODO: Load these from config file
@@ -131,6 +131,7 @@ var characterResources []characterResource = []characterResource{
 		-44,
 		-60,
 		1.8,
+		6.0,
 	},
 	{
 		"ranger",
@@ -148,6 +149,7 @@ var characterResources []characterResource = []characterResource{
 		-115,
 		-85,
 		0.8,
+		5.0,
 	},
 	{
 		"npc-torch",
@@ -163,6 +165,7 @@ var characterResources []characterResource = []characterResource{
 		-40,
 		-37,
 		0.4,
+		6.0,
 	},
 	{
 		"npc-orc",
@@ -178,6 +181,7 @@ var characterResources []characterResource = []characterResource{
 		-60,
 		-60,
 		1.2,
+		6.0,
 	},
 	{
 		"npc-slime",
@@ -193,6 +197,7 @@ var characterResources []characterResource = []characterResource{
 		-16,
 		-16,
 		1.5,
+		6.0,
 	},
 	{
 		"tower-blue",
@@ -205,6 +210,7 @@ var characterResources []characterResource = []characterResource{
 		-28,
 		-20,
 		0.22,
+		6.0,
 	},
 	{
 		"tower-red",
@@ -217,6 +223,7 @@ var characterResources []characterResource = []characterResource{
 		-28,
 		-30,
 		0.22,
+		6.0,
 	},
 	{
 		"castle",
@@ -229,6 +236,7 @@ var characterResources []characterResource = []characterResource{
 		-44,
 		-28,
 		0.44,
+		6.0,
 	},
 }
 
@@ -243,7 +251,7 @@ func loadCharacterAssets(frameCount *int64) (map[string]CharacterAsset, error) {
 		asset := CharacterAsset{
 			Tileset:        *tileset,
 			Animations:     res.Animations,
-			animationSpeed: 6,
+			animationSpeed: res.AnimationSpeed,
 			offsetX:        res.OffsetX,
 			offsetY:        res.OffsetY,
 			currentFrame:   frameCount,

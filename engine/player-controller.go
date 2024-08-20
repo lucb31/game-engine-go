@@ -11,11 +11,10 @@ import (
 // Parses user input and translates into player movement
 type PlayerController interface {
 	CalcVelocity(max, t float64) cp.Vector
-	// Returns currently active animation key
-	Animation() string
 }
 
 type KeyboardPlayerController struct {
+	animationController AnimationController
 	// General movement
 	movingEastSince  float64
 	movingWestSince  float64
@@ -27,11 +26,11 @@ type KeyboardPlayerController struct {
 	dashDirection cp.Vector
 
 	orientation Orientation
-	animation   string
 }
 
-func NewKeyboardPlayerController() (*KeyboardPlayerController, error) {
+func NewKeyboardPlayerController(ac AnimationController) (*KeyboardPlayerController, error) {
 	c := &KeyboardPlayerController{}
+	c.animationController = ac
 	return c, nil
 }
 
@@ -92,21 +91,10 @@ func (c *KeyboardPlayerController) CalcVelocity(maxVelocity, gameTime float64) c
 	if totalVel.Length() > 0.0 {
 		c.orientation = updateOrientation(c.orientation, totalVel)
 	}
-
-	// Update animation
-	if c.dashingSince > 0 {
-		if c.dashDirection.X < 0 {
-			c.animation = "dash_west"
-		} else {
-			c.animation = "dash_east"
-		}
-	} else {
-		c.animation = calculateWalkingAnimation(totalVel, c.orientation)
-	}
+	c.animationController.Loop(calculateWalkingAnimation(totalVel, c.orientation))
 
 	return totalVel
 }
-func (c *KeyboardPlayerController) Animation() string { return c.animation }
 
 func (c *KeyboardPlayerController) calcVelFromDash(vel cp.Vector, gameTime float64) cp.Vector {
 	diff := gameTime - c.dashingSince
@@ -123,6 +111,13 @@ func (c *KeyboardPlayerController) calcVelFromDash(vel cp.Vector, gameTime float
 				c.dashDirection = cp.Vector{X: -1, Y: 0}
 			} else {
 				c.dashDirection = cp.Vector{X: 1, Y: 0}
+			}
+
+			// Queue animation
+			if c.dashDirection.X < 0 {
+				c.animationController.Play("dash_west")
+			} else {
+				c.animationController.Play("dash_east")
 			}
 			diff = 0
 		}
