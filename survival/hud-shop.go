@@ -128,6 +128,10 @@ func (s *ShopMenu) Update() {
 	if inpututil.IsKeyJustPressed(ebiten.KeyB) {
 		s.visible = !s.visible
 	}
+	// Close shop with ESC
+	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
+		s.visible = false
+	}
 	if s.visible {
 		s.shopContainer.GetWidget().Visibility = widget.Visibility_Show
 	} else {
