@@ -145,6 +145,8 @@ var characterResources []characterResource = []characterResource{
 			"idle_west": {StartTile: 0, FrameCount: 12, Flip: true},
 			"dash_east": {StartTile: 198, FrameCount: 11},
 			"dash_west": {StartTile: 198, FrameCount: 11, Flip: true},
+			"hit_east":  {StartTile: 330, FrameCount: 6},
+			"hit_west":  {StartTile: 330, FrameCount: 6, Flip: true},
 		},
 		-115,
 		-85,

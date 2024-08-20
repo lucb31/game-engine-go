@@ -11,6 +11,7 @@ import (
 // Parses user input and translates into player movement
 type PlayerController interface {
 	CalcVelocity(max, t float64) cp.Vector
+	Orientation() Orientation
 }
 
 type KeyboardPlayerController struct {
@@ -95,6 +96,7 @@ func (c *KeyboardPlayerController) CalcVelocity(maxVelocity, gameTime float64) c
 
 	return totalVel
 }
+func (c *KeyboardPlayerController) Orientation() Orientation { return c.orientation }
 
 func (c *KeyboardPlayerController) calcVelFromDash(vel cp.Vector, gameTime float64) cp.Vector {
 	diff := gameTime - c.dashingSince
@@ -115,9 +117,9 @@ func (c *KeyboardPlayerController) calcVelFromDash(vel cp.Vector, gameTime float
 
 			// Queue animation
 			if c.dashDirection.X < 0 {
-				c.animationController.Play("dash_west")
+				c.animationController.Play("dash_west", 2)
 			} else {
-				c.animationController.Play("dash_east")
+				c.animationController.Play("dash_east", 2)
 			}
 			diff = 0
 		}

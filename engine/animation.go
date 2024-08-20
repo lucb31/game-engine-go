@@ -7,7 +7,7 @@ import (
 )
 
 type AnimationController interface {
-	Play(string) error
+	Play(string, int) error
 	Loop(string) error
 	Draw(RenderingTarget, *cp.Shape) error
 }
@@ -18,6 +18,7 @@ type BaseAnimationManager struct {
 	playingAnimation string
 	// Frame count when playing animation was started
 	playingAnimationSinceFrame int64
+	playingAnimationSpeed      int
 	loopAnimation              string
 }
 
@@ -29,14 +30,15 @@ func NewAnimationManager(asset *CharacterAsset) (*BaseAnimationManager, error) {
 	return am, nil
 }
 
-// Play the given animation ONCE
-func (a *BaseAnimationManager) Play(animation string) error {
+// Play the given animation once with given speed
+func (a *BaseAnimationManager) Play(animation string, speed int) error {
 	_, ok := a.asset.Animations[animation]
 	if !ok {
 		return fmt.Errorf("Unknown animation: %s", animation)
 	}
-	fmt.Println("Gonna play", animation)
+	fmt.Println("Gonna play", animation, speed)
 	a.playingAnimation = animation
+	a.playingAnimationSpeed = speed
 	a.playingAnimationSinceFrame = *a.asset.currentFrame
 	return nil
 }
@@ -58,8 +60,7 @@ func (a *BaseAnimationManager) Draw(t RenderingTarget, shape *cp.Shape) error {
 
 	// Calculate how many frames the animation has to play
 	animation := a.asset.Animations[a.playingAnimation]
-	// FIX: This needs to come from somewhere else
-	animationSpeed := 2
+	animationSpeed := a.playingAnimationSpeed
 	totalAnimationFrames := animationSpeed * animation.FrameCount
 	diff := *a.asset.currentFrame - a.playingAnimationSinceFrame
 

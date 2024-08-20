@@ -165,8 +165,18 @@ func (p *Player) OnPlayerHit(arb *cp.Arbiter, space *cp.Space, userData interfac
 		fmt.Println("Error during player npc collision damage calc", err.Error())
 		return true
 	}
-	npc.Destroy()
 
+	// Play on hit animation
+	hitAnimation := "hit_east"
+	if p.controller.Orientation()&West == 0 {
+		hitAnimation = "hit_west"
+	}
+	err = p.animationManager.Play(hitAnimation, 5)
+	if err != nil {
+		fmt.Println("Could not play on hit animation", err.Error())
+	}
+
+	npc.Destroy()
 	return false
 }
 
