@@ -16,19 +16,23 @@ const (
 )
 
 type Player struct {
-	id              GameEntityId
-	world           GameEntityManager
-	shape           *cp.Shape
-	asset           *CharacterAsset
-	projectileAsset *ProjectileAsset
-
-	// ATK
-	gun Gun
-
+	// Dependencies
+	id               GameEntityId
+	world            GameEntityManager
 	controller       PlayerController
 	animationManager AnimationController
+	asset            *CharacterAsset
+	projectileAsset  *ProjectileAsset
 
+	// Physics
+	shape *cp.Shape
+
+	// Damage model
+	gun Gun
 	GameEntityStats
+
+	// Eyeframes
+	lastHitAt float64
 }
 
 type GameEntityStats struct {
@@ -82,8 +86,9 @@ func (s *GameEntityStats) SetMaxHealth(v float64)     { s.maxHealth = v }
 func (s *GameEntityStats) SetMovementSpeed(v float64) { s.movementSpeed = v }
 
 const (
-	playerWidth  = 40
-	playerHeight = 40
+	playerWidth                    = 40
+	playerHeight                   = 40
+	invulnerableForSecondsAfterHit = 0.5
 )
 
 func NewPlayer(world GameEntityManager, asset *CharacterAsset, projectileAsset *ProjectileAsset) (*Player, error) {
@@ -185,12 +190,12 @@ func (p *Player) OnPlayerHit(arb *cp.Arbiter, space *cp.Space, userData interfac
 	npc, ok := b.UserData.(*NpcEntity)
 	if !ok {
 		fmt.Println("Collsion handler error: Expected npc but did not receive one")
-		return true
+		return false
 	}
 	_, err := p.world.DamageModel().ApplyDamage(npc, p, p.world.GetIngameTime())
 	if err != nil {
 		fmt.Println("Error during player npc collision damage calc", err.Error())
-		return true
+		return false
 	}
 
 	// Play on hit animation
@@ -199,8 +204,20 @@ func (p *Player) OnPlayerHit(arb *cp.Arbiter, space *cp.Space, userData interfac
 		fmt.Println("Could not play on hit animation", err.Error())
 	}
 
+	// Register eyeframe timeout
+	p.lastHitAt = p.world.GetIngameTime()
+
 	npc.Destroy()
 	return false
+}
+
+// Player invulnerable for a brief period after being hit
+func (p *Player) IsVulnerable() bool {
+	if p.lastHitAt == 0 {
+		return true
+	}
+	diff := p.world.GetIngameTime() - p.lastHitAt
+	return diff > invulnerableForSecondsAfterHit
 }
 
 func (p *Player) Id() GameEntityId      { return p.id }

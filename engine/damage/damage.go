@@ -25,6 +25,7 @@ type Defender interface {
 	Destroy() error
 	SetHealth(float64)
 	Shape() *cp.Shape
+	IsVulnerable() bool
 }
 
 type BasicDamageModel struct {
@@ -51,6 +52,11 @@ func (m *BasicDamageModel) CalculateDamage(atk Attacker, def Defender) (float64,
 }
 
 func (m *BasicDamageModel) ApplyDamage(atk Attacker, def Defender, gameTime float64) (*DamageRecord, error) {
+	// Check if vulnerable
+	if !def.IsVulnerable() {
+		return nil, fmt.Errorf("Defender is invulnerable")
+	}
+
 	damage, err := m.CalculateDamage(atk, def)
 	if err != nil {
 		return nil, err

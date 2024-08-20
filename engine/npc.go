@@ -108,6 +108,7 @@ func (n *NpcEntity) Destroy() error {
 func (n *NpcEntity) Id() GameEntityId      { return n.id }
 func (n *NpcEntity) SetId(id GameEntityId) { n.id = id }
 func (n *NpcEntity) Shape() *cp.Shape      { return n.shape }
+func (n *NpcEntity) IsVulnerable() bool    { return true }
 func (n *NpcEntity) LootTable() *LootTable { return n.loot }
 
 func (n *NpcEntity) defaultMovementAI(body *cp.Body, gravity cp.Vector, damping float64, dt float64) {
