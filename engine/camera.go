@@ -126,13 +126,24 @@ func (c *BaseCamera) DrawDebugInfo() {
 		fmt.Println("No screen!")
 		return
 	}
+	// Draw camera position
 	tl, br := c.Viewport()
 	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Camera Viewport: (%.1f, %.1f) - (%.1f, %.1f)", tl.X, tl.Y, br.X, br.Y), 10, 10)
+
+	// Draw cursor position
+	relX, relY := ebiten.CursorPosition()
+	worldPos := c.ScreenToWorldPos(cp.Vector{float64(relX), float64(relY)})
+	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Cursor Screen(%d, %d), World(%.1f, %.1f)", relX, relY, worldPos.X, worldPos.Y), 10, 20)
 }
 
 func (c *BaseCamera) AbsToRel(absolutePos cp.Vector) cp.Vector {
 	topLeft, _ := c.Viewport()
 	return absolutePos.Sub(topLeft)
+}
+
+func (c *BaseCamera) ScreenToWorldPos(relPos cp.Vector) cp.Vector {
+	topLeft, _ := c.Viewport()
+	return relPos.Add(topLeft)
 }
 
 // ////////
