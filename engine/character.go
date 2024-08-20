@@ -8,8 +8,6 @@ import (
 	"github.com/jakecoffman/cp"
 )
 
-const DEBUG_RENDER_COLLISION_BOXES = true
-
 type GameAssetAnimation struct {
 	StartTile  int
 	FrameCount int
@@ -99,12 +97,22 @@ func calculateWalkingAnimation(vel cp.Vector, orientation Orientation) string {
 	if vel.Length() > 5.0 {
 		animation = "walk_"
 	}
-	return animation + string(orientation)
+
+	// Append horizontal orientation
+	orientationString := "east"
+	if orientation&West == 0 {
+		orientationString = "west"
+	}
+	return animation + orientationString
 }
 
 func calculateOrientation(vel cp.Vector) Orientation {
-	if vel.X < 0 {
-		return West
+	res := Orientation(uint(0))
+	if vel.X > 0 {
+		res = res | West
 	}
-	return East
+	if vel.Y > 0 {
+		res = res | North
+	}
+	return res
 }

@@ -8,13 +8,17 @@ import (
 	"github.com/jakecoffman/cp"
 )
 
-type Orientation string
+type Orientation uint8
 
 const (
-	East  Orientation = "east"
-	South             = "south"
-	West              = "west"
-	North             = "north"
+	East      = Orientation(uint8(0))
+	West      = Orientation(uint8(1))
+	South     = Orientation(uint8(1 << 0))
+	North     = Orientation(uint8(1 << 1))
+	NorthEast = East | North
+	NorthWest = West | North
+	SouthEast = East | South
+	SouthWest = West | South
 )
 
 type Player struct {

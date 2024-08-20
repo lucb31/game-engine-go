@@ -15,9 +15,10 @@ import (
 // DEBUG SETTINGS
 // ///////////////
 const (
-	DEBUG_CAMERA_POS       = false
-	DEBUG_DRAW_STATIC_BODY = false
-	DEBUG_ENTITY_STATS     = true
+	DEBUG_CAMERA_POS             = false
+	DEBUG_DRAW_STATIC_BODY       = false
+	DEBUG_ENTITY_STATS           = true
+	DEBUG_RENDER_COLLISION_BOXES = true
 )
 
 type GameWorld struct {
@@ -273,7 +274,7 @@ func (w *GameWorld) InitPlayer(am AssetManager) (*Player, error) {
 	if err != nil {
 		return nil, err
 	}
-	projAsset, err := am.ProjectileAsset("bone")
+	projAsset, err := am.ProjectileAsset("arrow")
 	if err != nil {
 		return nil, err
 	}
