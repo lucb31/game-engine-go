@@ -10,6 +10,8 @@ import (
 type Gun interface {
 	Shoot() error
 	FireRange() float64
+	// Nr of projectiles per second
+	FireRate() float64
 	Power() float64
 	IsReloading() bool
 	Owner() GameEntity
@@ -43,13 +45,22 @@ func (g *BasicGun) Power() float64 {
 	return g.damage
 }
 
+// Determine by atk speed of owner
+func (g *BasicGun) FireRate() float64 {
+	if atk, isAttacker := g.owner.(damage.Attacker); isAttacker {
+		return atk.AtkSpeed()
+	}
+	return g.fireRatePerSecond
+}
+
 func (g *BasicGun) Owner() GameEntity  { return g.owner }
 func (g *BasicGun) FireRange() float64 { return g.fireRange }
 
 func (g *BasicGun) IsReloading() bool {
 	now := g.em.GetIngameTime()
 	diff := now - g.lastProjectileFired
-	if diff < 1/g.fireRatePerSecond {
+	fmt.Println("fire rate ", g.FireRate())
+	if diff < 1/g.FireRate() {
 		return true
 	}
 	return false

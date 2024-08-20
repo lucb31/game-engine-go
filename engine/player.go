@@ -33,14 +33,20 @@ type Player struct {
 
 type GameEntityStats struct {
 	armor         float64
+	atkSpeed      float64
 	health        float64
 	maxHealth     float64
 	movementSpeed float64
 	power         float64
 }
 
+func DefaultGameEntityStats() GameEntityStats {
+	return GameEntityStats{0, 1.0, 100.0, 100.0, 100.0, 30.0}
+}
+
 type GameEntityStatReader interface {
 	Armor() float64
+	AtkSpeed() float64
 	Health() float64
 	MaxHealth() float64
 	Power() float64
@@ -49,6 +55,7 @@ type GameEntityStatReader interface {
 
 type GameEntityStatWriter interface {
 	SetArmor(v float64)
+	SetAtkSpeed(v float64)
 	SetHealth(h float64)
 	SetPower(v float64)
 	SetMaxHealth(v float64)
@@ -61,12 +68,14 @@ type GameEntityStatReadWriter interface {
 }
 
 func (s *GameEntityStats) Armor() float64         { return s.armor }
+func (s *GameEntityStats) AtkSpeed() float64      { return s.atkSpeed }
 func (s *GameEntityStats) Health() float64        { return s.health }
 func (s *GameEntityStats) MaxHealth() float64     { return s.maxHealth }
 func (s *GameEntityStats) Power() float64         { return s.power }
 func (s *GameEntityStats) MovementSpeed() float64 { return s.movementSpeed }
 
 func (s *GameEntityStats) SetArmor(v float64)         { s.armor = v }
+func (s *GameEntityStats) SetAtkSpeed(v float64)      { s.atkSpeed = v }
 func (s *GameEntityStats) SetHealth(h float64)        { s.health = math.Min(h, s.maxHealth) }
 func (s *GameEntityStats) SetPower(v float64)         { s.power = v }
 func (s *GameEntityStats) SetMaxHealth(v float64)     { s.maxHealth = v }
@@ -98,10 +107,9 @@ func NewPlayer(world GameEntityManager, asset *CharacterAsset, projectileAsset *
 	ch.BeginFunc = p.OnPlayerHit
 
 	// Init stats
+	p.GameEntityStats = DefaultGameEntityStats()
 	p.movementSpeed = 150
-	p.maxHealth = 100
-	p.power = 30
-	p.health = p.maxHealth
+	p.atkSpeed = 1.0
 
 	// Init gun
 	var err error
@@ -152,6 +160,7 @@ func (p *Player) DrawPlayerStats(t RenderingTarget) error {
 	ebitenutil.DebugPrintAt(t.Screen(), fmt.Sprintf("Max Health %.2f", p.MaxHealth()), t.Screen().Bounds().Dx()-125, 65)
 	ebitenutil.DebugPrintAt(t.Screen(), fmt.Sprintf("Speed %.2f", p.MovementSpeed()), t.Screen().Bounds().Dx()-125, 80)
 	ebitenutil.DebugPrintAt(t.Screen(), fmt.Sprintf("Armor %.2f", p.Armor()), t.Screen().Bounds().Dx()-125, 95)
+	ebitenutil.DebugPrintAt(t.Screen(), fmt.Sprintf("AtkSpeed %.2f", p.AtkSpeed()), t.Screen().Bounds().Dx()-125, 110)
 	return nil
 }
 

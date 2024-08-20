@@ -1,8 +1,6 @@
 package engine
 
 import (
-	"math"
-
 	"github.com/jakecoffman/cp"
 )
 
@@ -11,12 +9,8 @@ type NpcEntity struct {
 	remover EntityRemover
 
 	// Logic
-	armor         float64
-	health        float64
-	maxHealth     float64
-	movementSpeed float64
-	power         float64
-	loot          *LootTable
+	GameEntityStats
+	loot *LootTable
 
 	// Rendering
 	asset       *CharacterAsset
@@ -114,11 +108,7 @@ func (n *NpcEntity) Destroy() error {
 func (n *NpcEntity) Id() GameEntityId      { return n.id }
 func (n *NpcEntity) SetId(id GameEntityId) { n.id = id }
 func (n *NpcEntity) Shape() *cp.Shape      { return n.shape }
-func (n *NpcEntity) Armor() float64        { return n.armor }
-func (n *NpcEntity) Health() float64       { return n.health }
-func (n *NpcEntity) Power() float64        { return n.power }
 func (n *NpcEntity) LootTable() *LootTable { return n.loot }
-func (n *NpcEntity) SetHealth(h float64)   { n.health = math.Min(h, n.maxHealth) }
 
 func (n *NpcEntity) defaultMovementAI(body *cp.Body, gravity cp.Vector, damping float64, dt float64) {
 	n.simpleWaypointAlgorithm(body, dt)

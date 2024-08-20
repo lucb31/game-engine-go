@@ -13,6 +13,10 @@ type DamageModel interface {
 
 type Attacker interface {
 	Power() float64
+	// 1.0 = 1 projectile per second
+	// 2.0 = 2 rounds per second
+	// ...
+	AtkSpeed() float64
 }
 
 type Defender interface {
