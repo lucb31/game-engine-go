@@ -47,7 +47,7 @@ func NpcCollisionFilter() cp.ShapeFilter {
 }
 
 func NewNpc(remover EntityRemover, asset *CharacterAsset, opts NpcOpts) (*NpcEntity, error) {
-	npc := &NpcEntity{remover: remover, orientation: South}
+	npc := &NpcEntity{remover: remover}
 	// Physics model
 	body := cp.NewBody(1, cp.INFINITY)
 	body.SetPosition(cp.Vector{X: 48, Y: 16})
@@ -163,7 +163,7 @@ func (n *NpcEntity) moveTowards(body *cp.Body, dest cp.Vector) float64 {
 	vel := diffNormalized.Mult(n.movementSpeed)
 	body.SetVelocityVector(vel)
 	// Update active animation & orientation
-	n.orientation = updateOrientation(vel)
+	n.orientation = updateOrientation(n.orientation, vel)
 	n.animation = calculateWalkingAnimation(vel, n.orientation)
 	return diff.Length()
 }

@@ -3,6 +3,7 @@ package engine
 import (
 	"fmt"
 	"image/color"
+	"math"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/jakecoffman/cp"
@@ -100,15 +101,26 @@ func calculateWalkingAnimation(vel cp.Vector, orientation Orientation) string {
 
 	// Append horizontal orientation
 	orientationString := "east"
-	if orientation == West {
+	if orientation&West == 0 {
 		orientationString = "west"
 	}
 	return animation + orientationString
 }
 
-func updateOrientation(vel cp.Vector) Orientation {
-	if vel.X < 0 {
-		return West
+func updateOrientation(prev Orientation, vel cp.Vector) Orientation {
+	if math.Abs(vel.X) > 0 {
+		if vel.X > 0 {
+			prev = prev | West
+		} else {
+			prev = prev &^ West
+		}
 	}
-	return East
+	if math.Abs(vel.Y) > 0 {
+		if vel.Y < 0 {
+			prev = prev | North
+		} else {
+			prev = prev &^ North
+		}
+	}
+	return prev
 }

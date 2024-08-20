@@ -32,7 +32,6 @@ type KeyboardPlayerController struct {
 
 func NewKeyboardPlayerController() (*KeyboardPlayerController, error) {
 	c := &KeyboardPlayerController{}
-	c.orientation = East
 	return c, nil
 }
 
@@ -91,7 +90,7 @@ func (c *KeyboardPlayerController) CalcVelocity(maxVelocity, gameTime float64) c
 
 	// Update orientation
 	if totalVel.Length() > 0.0 {
-		c.orientation = updateOrientation(totalVel)
+		c.orientation = updateOrientation(c.orientation, totalVel)
 	}
 
 	// Update animation

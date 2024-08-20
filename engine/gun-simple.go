@@ -40,10 +40,6 @@ func directionFromOrientationAndPos(orientation Orientation, pos cp.Vector) cp.V
 	switch orientation {
 	case North:
 		return cp.Vector{pos.X, -1000}
-	case South:
-		return cp.Vector{pos.X, 1000}
-	case East:
-		return cp.Vector{1000, pos.Y}
 	default:
 		return cp.Vector{-1000, pos.Y}
 	}
