@@ -50,7 +50,11 @@ func NewMapLayer(width, height int64, mapCsv []byte, tileset *Tileset) (*MapLaye
 			}
 		}
 	}
-	return &MapLayer{tileData: mapData, tileset: *tileset}, nil
+	layer := &MapLayer{tileData: mapData}
+	if tileset != nil {
+		layer.tileset = *tileset
+	}
+	return layer, nil
 }
 
 func (l *MapLayer) Draw(camera Camera) {

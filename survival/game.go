@@ -69,7 +69,7 @@ func (game *SurvivalGame) initMap() error {
 	}
 
 	// Castle front layer
-	if err := game.world.WorldMap.AddLayer(assets.MapDarkCastleCastleFrontCSV, baseTiles); err != nil {
+	if err := game.world.AddLayer(assets.MapDarkCastleCastleFrontCSV, baseTiles); err != nil {
 		return err
 	}
 
@@ -78,12 +78,12 @@ func (game *SurvivalGame) initMap() error {
 	if err != nil {
 		return err
 	}
-	if err := game.world.WorldMap.AddLayer(assets.MapDarkCastlePropsCSV, propTiles); err != nil {
+	if err := game.world.AddLayer(assets.MapDarkCastlePropsCSV, propTiles); err != nil {
 		return err
 	}
 
 	// Outside layer
-	if err := game.world.WorldMap.AddLayer(assets.MapDarkOutsideCSV, baseTiles); err != nil {
+	if err := game.world.AddLayer(assets.MapDarkOutsideCSV, baseTiles); err != nil {
 		return err
 	}
 
@@ -131,8 +131,18 @@ func (game *SurvivalGame) initialize() error {
 	game.goldManager.Add(50)
 
 	// Setup creep management
-	game.creepManager, err = NewSurvCreepManager(w, player, camera, w.AssetManager, game.goldManager)
+	game.creepManager, err = engine.NewBaseCreepManager(w, game.goldManager)
 	if err != nil {
+		return err
+	}
+	provider, err := NewSurvCreepProvider(am, player, camera)
+	if err != nil {
+		return err
+	}
+	if err = provider.ParseNoSpawnArea(assets.MapDarkLogicSpawnAreaCSV); err != nil {
+		return err
+	}
+	if err = game.creepManager.SetProvider(provider); err != nil {
 		return err
 	}
 

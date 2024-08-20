@@ -11,6 +11,7 @@ type CreepManager interface {
 	Update() error
 	Progress() hud.ProgressInfo
 	Round() int
+	SetProvider(c CreepProvider) error
 }
 
 type BaseCreepManager struct {
@@ -52,9 +53,6 @@ func NewDefaultCreepManager(em GameEntityManager, asset *CharacterAsset, goldMan
 		return nil, err
 	}
 	cm.SetProvider(creepProvider)
-	if err = cm.NextWave(); err != nil {
-		return nil, err
-	}
 	return cm, nil
 }
 
@@ -79,6 +77,7 @@ func (c *BaseCreepManager) RemoveEntity(entity GameEntity) error {
 	}
 	c.creepsAlive--
 	// Add gold for kill
+	// TODO: Should be handled via event-based damage / loot system
 	_, err := c.goldManager.Add(loot.Gold)
 	return err
 }
@@ -88,8 +87,11 @@ func (c *BaseCreepManager) Progress() hud.ProgressInfo {
 	return hud.ProgressInfo{Min: 0, Max: c.activeWave.TotalCreepsToSpawn, Current: c.creepsSpawned, Label: label}
 }
 
-func (c *BaseCreepManager) Round() int                  { return c.activeWave.Round }
-func (c *BaseCreepManager) SetProvider(p CreepProvider) { c.creepProvider = p }
+func (c *BaseCreepManager) Round() int { return c.activeWave.Round }
+func (c *BaseCreepManager) SetProvider(p CreepProvider) error {
+	c.creepProvider = p
+	return c.NextWave()
+}
 
 func (c *BaseCreepManager) spawnCreep() error {
 	// Timeout until creep spawn timer over

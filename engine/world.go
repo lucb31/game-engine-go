@@ -148,10 +148,14 @@ func (w *GameWorld) AddCollisionLayer(mapData []byte) error {
 
 // Adds a layer with collision segments AND tilesets
 func (w *GameWorld) AddCombinedLayer(mapData []byte, tileset *Tileset) error {
-	if err := w.WorldMap.AddLayer(mapData, tileset); err != nil {
+	if err := w.AddLayer(mapData, tileset); err != nil {
 		return err
 	}
 	return w.AddCollisionLayer(mapData)
+}
+
+func (w *GameWorld) AddLayer(mapData []byte, tileset *Tileset) error {
+	return w.WorldMap.AddLayer(mapData, tileset)
 }
 
 func (w *GameWorld) GetEntities() *map[GameEntityId]GameEntity { return &w.objects }
@@ -194,7 +198,7 @@ func (w *GameWorld) removeObject(id GameEntityId) {
 	delete(w.objects, id)
 }
 
-func (w *GameWorld) initializeOuterWallBoundingBox(camera Camera) {
+func (w *GameWorld) initializeCameraViewportBoundingBox(camera Camera) {
 	minX := float64(camera.ViewportWidth() / 2)
 	minY := float64(camera.ViewportHeight() / 2)
 	maxX := float64(w.Width) - minX
@@ -306,5 +310,6 @@ func (w *GameWorld) SetCamera(camera Camera) {
 	w.space.AddBody(w.camera.Body())
 	w.space.AddShape(w.camera.Shape())
 
-	w.initializeOuterWallBoundingBox(camera)
+	// TODO: Need to replace with smarter map data
+	// w.initializeCameraViewportBoundingBox(camera)
 }

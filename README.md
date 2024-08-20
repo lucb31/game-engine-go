@@ -2,6 +2,17 @@
 [Try it out](https://lucb31.github.io/game-engine-go/)
 
 # Survival game
+## Parsing map data
+- Ideally: Automatically detect layers & tilesets
+### Next steps
+- Parse creep waypoints from map data
+
+- Fix out of bounds filler tiles
+    - Idea: rather than iterating over known map data, iterate over full camera viewport
+        => If map data available, draw that
+        => If not, draw filler tile
+
+
 # Bugs
 - Dash cooldown not working correctly
 ## Priority
