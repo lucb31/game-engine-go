@@ -3,6 +3,7 @@ package survival
 import (
 	"fmt"
 	"image/color"
+	"math/rand"
 
 	"github.com/ebitenui/ebitenui"
 	"github.com/ebitenui/ebitenui/image"
@@ -25,33 +26,84 @@ type ShopMenu struct {
 	visible       bool
 
 	// Logic
-	items []*ShopItem
+	itemSlots []*ShopItemSlot
 }
+
+type ShopItemSlot struct {
+	item             *GameItem
+	buyButton        *widget.Button
+	priceLabel       *widget.Text
+	descriptionLabel *widget.Text
+}
+
+// TODO: move struct to engine package
+type GameItem struct {
+	Price           int64
+	Description     string
+	ApplyItemEffect func(p engine.GameEntityStatReadWriter) error
+}
+
+// Pool of all available items in the shop
+// TODO: Move to survival package
+var availableItems = []GameItem{
+	{Price: 50, Description: "+10 Max Health", ApplyItemEffect: func(p engine.GameEntityStatReadWriter) error {
+		// Need to increase both max health & current health
+		p.SetMaxHealth(p.MaxHealth() + 10.0)
+		p.SetHealth(p.Health() + 10.0)
+		return nil
+	}},
+	{Price: 50, Description: "+10 Movement speed", ApplyItemEffect: func(p engine.GameEntityStatReadWriter) error {
+		p.SetMovementSpeed(p.MovementSpeed() + 10.0)
+		return nil
+	}},
+	{Price: 50, Description: "+10 Armor", ApplyItemEffect: func(p engine.GameEntityStatReadWriter) error {
+		p.SetArmor(p.Armor() + 10.0)
+		return nil
+	}},
+	{Price: 50, Description: "+10 Power", ApplyItemEffect: func(p engine.GameEntityStatReadWriter) error {
+		p.SetPower(p.Power() + 10.0)
+		return nil
+	}},
+}
+
+const itemSlots = 3
 
 func NewShopMenu(goldManager engine.GoldManager, playerStats engine.GameEntityStatReadWriter) (*ShopMenu, error) {
 	shop := &ShopMenu{goldManager: goldManager, playerStats: playerStats}
-	// Setup some static testing items
-	shop.items = []*ShopItem{
-		{Price: 50, Description: "+10 Max Health", ApplyItemEffect: func(p engine.GameEntityStatReadWriter) error {
-			// Need to increase both max health & current health
-			p.SetMaxHealth(p.MaxHealth() + 10.0)
-			p.SetHealth(p.Health() + 10.0)
-			return nil
-		}},
-		{Price: 50, Description: "+10 Movement speed", ApplyItemEffect: func(p engine.GameEntityStatReadWriter) error {
-			p.SetMovementSpeed(p.MovementSpeed() + 10.0)
-			return nil
-		}},
-		{Price: 50, Description: "+10 Armor", ApplyItemEffect: func(p engine.GameEntityStatReadWriter) error {
-			p.SetArmor(p.Armor() + 10.0)
-			return nil
-		}},
-		{Price: 50, Description: "+10 Power", ApplyItemEffect: func(p engine.GameEntityStatReadWriter) error {
-			p.SetPower(p.Power() + 10.0)
-			return nil
-		}},
-	}
 	return shop, nil
+}
+
+func (s *ShopMenu) RerollItemSlot(idx int) {
+	// Select item from item pool
+	itemIdx := rand.Intn(len(availableItems))
+	newItem := &availableItems[itemIdx]
+
+	// Update UI
+	s.itemSlots[idx].item = newItem
+	s.itemSlots[idx].priceLabel.Label = fmt.Sprintf("%d gold", newItem.Price)
+	s.itemSlots[idx].descriptionLabel.Label = newItem.Description
+}
+
+func (s *ShopMenu) BuyHandler(idx int) {
+	item := s.itemSlots[idx].item
+	if !s.goldManager.CanAfford(item.Price) {
+		fmt.Println("Cannot afford item", item)
+		return
+	}
+	newBalance, err := s.goldManager.Remove(item.Price)
+	if err != nil {
+		fmt.Println("Error removing item cost", err.Error())
+		return
+	}
+	err = item.ApplyItemEffect(s.playerStats)
+	if err != nil {
+		fmt.Println("Error applying item effect", err.Error())
+		return
+	}
+	fmt.Printf("Bought item %v, new balance %d\n", item, newBalance)
+
+	// Reroll
+	s.RerollItemSlot(idx)
 }
 
 func (s *ShopMenu) Update() {
@@ -66,19 +118,12 @@ func (s *ShopMenu) Update() {
 	}
 
 	// Enable/disable buttons depending on affordability
-	for _, item := range s.items {
-		if item.buyButton == nil {
+	for _, slot := range s.itemSlots {
+		if slot.buyButton == nil {
 			continue
 		}
-		item.buyButton.GetWidget().Disabled = !s.goldManager.CanAfford(item.Price)
+		slot.buyButton.GetWidget().Disabled = !s.goldManager.CanAfford(slot.item.Price)
 	}
-}
-
-type ShopItem struct {
-	Price           int64
-	Description     string
-	ApplyItemEffect func(p engine.GameEntityStatReadWriter) error
-	buyButton       *widget.Button
 }
 
 func defaultApplyItemEffect(p engine.GameEntityStatReadWriter) error {
@@ -123,7 +168,13 @@ func (s *ShopMenu) SetUI(ui *ebitenui.UI) {
 	if err != nil {
 		fmt.Println("Could not load button image", err.Error())
 	}
-	for _, item := range s.items {
+
+	// Initialize item slots
+	s.itemSlots = make([]*ShopItemSlot, itemSlots)
+	for idx := range s.itemSlots {
+		slot := &ShopItemSlot{}
+		s.itemSlots[idx] = slot
+
 		itemContainer := widget.NewContainer(
 			widget.ContainerOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{66, 66, 66, 255})),
 			widget.ContainerOpts.Layout(widget.NewGridLayout(
@@ -133,48 +184,32 @@ func (s *ShopMenu) SetUI(ui *ebitenui.UI) {
 			widget.ContainerOpts.WidgetOpts(widget.WidgetOpts.MinSize(150, 150)),
 		)
 
-		priceLabel := widget.NewText(
-			widget.TextOpts.Text(fmt.Sprintf("%d gold", item.Price), fontFace, color.RGBA{255, 255, 255, 1}),
+		slot.priceLabel = widget.NewText(
+			widget.TextOpts.Text("", fontFace, color.RGBA{255, 255, 255, 1}),
 			widget.TextOpts.MaxWidth(100),
 			widget.TextOpts.Position(widget.TextPositionCenter, widget.TextPositionStart),
 		)
-		itemContainer.AddChild(priceLabel)
+		itemContainer.AddChild(slot.priceLabel)
 
-		descriptionLabel := widget.NewText(
-			widget.TextOpts.Text(item.Description, fontFace, color.RGBA{255, 255, 255, 1}),
+		slot.descriptionLabel = widget.NewText(
+			widget.TextOpts.Text("", fontFace, color.RGBA{255, 255, 255, 1}),
 			widget.TextOpts.MaxWidth(100),
 			widget.TextOpts.Position(widget.TextPositionCenter, widget.TextPositionStart),
 		)
-		itemContainer.AddChild(descriptionLabel)
+		itemContainer.AddChild(slot.descriptionLabel)
 
-		buyButton := widget.NewButton(
+		slot.buyButton = widget.NewButton(
 			widget.ButtonOpts.Image(buttonImage),
 			widget.ButtonOpts.Text("Buy!", fontFace, &widget.ButtonTextColor{
 				Idle: color.RGBA{255, 255, 255, 1},
 			}),
-			widget.ButtonOpts.ClickedHandler(func(args *widget.ButtonClickedEventArgs) {
-				if !s.goldManager.CanAfford(item.Price) {
-					fmt.Println("Cannot afford item", item)
-					return
-				}
-				newBalance, err := s.goldManager.Remove(item.Price)
-				if err != nil {
-					fmt.Println("Error removing item cost", err.Error())
-					return
-				}
-				err = item.ApplyItemEffect(s.playerStats)
-				if err != nil {
-					fmt.Println("Error applying item effect", err.Error())
-					return
-				}
-
-				fmt.Printf("Bought item %v, new balance %d\n", item, newBalance)
-			}),
+			widget.ButtonOpts.ClickedHandler(func(args *widget.ButtonClickedEventArgs) { s.BuyHandler(idx) }),
 		)
-		item.buyButton = buyButton
-		itemContainer.AddChild(buyButton)
-
+		itemContainer.AddChild(slot.buyButton)
 		rootContainer.AddChild(itemContainer)
+
+		// Reroll to initialize
+		s.RerollItemSlot(idx)
 	}
 	rootContainer.GetWidget().Visibility = widget.Visibility_Hide
 	s.shopContainer = rootContainer
