@@ -32,12 +32,21 @@ func NewShopMenu(goldManager engine.GoldManager, playerStats engine.GameEntitySt
 	shop := &ShopMenu{goldManager: goldManager, playerStats: playerStats}
 	// Setup some static testing items
 	shop.items = []*ShopItem{
-		{Price: 9999, Description: "2% movement speed", ApplyItemEffect: defaultApplyItemEffect},
-		{Price: 9999, Description: "2% movement speed", ApplyItemEffect: defaultApplyItemEffect},
-		{Price: 9999, Description: "2% movement speed", ApplyItemEffect: defaultApplyItemEffect},
-		{Price: 9999, Description: "2% movement speed", ApplyItemEffect: defaultApplyItemEffect},
-		{Price: 9999, Description: "2% movement speed", ApplyItemEffect: defaultApplyItemEffect},
-		{Price: 50, Description: "+10 power", ApplyItemEffect: func(p engine.GameEntityStatReadWriter) error {
+		{Price: 50, Description: "+10 Max Health", ApplyItemEffect: func(p engine.GameEntityStatReadWriter) error {
+			// Need to increase both max health & current health
+			p.SetMaxHealth(p.MaxHealth() + 10.0)
+			p.SetHealth(p.Health() + 10.0)
+			return nil
+		}},
+		{Price: 50, Description: "+10 Movement speed", ApplyItemEffect: func(p engine.GameEntityStatReadWriter) error {
+			p.SetMovementSpeed(p.MovementSpeed() + 10.0)
+			return nil
+		}},
+		{Price: 50, Description: "+10 Armor", ApplyItemEffect: func(p engine.GameEntityStatReadWriter) error {
+			p.SetArmor(p.Armor() + 10.0)
+			return nil
+		}},
+		{Price: 50, Description: "+10 Power", ApplyItemEffect: func(p engine.GameEntityStatReadWriter) error {
 			p.SetPower(p.Power() + 10.0)
 			return nil
 		}},
