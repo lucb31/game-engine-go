@@ -32,6 +32,7 @@ type ShopMenu struct {
 type ShopItemSlot struct {
 	item             *GameItem
 	buyButton        *widget.Button
+	rerollButton     *widget.Button
 	priceLabel       *widget.Text
 	descriptionLabel *widget.Text
 }
@@ -66,7 +67,10 @@ var availableItems = []GameItem{
 	}},
 }
 
-const itemSlots = 3
+const (
+	itemSlots   = 3
+	rerollPrice = 10
+)
 
 func NewShopMenu(goldManager engine.GoldManager, playerStats engine.GameEntityStatReadWriter) (*ShopMenu, error) {
 	shop := &ShopMenu{goldManager: goldManager, playerStats: playerStats}
@@ -102,10 +106,23 @@ func (s *ShopMenu) BuyHandler(idx int) {
 	}
 	fmt.Printf("Bought item %v, new balance %d\n", item, newBalance)
 
-	// Reroll
 	s.RerollItemSlot(idx)
 }
 
+func (s *ShopMenu) RerollHandler(idx int) {
+	if !s.goldManager.CanAfford(rerollPrice) {
+		fmt.Println("Cannot afford to reroll")
+		return
+	}
+	newBalance, err := s.goldManager.Remove(rerollPrice)
+	if err != nil {
+		fmt.Println("Error removing item cost", err.Error())
+		return
+	}
+	fmt.Printf("Rerolled item slot %d, new balance %d\n", idx, newBalance)
+
+	s.RerollItemSlot(idx)
+}
 func (s *ShopMenu) Update() {
 	// Toggle shop visibility with B
 	if inpututil.IsKeyJustPressed(ebiten.KeyB) {
@@ -123,6 +140,10 @@ func (s *ShopMenu) Update() {
 			continue
 		}
 		slot.buyButton.GetWidget().Disabled = !s.goldManager.CanAfford(slot.item.Price)
+		if slot.rerollButton == nil {
+			continue
+		}
+		slot.rerollButton.GetWidget().Disabled = !s.goldManager.CanAfford(rerollPrice)
 	}
 }
 
@@ -179,10 +200,20 @@ func (s *ShopMenu) SetUI(ui *ebitenui.UI) {
 			widget.ContainerOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{66, 66, 66, 255})),
 			widget.ContainerOpts.Layout(widget.NewGridLayout(
 				widget.GridLayoutOpts.Columns(1),
-				widget.GridLayoutOpts.Stretch([]bool{true, true}, []bool{true, true}),
+				widget.GridLayoutOpts.Stretch([]bool{true}, []bool{false, false, true, false}),
+				widget.GridLayoutOpts.Spacing(0, 10),
 			)),
 			widget.ContainerOpts.WidgetOpts(widget.WidgetOpts.MinSize(150, 150)),
 		)
+
+		slot.rerollButton = widget.NewButton(
+			widget.ButtonOpts.Image(buttonImage),
+			widget.ButtonOpts.Text(fmt.Sprintf("Reroll (%dg)", rerollPrice), fontFace, &widget.ButtonTextColor{
+				Idle: color.RGBA{255, 255, 255, 1},
+			}),
+			widget.ButtonOpts.ClickedHandler(func(args *widget.ButtonClickedEventArgs) { s.RerollHandler(idx) }),
+		)
+		itemContainer.AddChild(slot.rerollButton)
 
 		slot.priceLabel = widget.NewText(
 			widget.TextOpts.Text("", fontFace, color.RGBA{255, 255, 255, 1}),
@@ -206,6 +237,7 @@ func (s *ShopMenu) SetUI(ui *ebitenui.UI) {
 			widget.ButtonOpts.ClickedHandler(func(args *widget.ButtonClickedEventArgs) { s.BuyHandler(idx) }),
 		)
 		itemContainer.AddChild(slot.buyButton)
+
 		rootContainer.AddChild(itemContainer)
 
 		// Reroll to initialize
