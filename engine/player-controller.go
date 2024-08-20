@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"fmt"
 	"math"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -24,8 +23,8 @@ type KeyboardPlayerController struct {
 	movingSouthSince float64
 
 	// Dash
-	dashingSince    float64
-	dashOrientation Orientation
+	dashingSince  float64
+	dashDirection cp.Vector
 
 	orientation Orientation
 	animation   string
@@ -88,16 +87,20 @@ func (c *KeyboardPlayerController) CalcVelocity(maxVelocity, gameTime float64) c
 	}
 
 	// Add up velocity from walking & dashing
-	totalVel := vel.Add(c.calcVelFromDash(gameTime))
+	totalVel := vel.Add(c.calcVelFromDash(vel, gameTime))
 
 	// Update orientation
 	if totalVel.Length() > 0.0 {
-		c.orientation = calculateOrientation(totalVel)
+		c.orientation = updateOrientation(totalVel)
 	}
 
 	// Update animation
 	if c.dashingSince > 0 {
-		c.animation = fmt.Sprintf("dash_%s", c.orientation)
+		if c.dashDirection.X < 0 {
+			c.animation = "dash_west"
+		} else {
+			c.animation = "dash_east"
+		}
 	} else {
 		c.animation = calculateWalkingAnimation(totalVel, c.orientation)
 	}
@@ -106,14 +109,14 @@ func (c *KeyboardPlayerController) CalcVelocity(maxVelocity, gameTime float64) c
 }
 func (c *KeyboardPlayerController) Animation() string { return c.animation }
 
-func (c *KeyboardPlayerController) calcVelFromDash(gameTime float64) cp.Vector {
+func (c *KeyboardPlayerController) calcVelFromDash(vel cp.Vector, gameTime float64) cp.Vector {
 	diff := gameTime - c.dashingSince
 	// Register new dashes
 	if inpututil.IsKeyJustPressed(ebiten.KeySpace) {
 		// Timeout
 		if diff > dashCooldownInSeconds {
 			c.dashingSince = gameTime
-			c.dashOrientation = c.orientation
+			c.dashDirection = vel.Normalize()
 			diff = 0
 		}
 	}
@@ -130,16 +133,9 @@ func (c *KeyboardPlayerController) calcVelFromDash(gameTime float64) cp.Vector {
 	smoothenedProgress := easeInOutCubic(progressInRampUp)
 	dashVelocity := dashDistance / dashDurationInSeconds
 	smoothenedVelocity := smoothenedProgress * dashVelocity
-	// FIX: Dash direction (mising S & N + not working when standing still)
-	if c.movingWestSince > 0 {
-		smoothenedVelocity *= -1
-	}
 
 	// Apply dashing velocity
-	return cp.Vector{
-		X: smoothenedVelocity,
-		Y: 0,
-	}
+	return c.dashDirection.Mult(smoothenedVelocity)
 }
 
 // Smoothen input value by comparing time difference between start and end time to ramp up time

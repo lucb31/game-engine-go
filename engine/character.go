@@ -100,19 +100,15 @@ func calculateWalkingAnimation(vel cp.Vector, orientation Orientation) string {
 
 	// Append horizontal orientation
 	orientationString := "east"
-	if orientation&West == 0 {
+	if orientation == West {
 		orientationString = "west"
 	}
 	return animation + orientationString
 }
 
-func calculateOrientation(vel cp.Vector) Orientation {
-	res := Orientation(uint(0))
-	if vel.X > 0 {
-		res = res | West
+func updateOrientation(vel cp.Vector) Orientation {
+	if vel.X < 0 {
+		return West
 	}
-	if vel.Y > 0 {
-		res = res | North
-	}
-	return res
+	return East
 }

@@ -70,7 +70,9 @@ func (w *GameWorld) Draw(screen *ebiten.Image) {
 
 	// Render player
 	if w.player != nil {
-		w.player.Draw(w.camera)
+		if err := w.player.Draw(w.camera); err != nil {
+			fmt.Println("Error drawing player: ", err.Error())
+		}
 		ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Player pos: %s", w.player.shape.Body().Position()), 10, 90)
 	}
 	// Render entities that are visible in the camera viewport

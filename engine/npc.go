@@ -163,7 +163,7 @@ func (n *NpcEntity) moveTowards(body *cp.Body, dest cp.Vector) float64 {
 	vel := diffNormalized.Mult(n.movementSpeed)
 	body.SetVelocityVector(vel)
 	// Update active animation & orientation
-	n.orientation = calculateOrientation(vel)
+	n.orientation = updateOrientation(vel)
 	n.animation = calculateWalkingAnimation(vel, n.orientation)
 	return diff.Length()
 }

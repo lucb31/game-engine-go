@@ -11,14 +11,10 @@ import (
 type Orientation uint8
 
 const (
-	East      = Orientation(uint8(0))
-	West      = Orientation(uint8(1))
-	South     = Orientation(uint8(1 << 0))
-	North     = Orientation(uint8(1 << 1))
-	NorthEast = East | North
-	NorthWest = West | North
-	SouthEast = East | South
-	SouthWest = West | South
+	East  Orientation = 0
+	West              = 1
+	South             = 2
+	North             = 3
 )
 
 type Player struct {
