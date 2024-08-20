@@ -3,7 +3,6 @@ package engine
 import (
 	"fmt"
 
-	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/jakecoffman/cp"
 )
@@ -28,6 +27,8 @@ type Player struct {
 
 	// ATK
 	gun Gun
+
+	controller PlayerController
 
 	GameEntityStats
 }
@@ -86,6 +87,7 @@ func NewPlayer(world GameEntityManager, asset *CharacterAsset, projectileAsset *
 	playerBody.SetPosition(cp.Vector{X: 1470, Y: 820})
 	playerBody.UserData = p
 	playerBody.SetVelocityUpdateFunc(p.calculateVelocity)
+	p.orientation = East
 
 	// Collision model
 	p.shape = cp.NewBox(playerBody, playerWidth, playerHeight, 0)
@@ -103,10 +105,17 @@ func NewPlayer(world GameEntityManager, asset *CharacterAsset, projectileAsset *
 	p.maxHealth = 100
 	p.power = 30
 	p.health = p.maxHealth
+
 	// Init gun
 	var err error
 	gunOpts := BasicGunOpts{FireRatePerSecond: 1.3, FireRange: 250.0}
 	p.gun, err = NewAutoAimGun(world, p, projectileAsset, gunOpts)
+	if err != nil {
+		return nil, err
+	}
+
+	// Init input controller
+	p.controller, err = NewKeyboardPlayerController()
 	if err != nil {
 		return nil, err
 	}
@@ -169,28 +178,10 @@ func (p *Player) calculateVelocity(body *cp.Body, gravity cp.Vector, damping flo
 			fmt.Println("Error when trying to shoot player gun", err.Error())
 		}
 	}
-	// Smoothen velocity
-	playerVelocity := p.MovementSpeed()
-	velocity := body.Velocity()
-	if ebiten.IsKeyPressed(ebiten.KeyW) {
-		velocity.Y = max(-playerVelocity, velocity.Y-playerVelocity*0.1)
-	} else if ebiten.IsKeyPressed(ebiten.KeyS) {
-		velocity.Y = min(playerVelocity, velocity.Y+playerVelocity*0.1)
-	} else {
-		velocity.Y = 0
-	}
-	if ebiten.IsKeyPressed(ebiten.KeyA) {
-		velocity.X = -playerVelocity
-		p.orientation = West
-	} else if ebiten.IsKeyPressed(ebiten.KeyD) {
-		velocity.X = playerVelocity
-		p.orientation = East
-	} else {
-		velocity.X = 0
-	}
-	// Update physics velocity
+	velocity := p.controller.CalcVelocity(body.Velocity(), p.MovementSpeed())
 	body.SetVelocityVector(velocity)
-	// Update animation
+
+	// Update orientation
 	if velocity.Length() > 0.0 {
 		p.orientation = calculateOrientation(velocity)
 	}
