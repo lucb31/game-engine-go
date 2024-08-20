@@ -11,12 +11,12 @@ import (
 )
 
 const (
-	screenWidth  = 1024
-	screenHeight = 768
+	screenWidth  = 1920
+	screenHeight = 1080
 )
 
 func main() {
-	ebiten.SetWindowSize(1024, 768)
+	ebiten.SetWindowSize(screenWidth, screenHeight)
 	ebiten.SetWindowTitle("Game engine")
 
 	// CLI

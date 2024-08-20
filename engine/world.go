@@ -131,19 +131,27 @@ func (w *GameWorld) RemoveEntity(object GameEntity) error {
 	return nil
 }
 
-func (w *GameWorld) AddCollisionLayer(mapData []byte, tileset *Tileset) error {
-	if err := w.WorldMap.AddLayer(mapData, tileset); err != nil {
+func (w *GameWorld) AddCollisionLayer(mapData []byte) error {
+	tileData, err := ReadCsvFromBinary(mapData)
+	if err != nil {
 		return err
 	}
 
 	// Register wall segments to physical space
-	tileData := w.WorldMap.layers[len(w.WorldMap.layers)-1].TileData()
 	walls := CalcHorizontalWallSegments(tileData)
 	walls = append(walls, CalcVerticalWallSegments(tileData)...)
 	for _, wall := range walls {
 		RegisterWallSegmentToSpace(w.space, wall)
 	}
 	return nil
+}
+
+// Adds a layer with collision segments AND tilesets
+func (w *GameWorld) AddCombinedLayer(mapData []byte, tileset *Tileset) error {
+	if err := w.WorldMap.AddLayer(mapData, tileset); err != nil {
+		return err
+	}
+	return w.AddCollisionLayer(mapData)
 }
 
 func (w *GameWorld) GetEntities() *map[GameEntityId]GameEntity { return &w.objects }

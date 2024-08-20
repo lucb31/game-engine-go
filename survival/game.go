@@ -53,30 +53,47 @@ func (g *SurvivalGame) Layout(outsideWidth, outsideHeight int) (int, int) {
 // Initialize map layers from CSV data
 func (game *SurvivalGame) initMap() error {
 	// Base layer
-	baseTiles, err := game.world.AssetManager.Tileset("grounds")
+	baseTiles, err := game.world.AssetManager.Tileset("darkdimension")
 	if err != nil {
 		return err
 	}
-	worldMap, err := engine.NewWorldMap(game.worldWidth, game.worldHeight, assets.MapTDBaseGroundCSV, baseTiles)
+	worldMap, err := engine.NewWorldMap(game.worldWidth, game.worldHeight, assets.MapDarkBGGroundCSV, baseTiles)
 	if err != nil {
 		return err
 	}
 	game.world.WorldMap = worldMap
 
 	// Inner walls layer
-	wallTiles, err := game.world.AssetManager.Tileset("fences")
+	if err := game.world.AddCollisionLayer(assets.MapDarkBGWallsCSV); err != nil {
+		return err
+	}
+
+	// Castle front layer
+	if err := game.world.WorldMap.AddLayer(assets.MapDarkCastleCastleFrontCSV, baseTiles); err != nil {
+		return err
+	}
+
+	// Castle prop layer
+	propTiles, err := game.world.AssetManager.Tileset("props")
 	if err != nil {
 		return err
 	}
-	game.world.AddCollisionLayer(assets.MapTDBaseWallsCSV, wallTiles)
+	if err := game.world.WorldMap.AddLayer(assets.MapDarkCastlePropsCSV, propTiles); err != nil {
+		return err
+	}
+
+	// Outside layer
+	if err := game.world.WorldMap.AddLayer(assets.MapDarkOutsideCSV, baseTiles); err != nil {
+		return err
+	}
 
 	return nil
 }
 
 // Initialize all parts of the game world that need to be reset on restart
 func (game *SurvivalGame) initialize() error {
-	game.worldHeight = int64(2112)
-	game.worldWidth = int64(2944)
+	game.worldHeight = int64(3840)
+	game.worldWidth = int64(3840)
 
 	fmt.Println("Initializing game")
 	// Init game world

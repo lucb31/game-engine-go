@@ -85,9 +85,10 @@ type tileResource struct {
 
 // TODO: Load these from config file
 var tileResources []tileResource = []tileResource{
+	// Used for td
 	{"plains", assets.Plains, 16, 16},
-	{"grounds", assets.Grounds, 16, 16},
-	{"fences", assets.Fences, 16, 16},
+	{"darkdimension", assets.Darkdimension, 16, 16},
+	{"props", assets.Props, 16, 16},
 }
 
 // Load tilesets for static resources
