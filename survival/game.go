@@ -57,8 +57,12 @@ func (game *SurvivalGame) initMap() error {
 	if err != nil {
 		return err
 	}
-	worldMap, err := engine.NewWorldMap(game.worldWidth, game.worldHeight, assets.MapDarkDarkGroundCSV, baseTiles)
+	worldMap, err := engine.NewWorldMap(game.worldWidth, game.worldHeight)
 	if err != nil {
+		return err
+	}
+	worldMap.AddSkyboxLayer(int64(game.screenWidth), int64(game.screenHeight), baseTiles)
+	if err := worldMap.AddLayer(assets.MapDarkDarkGroundCSV, baseTiles); err != nil {
 		return err
 	}
 	game.world.WorldMap = worldMap

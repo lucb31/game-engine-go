@@ -67,8 +67,11 @@ func (game *TDGame) initialize() error {
 	if err != nil {
 		return err
 	}
-	w.WorldMap, err = engine.NewWorldMap(width, height, assets.LabyrinthMapCSV, tileset)
+	w.WorldMap, err = engine.NewWorldMap(width, height)
 	if err != nil {
+		return err
+	}
+	if err = w.WorldMap.AddLayer(assets.LabyrinthMapCSV, tileset); err != nil {
 		return err
 	}
 	game.world = w

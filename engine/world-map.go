@@ -1,27 +1,29 @@
 package engine
 
 import (
+	"fmt"
+
 	"github.com/jakecoffman/cp"
 )
 
 type WorldMap struct {
-	layers        []*MapLayer
+	layers        []MapLayer
 	width, height int64
 }
 
-// Creates a new multi layer world map. Need to provide data for base layer
-// since map cannot have 0 layers
-func NewWorldMap(width, height int64, mapCsv []byte, tileset *Tileset) (*WorldMap, error) {
+// Creates a new multi layer world map
+func NewWorldMap(width, height int64) (*WorldMap, error) {
 	m := &WorldMap{width: width, height: height}
-	if err := m.AddLayer(mapCsv, tileset); err != nil {
-		return nil, err
-	}
 	return m, nil
 }
 
 // Draw all map layers
-func (m *WorldMap) Draw(camera Camera) {
-	for _, l := range m.layers {
+func (w *WorldMap) Draw(camera Camera) {
+	if len(w.layers) == 0 {
+		fmt.Println("Empty world map. No layers defined")
+		return
+	}
+	for _, l := range w.layers {
 		l.Draw(camera)
 	}
 }
@@ -30,8 +32,20 @@ func (w *WorldMap) TileAt(worldPos cp.Vector) (MapTile, error) {
 	return w.layers[0].TileAt(worldPos)
 }
 
+func (w *WorldMap) AddSkyboxLayer(width, height int64, tileset *Tileset) error {
+	if len(w.layers) > 0 {
+		return fmt.Errorf("Map already has existing layers. Skybox needs to be added as first layer")
+	}
+	l, err := NewSkyboxLayer(width, height, tileset)
+	if err != nil {
+		return err
+	}
+	w.layers = append(w.layers, l)
+	return nil
+}
+
 func (w *WorldMap) AddLayer(mapCsv []byte, tileset *Tileset) error {
-	l, err := NewMapLayer(w.width, w.height, mapCsv, tileset)
+	l, err := NewBaseMapLayer(w.width, w.height, mapCsv, tileset)
 	if err != nil {
 		return err
 	}

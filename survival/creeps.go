@@ -46,7 +46,7 @@ type SurvCreepProvider struct {
 	// Required to not spawn within current viewport
 	camera engine.Camera
 	// Spawn areas
-	spawnAreaLayer *engine.MapLayer
+	spawnAreaLayer engine.MapLayer
 }
 
 func NewSurvCreepProvider(am engine.AssetManager, t engine.GameEntity, cam engine.Camera) (*SurvCreepProvider, error) {
@@ -54,7 +54,8 @@ func NewSurvCreepProvider(am engine.AssetManager, t engine.GameEntity, cam engin
 }
 
 func (p *SurvCreepProvider) ParseNoSpawnArea(mapCsvData []byte) error {
-	layer, err := engine.NewMapLayer(5000, 5000, mapCsvData, nil)
+	// TODO: Get rid of fixed dimension
+	layer, err := engine.NewBaseMapLayer(5000, 5000, mapCsvData, nil)
 	if err != nil {
 		return err
 	}

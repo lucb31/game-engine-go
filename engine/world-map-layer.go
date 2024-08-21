@@ -23,13 +23,18 @@ const (
 	mapTileSize         = 16
 )
 
-type MapLayer struct {
+type MapLayer interface {
+	Draw(Camera) error
+	WorldMapReader
+}
+
+type BaseMapLayer struct {
 	tileset  Tileset
 	tileData [][]MapTile
 }
 
 // Generate new map layer for widht & height dimensions IN PX
-func NewMapLayer(width, height int64, mapCsv []byte, tileset *Tileset) (*MapLayer, error) {
+func NewBaseMapLayer(width, height int64, mapCsv []byte, tileset *Tileset) (*BaseMapLayer, error) {
 	// Read map data from provided path
 	csvMapData, err := ReadCsvFromBinary(mapCsv)
 	if err != nil {
@@ -50,14 +55,15 @@ func NewMapLayer(width, height int64, mapCsv []byte, tileset *Tileset) (*MapLaye
 			}
 		}
 	}
-	layer := &MapLayer{tileData: mapData}
+	layer := &BaseMapLayer{tileData: mapData}
 	if tileset != nil {
 		layer.tileset = *tileset
 	}
 	return layer, nil
 }
 
-func (l *MapLayer) Draw(camera Camera) {
+// Iterates over map layer data and draws tiles that are within viewport of camera
+func (l *BaseMapLayer) Draw(camera Camera) error {
 	topLeft, bottomRight := camera.Viewport()
 	// We dont want to iterate over out of bounds rows and cols
 	startingRow := int(math.Max(topLeft.Y/mapTileSize, 0))
@@ -82,17 +88,16 @@ func (l *MapLayer) Draw(camera Camera) {
 			// Select correct tile from tileset
 			subIm, err := l.tileset.GetTile(int(mapTile))
 			if err != nil {
-				fmt.Println("Unable to draw world map cell", err.Error())
-				return
+				return fmt.Errorf("Unable to draw world map cell", err.Error())
 			}
 			// Draw tile
 			camera.DrawImage(subIm, &op)
 		}
 	}
+	return nil
 }
 
-// NOTE: Currently only required to determine buildable tiles
-func (l *MapLayer) TileAt(worldPos cp.Vector) (MapTile, error) {
+func (l *BaseMapLayer) TileAt(worldPos cp.Vector) (MapTile, error) {
 	if worldPos.X < 0 || worldPos.Y < 0 {
 		return EmptyTile, fmt.Errorf("Out of bounds")
 	}
@@ -103,7 +108,7 @@ func (l *MapLayer) TileAt(worldPos cp.Vector) (MapTile, error) {
 	}
 	return l.tileData[row][col], nil
 }
-func (l *MapLayer) TileData() [][]MapTile { return l.tileData }
+func (l *BaseMapLayer) TileData() [][]MapTile { return l.tileData }
 
 func ReadCsvFromBinary(data []byte) ([][]MapTile, error) {
 	reader := bytes.NewReader(data)

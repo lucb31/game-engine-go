@@ -3,7 +3,7 @@
 
 # Survival game
 ## Parsing map data
-- Ideally: Automatically detect layers & tilesets
+- BUG: Cannot draw fence on exact outer bounds. need to keep 1 tile buffer. Dont know why that is
 ### Next steps
 - Parse creep waypoints from map data
 
