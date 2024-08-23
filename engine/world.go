@@ -18,7 +18,7 @@ const (
 	DEBUG_CAMERA_POS             = false
 	DEBUG_DRAW_STATIC_BODY       = false
 	DEBUG_ENTITY_STATS           = true
-	DEBUG_RENDER_COLLISION_BOXES = true
+	DEBUG_RENDER_COLLISION_BOXES = false
 )
 
 type GameWorld struct {
