@@ -1,6 +1,9 @@
 package engine
 
-import "fmt"
+import (
+	"fmt"
+	"math"
+)
 
 type IngameTimer struct {
 	timeProvider IngameTimeProvider
@@ -15,8 +18,14 @@ func NewIngameTimer(p IngameTimeProvider) (*IngameTimer, error) {
 	return &IngameTimer{timeProvider: p}, nil
 }
 
-func (t *IngameTimer) Start() { t.startedAt = t.timeProvider.GetIngameTime() }
+func (t *IngameTimer) Start()       { t.startedAt = t.timeProvider.GetIngameTime() }
+func (t *IngameTimer) Stop()        { t.startedAt = 0 }
+func (t *IngameTimer) Active() bool { return t.startedAt != 0 }
 func (t *IngameTimer) Elapsed() float64 {
+	// Return INF if not started
+	if t.startedAt == 0 {
+		return math.MaxFloat64
+	}
 	now := t.timeProvider.GetIngameTime()
 	return now - t.startedAt
 }

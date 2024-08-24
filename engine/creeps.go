@@ -19,13 +19,20 @@ type BaseCreepManager struct {
 	goldManager   GoldManager
 	creepProvider CreepProvider
 
+	// Configuration params for currently active wave
 	activeWave *Wave
 
 	// Active wave
-	creepsSpawned   int
-	creepsAlive     int
+	creepsSpawned int
+	creepsAlive   int
+	// Timer to control creep spawns during an active wave
 	creepSpawnTimer *IngameTimer
+
+	// Timer to control idle time between waves
+	spawnIdleTimer *IngameTimer
 }
+
+const idleTimeAfterWaveFinished = 10.0
 
 type Wave struct {
 	Round              int
@@ -39,6 +46,9 @@ func NewBaseCreepManager(em GameEntityManager, goldManager GoldManager) (*BaseCr
 	cm := &BaseCreepManager{entityManager: em, goldManager: goldManager}
 	var err error
 	if cm.creepSpawnTimer, err = NewIngameTimer(em); err != nil {
+		return nil, err
+	}
+	if cm.spawnIdleTimer, err = NewIngameTimer(em); err != nil {
 		return nil, err
 	}
 
@@ -62,14 +72,27 @@ func NewDefaultCreepManager(em GameEntityManager, asset *CharacterAsset, goldMan
 }
 
 func (c *BaseCreepManager) Update() error {
+	// As long as the idle timer is running, we're not supposed to do anything
+	if c.spawnIdleTimer.Elapsed() < idleTimeAfterWaveFinished {
+		return nil
+	}
+
+	// Stop idle timer & spawn next wave
+	if c.spawnIdleTimer.Active() {
+		if err := c.NextWave(); err != nil {
+			return err
+		}
+		c.spawnIdleTimer.Stop()
+	}
+
 	// Check if creeps to spawn left
 	if c.creepsSpawned < c.activeWave.TotalCreepsToSpawn {
 		if err := c.spawnCreep(); err != nil {
 			return err
 		}
 	} else if c.creepsAlive == 0 {
-		// Wave cleared
-		return c.NextWave()
+		// Wave cleared, start idle timer
+		c.spawnIdleTimer.Start()
 	}
 	return nil
 }
@@ -89,6 +112,13 @@ func (c *BaseCreepManager) RemoveEntity(entity GameEntity) error {
 
 func (c *BaseCreepManager) Progress() hud.ProgressInfo {
 	label := fmt.Sprintf("Wave %d", c.activeWave.Round)
+	// While idle timer is active, show remaining timeout
+	if c.spawnIdleTimer.Active() {
+		label := "DAY"
+		current := int((idleTimeAfterWaveFinished - c.spawnIdleTimer.Elapsed()) / idleTimeAfterWaveFinished * 100)
+		return hud.ProgressInfo{Min: 0, Max: 100, Current: current, Label: label}
+	}
+	// While wave is spawning show wave progress
 	return hud.ProgressInfo{Min: 0, Max: c.activeWave.TotalCreepsToSpawn, Current: c.creepsSpawned, Label: label}
 }
 
