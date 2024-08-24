@@ -73,7 +73,7 @@ func (l *SkyboxLayer) Draw(cam Camera) error {
 			// Select correct tile from tileset
 			subIm, err := l.tileset.GetTile(int(mapTile))
 			if err != nil {
-				return fmt.Errorf("Unable to draw world map cell", err.Error())
+				return fmt.Errorf("Unable to draw world map cell: %s", err.Error())
 			}
 			// Draw
 			op := ebiten.DrawImageOptions{}

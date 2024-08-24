@@ -39,7 +39,7 @@ func (a *CharacterAsset) GetTile(animation GameAssetAnimation, animationTile int
 
 func (a *CharacterAsset) DrawAnimationTile(t RenderingTarget, animation GameAssetAnimation, animationTile int, shape *cp.Shape) error {
 	if DEBUG_RENDER_COLLISION_BOXES {
-		a.DrawRectBoundingBox(t, shape)
+		DrawRectBoundingBox(t, shape)
 	}
 	subIm, err := a.GetTile(animation, animationTile)
 	if err != nil {
@@ -60,14 +60,6 @@ func (a *CharacterAsset) Draw(t RenderingTarget, activeAnimation string, shape *
 	}
 	animationFrame := int(float64(*a.currentFrame)/a.animationSpeed) % animation.FrameCount
 	return a.DrawAnimationTile(t, animation, animationFrame, shape)
-}
-
-// Draws Rect bounding box around shape position
-func (a *CharacterAsset) DrawRectBoundingBox(t RenderingTarget, shape *cp.Shape) error {
-	width := shape.BB().R - shape.BB().L
-	height := shape.BB().T - shape.BB().B
-	t.StrokeRect(shape.Body().Position().X-width/2, shape.Body().Position().Y-height/2, float32(width), float32(height), 2.5, color.RGBA{255, 0, 0, 255}, false)
-	return nil
 }
 
 func (a *CharacterAsset) DrawHealthbar(t RenderingTarget, shape *cp.Shape, health, maxHealth float64) {

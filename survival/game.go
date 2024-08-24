@@ -5,6 +5,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
+	"github.com/jakecoffman/cp"
 	"github.com/lucb31/game-engine-go/bin/assets"
 	"github.com/lucb31/game-engine-go/engine"
 	"github.com/lucb31/game-engine-go/engine/hud"
@@ -89,6 +90,16 @@ func (game *SurvivalGame) initMap() error {
 	// Outside layer
 	if err := game.world.AddLayer(assets.MapDarkDarkOutsidePropsCSV, baseTiles); err != nil {
 		return err
+	}
+
+	// Init trees
+	for i := range 10 {
+		pos := cp.Vector{float64(i * 100), float64(i * 100)}
+		tree, err := engine.NewTree(pos)
+		if err != nil {
+			return err
+		}
+		game.world.AddEntity(tree)
 	}
 
 	return nil

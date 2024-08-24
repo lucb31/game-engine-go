@@ -2,6 +2,7 @@ package engine
 
 import (
 	"fmt"
+	"image/color"
 
 	"github.com/jakecoffman/cp"
 	"github.com/lucb31/game-engine-go/engine/damage"
@@ -16,12 +17,12 @@ const (
 )
 
 const (
-	PlayerCategory     uint = 1
-	NpcCategory        uint = 1 << 1
-	OuterWallsCategory uint = 1 << 2
-	InnerWallsCategory uint = 1 << 3
-	TowerCategory      uint = 1 << 4
-	ProjectileCategory uint = 1 << 5
+	PlayerCategory      uint = 1
+	NpcCategory         uint = 1 << 1
+	OuterWallsCategory  uint = 1 << 2
+	HarvestableCategory uint = 1 << 3
+	TowerCategory       uint = 1 << 4
+	ProjectileCategory  uint = 1 << 5
 )
 
 // Used to pass damage model and in game timer to collision callback
@@ -42,11 +43,11 @@ func NewPhysicsSpace(damageModel damage.DamageModel, gameTime *float64) (*cp.Spa
 }
 
 func TowerCollisionFilter() cp.ShapeFilter {
-	return cp.NewShapeFilter(0, TowerCategory, PlayerCategory|NpcCategory|OuterWallsCategory|InnerWallsCategory|TowerCategory)
+	return cp.NewShapeFilter(0, TowerCategory, PlayerCategory|NpcCategory|OuterWallsCategory|HarvestableCategory|TowerCategory)
 }
 
 func PlayerCollisionFilter() cp.ShapeFilter {
-	return cp.NewShapeFilter(0, PlayerCategory, PlayerCategory|NpcCategory|OuterWallsCategory|TowerCategory)
+	return cp.NewShapeFilter(0, PlayerCategory, PlayerCategory|NpcCategory|OuterWallsCategory|TowerCategory|HarvestableCategory)
 }
 
 func TopLeftBBPosition(shape *cp.Shape) cp.Vector {
@@ -131,4 +132,12 @@ func projectileCollisionHandler(arb *cp.Arbiter, space *cp.Space, userData inter
 	// Remove projectile
 	projectile.Destroy()
 	return false
+}
+
+// Draws Rect bounding box around shape position
+func DrawRectBoundingBox(t RenderingTarget, shape *cp.Shape) error {
+	width := shape.BB().R - shape.BB().L
+	height := shape.BB().T - shape.BB().B
+	t.StrokeRect(shape.Body().Position().X-width/2, shape.Body().Position().Y-height/2, float32(width), float32(height), 2.5, color.RGBA{255, 0, 0, 255}, false)
+	return nil
 }

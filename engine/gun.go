@@ -78,17 +78,19 @@ func (g *BasicGun) SetShootingAnimationCallback(playShootAnimation ShootingAnima
 }
 
 func (g *BasicGun) chooseTarget() GameEntity {
-	query := g.owner.Shape().Space().PointQueryNearest(g.owner.Shape().Body().Position(), g.fireRange, cp.NewShapeFilter(cp.NO_GROUP, cp.ALL_CATEGORIES, NpcCategory))
+	query := g.owner.Shape().Space().PointQueryNearest(g.owner.Shape().Body().Position(), g.fireRange, gunTargetCollisionFilter)
 	if query.Shape == nil {
 		return nil
 	}
 	npc, ok := query.Shape.Body().UserData.(*NpcEntity)
 	if !ok {
-		fmt.Println("Expected npc target, but found something else")
+		fmt.Println("Expected npc target, but found something else", query.Shape.Body().UserData)
 		return nil
 	}
 	return npc
 }
+
+var gunTargetCollisionFilter = cp.NewShapeFilter(cp.NO_GROUP, cp.ALL_CATEGORIES, NpcCategory)
 
 func NewBasicGun(em GameEntityManager, owner GameEntity, proj *ProjectileAsset, opts BasicGunOpts) (*BasicGun, error) {
 	gun := &BasicGun{em: em, owner: owner, projectileAsset: proj}

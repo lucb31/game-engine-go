@@ -2,8 +2,6 @@ package engine
 
 import (
 	"testing"
-
-	"github.com/jakecoffman/cp"
 )
 
 func TestPlayerCollisionFilters(t *testing.T) {
@@ -72,11 +70,14 @@ func TestProjectileCollisionFilter(t *testing.T) {
 	}
 }
 
-func TestPointQueryFilter(t *testing.T) {
-	filter := cp.NewShapeFilter(cp.NO_GROUP, cp.ALL_CATEGORIES, NpcCategory)
+func TestGunTargetCollisionFilter(t *testing.T) {
+	filter := gunTargetCollisionFilter
 	npc := NpcCollisionFilter()
 	if filter.Reject(npc) {
 		t.Fatal("Collision between query and npc was rejected, but should collide")
+	}
+	if !filter.Reject(TreeCollisionFilter) {
+		t.Fatal("Expected collision between gun target scanner and tree to be rejected, but was checked")
 	}
 }
 

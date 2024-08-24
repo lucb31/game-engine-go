@@ -90,7 +90,7 @@ func (l *BaseMapLayer) Draw(camera Camera) error {
 			// Select correct tile from tileset
 			subIm, err := l.tileset.GetTile(int(mapTile))
 			if err != nil {
-				return fmt.Errorf("Unable to draw world map cell", err.Error())
+				return fmt.Errorf("Unable to draw world map cell: %s", err.Error())
 			}
 			// Draw tile
 			camera.DrawImage(subIm, &op)
