@@ -53,9 +53,8 @@ func NewSurvCreepProvider(am engine.AssetManager, t engine.GameEntity, cam engin
 	return &SurvCreepProvider{assetManager: am, target: t, camera: cam}, nil
 }
 
-func (p *SurvCreepProvider) ParseNoSpawnArea(mapCsvData []byte) error {
-	// TODO: Get rid of fixed dimension
-	layer, err := engine.NewBaseMapLayer(5000, 5000, mapCsvData, nil)
+func (p *SurvCreepProvider) ParseNoSpawnArea(width, height int64, mapCsvData []byte) error {
+	layer, err := engine.NewBaseMapLayer(width, height, mapCsvData, nil)
 	if err != nil {
 		return err
 	}
