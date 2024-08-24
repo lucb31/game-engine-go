@@ -45,6 +45,10 @@ func TowerCollisionFilter() cp.ShapeFilter {
 	return cp.NewShapeFilter(0, TowerCategory, PlayerCategory|NpcCategory|OuterWallsCategory|InnerWallsCategory|TowerCategory)
 }
 
+func PlayerCollisionFilter() cp.ShapeFilter {
+	return cp.NewShapeFilter(0, PlayerCategory, PlayerCategory|NpcCategory|OuterWallsCategory|TowerCategory)
+}
+
 func TopLeftBBPosition(shape *cp.Shape) cp.Vector {
 	width := shape.BB().R - shape.BB().L
 	height := shape.BB().T - shape.BB().B
