@@ -31,7 +31,7 @@ type Player struct {
 	GameEntityStats
 
 	// Eyeframes
-	lastHitAt float64
+	eyeframesTimer *IngameTimer
 }
 
 const (
@@ -85,6 +85,12 @@ func NewPlayer(world GameEntityManager, asset *CharacterAsset, projectileAsset *
 
 	// Init input controller
 	p.controller, err = NewKeyboardPlayerController(p.animationManager)
+	if err != nil {
+		return nil, err
+	}
+
+	// Init eyeframe timer
+	p.eyeframesTimer, err = NewIngameTimer(world)
 	if err != nil {
 		return nil, err
 	}
@@ -150,7 +156,7 @@ func (p *Player) OnPlayerHit(arb *cp.Arbiter, space *cp.Space, userData interfac
 	}
 
 	// Register eyeframe timeout
-	p.lastHitAt = p.world.GetIngameTime()
+	p.eyeframesTimer.Start()
 
 	npc.Destroy()
 	return false
@@ -158,11 +164,7 @@ func (p *Player) OnPlayerHit(arb *cp.Arbiter, space *cp.Space, userData interfac
 
 // Player invulnerable for a brief period after being hit
 func (p *Player) IsVulnerable() bool {
-	if p.lastHitAt == 0 {
-		return true
-	}
-	diff := p.world.GetIngameTime() - p.lastHitAt
-	return diff > invulnerableForSecondsAfterHit
+	return p.eyeframesTimer.Elapsed() > invulnerableForSecondsAfterHit
 }
 
 func (p *Player) Id() GameEntityId      { return p.id }
