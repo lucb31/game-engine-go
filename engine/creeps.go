@@ -22,9 +22,9 @@ type BaseCreepManager struct {
 	activeWave *Wave
 
 	// Active wave
-	creepsSpawned        int
-	creepsAlive          int
-	lastCreepSpawnedTime float64
+	creepsSpawned   int
+	creepsAlive     int
+	creepSpawnTimer *IngameTimer
 }
 
 type Wave struct {
@@ -37,6 +37,11 @@ type Wave struct {
 
 func NewBaseCreepManager(em GameEntityManager, goldManager GoldManager) (*BaseCreepManager, error) {
 	cm := &BaseCreepManager{entityManager: em, goldManager: goldManager}
+	var err error
+	if cm.creepSpawnTimer, err = NewIngameTimer(em); err != nil {
+		return nil, err
+	}
+
 	return cm, nil
 }
 
@@ -95,9 +100,7 @@ func (c *BaseCreepManager) SetProvider(p CreepProvider) error {
 
 func (c *BaseCreepManager) spawnCreep() error {
 	// Timeout until creep spawn timer over
-	now := c.entityManager.GetIngameTime()
-	diff := now - c.lastCreepSpawnedTime
-	if diff < 1/c.activeWave.WaveTicksPerSecond {
+	if c.creepSpawnTimer.Elapsed() < 1/c.activeWave.WaveTicksPerSecond {
 		return nil
 	}
 
@@ -113,7 +116,7 @@ func (c *BaseCreepManager) spawnCreep() error {
 	}
 
 	// Update metrics
-	c.lastCreepSpawnedTime = now
+	c.creepSpawnTimer.Start()
 	return nil
 }
 
