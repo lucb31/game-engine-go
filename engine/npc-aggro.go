@@ -41,7 +41,7 @@ func (n *NpcAggro) aggroMovementAI(body *cp.Body, gravity cp.Vector, damping flo
 	dst := n.target.Shape().Body().Position()
 	nextReachableWaypoint, err := n.nextWaypointWithDijkstra(n.shape, dst)
 	if err != nil {
-		fmt.Println("Could not find wp to go to", err.Error())
+		// fmt.Println("Could not find wp to go to", err.Error())
 		// Idle
 		body.SetVelocityVector(cp.Vector{})
 		n.animation = calculateWalkingAnimation(body.Velocity(), n.orientation)
@@ -168,7 +168,8 @@ func (n *NpcAggro) nextWaypointWithDijkstra(srcShape *cp.Shape, dst cp.Vector) (
 		if strErr != nil {
 			return cp.Vector{}, strErr
 		}
-		fmt.Println("Graph data", str)
+		_ = str
+		// fmt.Println("Graph data", str)
 		return cp.Vector{}, err
 	}
 	secondNodeInPathIdx := bestPath.Path[1]

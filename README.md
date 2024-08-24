@@ -4,13 +4,6 @@
 # Survival game
 ## Parsing map data
 - BUG: Cannot draw fence on exact outer bounds. need to keep 1 tile buffer. Dont know why that is
-### Next steps
-- Parse creep waypoints from map data
-
-- Fix out of bounds filler tiles
-    - Idea: rather than iterating over known map data, iterate over full camera viewport
-        => If map data available, draw that
-        => If not, draw filler tile
 
 
 # Bugs

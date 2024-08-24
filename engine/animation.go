@@ -41,7 +41,7 @@ func (a *BaseAnimationManager) Play(baseAnimation string, speed int, orientation
 	if !ok {
 		return fmt.Errorf("Unknown animation: %s", animation)
 	}
-	fmt.Println("Gonna play", animation, speed)
+	// fmt.Println("Gonna play", animation, speed)
 	a.playingAnimation = animation
 	a.playingAnimationSpeed = speed
 	a.playingAnimationSinceFrame = *a.asset.currentFrame

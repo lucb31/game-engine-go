@@ -23,21 +23,11 @@ const (
 	boundsMinX, boundsMinY, boundsMaxX, boundsMaxY = 530.0, 402.0, 2410.0, 1710.0
 )
 
-// Map waypoints used to unstuck creeps
-var aiWaypoints = []cp.Vector{
-	{1465, 1000},
-	{1465, 1185},
-	{1140, 1185},
-	{1810, 1185},
-	{1140, 480},
-	{1810, 480},
-}
-
 // TODO: Config file
 var availableNpcs = []NpcType{
-	{"npc-torch", engine.NpcOpts{BasePower: 30, BaseHealth: 60, BaseMovementSpeed: 75.0, GoldValue: 2, Waypoints: aiWaypoints}},
-	{"npc-orc", engine.NpcOpts{BasePower: 15, BaseHealth: 90, BaseMovementSpeed: 50.0, GoldValue: 3, Waypoints: aiWaypoints}},
-	{"npc-slime", engine.NpcOpts{BasePower: 50, BaseHealth: 30, BaseMovementSpeed: 25.0, GoldValue: 1, Waypoints: aiWaypoints}},
+	{"npc-torch", engine.NpcOpts{BasePower: 30, BaseHealth: 60, BaseMovementSpeed: 75.0, GoldValue: 2}},
+	{"npc-orc", engine.NpcOpts{BasePower: 15, BaseHealth: 90, BaseMovementSpeed: 50.0, GoldValue: 3}},
+	{"npc-slime", engine.NpcOpts{BasePower: 50, BaseHealth: 30, BaseMovementSpeed: 25.0, GoldValue: 1}},
 }
 
 type SurvCreepProvider struct {
@@ -47,6 +37,8 @@ type SurvCreepProvider struct {
 	camera engine.Camera
 	// Spawn areas
 	spawnAreaLayer engine.MapLayer
+	// Map waypoints used to unstuck creeps
+	aiWaypoints []cp.Vector
 }
 
 func NewSurvCreepProvider(am engine.AssetManager, t engine.GameEntity, cam engine.Camera) (*SurvCreepProvider, error) {
@@ -62,6 +54,23 @@ func (p *SurvCreepProvider) ParseNoSpawnArea(width, height int64, mapCsvData []b
 	return nil
 }
 
+func (p *SurvCreepProvider) ParseCreepWaypoints(mapCsvData []byte) error {
+	mapTiles, err := engine.ReadCsvFromBinary(mapCsvData)
+	if err != nil {
+		return err
+	}
+	for row := range len(mapTiles) {
+		for col := range len(mapTiles[row]) {
+			if mapTiles[row][col] == engine.EmptyTile {
+				continue
+			}
+			x, y := engine.GridPosToCenterWorldPos(col, row)
+			p.aiWaypoints = append(p.aiWaypoints, cp.Vector{x, y})
+		}
+	}
+	return nil
+}
+
 func (p *SurvCreepProvider) NextNpc(remover engine.EntityRemover, wave engine.Wave) (engine.GameEntity, error) {
 	npcType := p.nextNpcType()
 	// Load asset
@@ -71,6 +80,7 @@ func (p *SurvCreepProvider) NextNpc(remover engine.EntityRemover, wave engine.Wa
 	}
 	// Load opts & calculate starting position
 	opts := npcType.opts
+	opts.Waypoints = p.aiWaypoints
 	opts.StartingPos, err = p.calcCreepSpawnPosition(p.camera)
 	if err != nil {
 		return nil, err
