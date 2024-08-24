@@ -18,12 +18,7 @@ type NpcType struct {
 // CONFIG
 // ////////
 
-// TODO: Remove hard coded values
-const (
-	boundsMinX, boundsMinY, boundsMaxX, boundsMaxY = 530.0, 402.0, 2410.0, 1710.0
-)
-
-// TODO: Config file
+// TODO: Config file or DB
 var availableNpcs = []NpcType{
 	{"npc-torch", engine.NpcOpts{BasePower: 30, BaseHealth: 60, BaseMovementSpeed: 75.0, GoldValue: 2}},
 	{"npc-orc", engine.NpcOpts{BasePower: 15, BaseHealth: 90, BaseMovementSpeed: 50.0, GoldValue: 3}},
@@ -101,9 +96,11 @@ func (p *SurvCreepProvider) NextNpc(remover engine.EntityRemover, wave engine.Wa
 // - camera viewport
 func (p *SurvCreepProvider) calcCreepSpawnPosition(cam engine.Camera) (cp.Vector, error) {
 	for tries := 0; tries < 10; tries++ {
-		// Generate random coordinates within bounds
-		randX := rand.Float64()*(boundsMaxX-boundsMinX) + boundsMinX
-		randY := rand.Float64()*(boundsMaxY-boundsMinY) + boundsMinY
+		// Select random position within spawnable area
+		width, height := p.spawnAreaLayer.Dimensions()
+		row := rand.IntN(height)
+		col := rand.IntN(width)
+		randX, randY := engine.GridPosToCenterWorldPos(col, row)
 
 		// Check spawn area layer
 		tileAt, err := p.spawnAreaLayer.TileAt(cp.Vector{randX, randY})

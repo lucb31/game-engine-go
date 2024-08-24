@@ -86,6 +86,13 @@ func (l *SkyboxLayer) Draw(cam Camera) error {
 	return nil
 }
 
+func (l *SkyboxLayer) Dimensions() (int, int) {
+	if len(l.tileData) == 0 {
+		return 0, 0
+	}
+	return len(l.tileData), len(l.tileData[0])
+}
+
 func calcDiscreteOffset(intVal int, floatVal float64, maxVal int) int {
 	lastCol := maxVal - 1
 	tileCol := (intVal - int(floatVal/mapTileSize)) % lastCol

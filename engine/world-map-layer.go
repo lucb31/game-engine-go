@@ -25,6 +25,8 @@ const (
 
 type MapLayer interface {
 	Draw(Camera) error
+	// Return width & height of map layer
+	Dimensions() (int, int)
 	WorldMapReader
 }
 
@@ -108,7 +110,13 @@ func (l *BaseMapLayer) TileAt(worldPos cp.Vector) (MapTile, error) {
 	}
 	return l.tileData[row][col], nil
 }
-func (l *BaseMapLayer) TileData() [][]MapTile { return l.tileData }
+
+func (l *BaseMapLayer) Dimensions() (int, int) {
+	if len(l.tileData) == 0 {
+		return 0, 0
+	}
+	return len(l.tileData), len(l.tileData[0])
+}
 
 func ReadCsvFromBinary(data []byte) ([][]MapTile, error) {
 	reader := bytes.NewReader(data)
