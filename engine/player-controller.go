@@ -12,6 +12,8 @@ import (
 type PlayerController interface {
 	CalcVelocity(max, t float64) cp.Vector
 	Orientation() Orientation
+	// True WHILE interaction is ongoing
+	Interaction() bool
 }
 
 type KeyboardPlayerController struct {
@@ -100,6 +102,11 @@ func (c *KeyboardPlayerController) CalcVelocity(maxVelocity, gameTime float64) c
 
 	return totalVel
 }
+
+func (c *KeyboardPlayerController) Interaction() bool {
+	return ebiten.IsKeyPressed(ebiten.KeyE)
+}
+
 func (c *KeyboardPlayerController) Orientation() Orientation { return c.orientation }
 
 func (c *KeyboardPlayerController) calcVelFromDash(vel cp.Vector, gameTime float64) cp.Vector {

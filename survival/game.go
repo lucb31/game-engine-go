@@ -95,7 +95,7 @@ func (game *SurvivalGame) initMap() error {
 	// Init trees
 	for i := range 10 {
 		pos := cp.Vector{float64(i * 100), float64(i * 100)}
-		tree, err := engine.NewTree(pos)
+		tree, err := engine.NewTree(game.world, pos)
 		if err != nil {
 			return err
 		}
@@ -129,6 +129,11 @@ func (game *SurvivalGame) initialize() error {
 	if err != nil {
 		return err
 	}
+	axe, err := engine.NewWoodHarvestingTool(game.world, player)
+	if err != nil {
+		return err
+	}
+	player.SetAxe(axe)
 
 	// Init main camera
 	camera, err := engine.NewFollowingCamera(game.screenWidth, game.screenHeight, player)

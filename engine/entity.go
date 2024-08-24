@@ -13,8 +13,13 @@ type GameEntity interface {
 	SetId(GameEntityId)
 	Shape() *cp.Shape
 	Draw(RenderingTarget) error
-	Destroy() error
+	Lootable
+}
+
+// Interface for an entity that can provide loot
+type Lootable interface {
 	LootTable() *LootTable
+	Destroy() error
 }
 
 type EntityRemover interface {

@@ -2,6 +2,9 @@
 [Try it out](https://lucb31.github.io/game-engine-go/)
 
 # Survival game
+## Animation
+- BUG: When looping a new animation, the loop is not beginning at the start of the animation 
+
 ## Parsing map data
 - BUG: Cannot draw fence on exact outer bounds. need to keep 1 tile buffer. Dont know why that is
 

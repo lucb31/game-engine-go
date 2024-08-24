@@ -82,7 +82,7 @@ func (a *BaseAnimationManager) Draw(t RenderingTarget, shape *cp.Shape) error {
 	}
 
 	// Finished playing, back to loop
-	fmt.Println("finished playing", a.playingAnimation)
+	// fmt.Println("finished playing", a.playingAnimation)
 	a.playingAnimationSinceFrame = 0
 	return a.asset.Draw(t, a.loopAnimation, shape)
 }

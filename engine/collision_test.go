@@ -76,28 +76,7 @@ func TestGunTargetCollisionFilter(t *testing.T) {
 	if filter.Reject(npc) {
 		t.Fatal("Collision between query and npc was rejected, but should collide")
 	}
-	if !filter.Reject(TreeCollisionFilter) {
+	if !filter.Reject(HarvestableCollisionFilter) {
 		t.Fatal("Expected collision between gun target scanner and tree to be rejected, but was checked")
 	}
-}
-
-type ShapeFilter struct {
-	/// Two objects with the same non-zero group value do not collide.
-	/// This is generally used to group objects in a composite object together to disable self collisions.
-	Group uint
-	/// A bitmask of user definable categories that this object belongs to.
-	/// The category/mask combinations of both objects in a collision must agree for a collision to occur.
-	Categories uint
-	/// A bitmask of user definable category types that this object object collides with.
-	/// The category/mask combinations of both objects in a collision must agree for a collision to occur.
-	Mask uint
-}
-
-// Just for reference
-func (a ShapeFilter) Reject(b ShapeFilter) bool {
-	// Reject the collision if:
-	return (a.Group != 0 && a.Group == b.Group) ||
-		// One of the category/mask combinations fails.
-		(a.Categories&b.Mask) == 0 ||
-		(b.Categories&a.Mask) == 0
 }

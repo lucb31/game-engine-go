@@ -30,6 +30,9 @@ type Player struct {
 	gun Gun
 	GameEntityStats
 
+	// Harvesting
+	axe HarvestingTool
+
 	// Eyeframes
 	eyeframesTimer *IngameTimer
 }
@@ -121,6 +124,7 @@ func (p *Player) DrawPlayerStats(t RenderingTarget) error {
 	ebitenutil.DebugPrintAt(t.Screen(), fmt.Sprintf("Speed %.2f", p.MovementSpeed()), t.Screen().Bounds().Dx()-125, 80)
 	ebitenutil.DebugPrintAt(t.Screen(), fmt.Sprintf("Armor %.2f", p.Armor()), t.Screen().Bounds().Dx()-125, 95)
 	ebitenutil.DebugPrintAt(t.Screen(), fmt.Sprintf("AtkSpeed %.2f", p.AtkSpeed()), t.Screen().Bounds().Dx()-125, 110)
+	ebitenutil.DebugPrintAt(t.Screen(), fmt.Sprintf("Can harvest: %v", p.axe.InRange()), t.Screen().Bounds().Dx()-125, 125)
 	return nil
 }
 
@@ -167,19 +171,42 @@ func (p *Player) IsVulnerable() bool {
 	return p.eyeframesTimer.Elapsed() > invulnerableForSecondsAfterHit
 }
 
+func (p *Player) SetAxe(axe HarvestingTool) { p.axe = axe }
+
 func (p *Player) Id() GameEntityId      { return p.id }
 func (p *Player) SetId(id GameEntityId) { p.id = id }
 func (p *Player) Shape() *cp.Shape      { return p.shape }
 func (p *Player) LootTable() *LootTable { return EmptyLootTable() }
 
 func (p *Player) calculateVelocity(body *cp.Body, gravity cp.Vector, damping float64, dt float64) {
+	// Check for interaction inputs
+	if p.controller.Interaction() {
+		// Check for axe harvesting
+		if p.axe.InRange() {
+			if err := p.axe.HarvestNearest(); err != nil {
+				fmt.Println("Could not harvest", err.Error())
+				return
+			}
+			// Stop movement,animate and early return. Other inputs will be ignored
+			body.SetVelocity(0, 0)
+			p.animationManager.Loop("harvest", p.controller.Orientation())
+			return
+		}
+	}
+
+	// Abort all prev interactions
+	if err := p.axe.Abort(); err != nil {
+		fmt.Println("Could not abort harvest", err.Error())
+	}
+
 	// Automatically shoot
 	if !p.gun.IsReloading() {
 		if err := p.gun.Shoot(); err != nil {
 			fmt.Println("Error when trying to shoot player gun", err.Error())
 		}
 	}
+
+	// Update velocity based on inputs
 	velocity := p.controller.CalcVelocity(p.MovementSpeed(), p.world.GetIngameTime())
 	body.SetVelocityVector(velocity)
-
 }
