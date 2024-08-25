@@ -55,3 +55,4 @@ func (p *TreeEntity) Id() GameEntityId          { return p.id }
 func (p *TreeEntity) SetId(id GameEntityId)     { p.id = id }
 func (p *TreeEntity) Shape() *cp.Shape          { return p.shape }
 func (p *TreeEntity) LootTable() loot.LootTable { return p.loot }
+func (p *TreeEntity) Position() cp.Vector       { return p.Shape().Body().Position() }

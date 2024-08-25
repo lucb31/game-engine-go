@@ -2,6 +2,7 @@ package engine
 
 import (
 	"fmt"
+	"math/rand"
 
 	"github.com/jakecoffman/cp"
 )
@@ -22,6 +23,7 @@ type HarvestingTool interface {
 type Harvestable interface {
 	BaseEntity
 	Lootable
+	Position() cp.Vector
 }
 
 var HarvestToolCollisionFilter = cp.NewShapeFilter(cp.NO_GROUP, cp.ALL_CATEGORIES, HarvestableCategory)
@@ -98,8 +100,9 @@ func (ht *WoodHarvestingTool) HarvestNearest() error {
 			return err
 		}
 
-		// Drop loot
-		if err := ht.em.DropLoot(ht.target.LootTable(), ht.owner.Shape().Body().Position()); err != nil {
+		// Drop loot at slightly randomized position
+		pos := ht.target.Position().Add(cp.Vector{rand.Float64()*20 - 10, rand.Float64()*20 - 10})
+		if err := ht.em.DropLoot(ht.target.LootTable(), pos); err != nil {
 			return err
 		}
 
