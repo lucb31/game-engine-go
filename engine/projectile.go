@@ -6,6 +6,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/jakecoffman/cp"
+	"github.com/lucb31/game-engine-go/engine/loot"
 )
 
 func ProjectileCollisionFilter() cp.ShapeFilter {
@@ -87,10 +88,10 @@ func (p *Projectile) Draw(t RenderingTarget) error {
 	return p.asset.Draw(t, p.shape.Body().Position(), angle)
 }
 
-func (p *Projectile) Shape() *cp.Shape      { return p.shape }
-func (p *Projectile) Power() float64        { return p.gun.Power() }
-func (p *Projectile) AtkSpeed() float64     { return 1.0 }
-func (p *Projectile) LootTable() *LootTable { return EmptyLootTable() }
+func (p *Projectile) Shape() *cp.Shape          { return p.shape }
+func (p *Projectile) Power() float64            { return p.gun.Power() }
+func (p *Projectile) AtkSpeed() float64         { return 1.0 }
+func (p *Projectile) LootTable() loot.LootTable { return loot.NewEmptyLootTable() }
 
 func (p *Projectile) calculateVelocity(body *cp.Body, gravity cp.Vector, damping float64, dt float64) {
 	// Remove guided projectile if target no longer exists

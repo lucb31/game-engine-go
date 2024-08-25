@@ -6,6 +6,7 @@ import (
 	"github.com/jakecoffman/cp"
 	"github.com/lucb31/game-engine-go/engine"
 	"github.com/lucb31/game-engine-go/engine/hud"
+	"github.com/lucb31/game-engine-go/engine/loot"
 )
 
 const startingHealth = float64(100.0)
@@ -69,7 +70,7 @@ func (e *CastleEntity) Destroy() error {
 func (e *CastleEntity) Id() engine.GameEntityId      { return e.id }
 func (e *CastleEntity) SetId(id engine.GameEntityId) { e.id = id }
 func (e *CastleEntity) Shape() *cp.Shape             { return e.shape }
-func (e *CastleEntity) LootTable() *engine.LootTable { return engine.EmptyLootTable() }
+func (e *CastleEntity) LootTable() loot.LootTable    { return loot.NewEmptyLootTable() }
 
 func (e *CastleEntity) GetHealthBar() hud.ProgressInfo {
 	return hud.ProgressInfo{0, int(startingHealth), int(e.health), "Castle health"}

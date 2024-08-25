@@ -9,11 +9,12 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/jakecoffman/cp"
 	"github.com/lucb31/game-engine-go/engine"
+	"github.com/lucb31/game-engine-go/engine/loot"
 )
 
 type TowerManager struct {
 	world          engine.GameEntityManager
-	goldManager    engine.GoldManager
+	goldManager    loot.GoldManager
 	assetManager   engine.AssetManager
 	worldMapReader engine.WorldMapReader
 
@@ -43,7 +44,7 @@ var buildableTiles = []engine.MapTile{25, 26, 27, 28, 29, 31, 32, 33, 34, 37, 38
 func NewTowerManager(
 	world engine.GameEntityManager,
 	am engine.AssetManager,
-	goldManager engine.GoldManager,
+	goldManager loot.GoldManager,
 	worldMapReader engine.WorldMapReader) (*TowerManager, error) {
 	return &TowerManager{world: world, assetManager: am, goldManager: goldManager, worldMapReader: worldMapReader}, nil
 }

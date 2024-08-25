@@ -5,6 +5,7 @@ import (
 
 	"github.com/jakecoffman/cp"
 	"github.com/lucb31/game-engine-go/engine/damage"
+	"github.com/lucb31/game-engine-go/engine/loot"
 )
 
 type GameEntityId int
@@ -15,9 +16,14 @@ type GameEntity interface {
 	Draw(RenderingTarget) error
 }
 
+type GameEntityWithInventory interface {
+	GameEntity
+	Inventory() loot.Inventory
+}
+
 // Interface for an entity that can provide loot
 type Lootable interface {
-	LootTable() *LootTable
+	LootTable() loot.LootTable
 }
 
 type BaseEntity interface {

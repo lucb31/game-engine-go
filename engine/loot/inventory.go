@@ -1,7 +1,7 @@
-package engine
+package loot
 
 type Inventory interface {
-	Add(*LootTable) error
+	Add(LootTable) error
 	CanAfford(int64) bool
 	Balance() int64
 	Revenue() int64
@@ -12,27 +12,29 @@ type InMemoryInventory struct {
 	goldManager GoldManager
 }
 
-type GameEntityWithInventory interface {
-	GameEntity
-	Inventory() Inventory
-}
-
 func NewInventory() (*InMemoryInventory, error) {
 	goldManager, err := NewInMemoryGoldManager()
 	if err != nil {
 		return nil, err
 	}
 	// Add starting gold
-	goldManager.Add(50)
+	goldManager.Add(5000)
 
 	inv := &InMemoryInventory{goldManager: goldManager}
 	return inv, nil
 }
 
-func (i *InMemoryInventory) Add(loot *LootTable) error {
-	_, err := i.goldManager.Add(loot.Gold)
-	if err != nil {
-		return err
+func (i *InMemoryInventory) Add(loot LootTable) error {
+	lootResult := loot.Result()
+	// FIX: Currently only supports gold drops. Ignores all other
+	for _, lootItem := range lootResult {
+		goldItem, ok := lootItem.(*GoldItem)
+		if ok {
+			_, err := i.goldManager.Add(goldItem.Value())
+			if err != nil {
+				return err
+			}
+		}
 	}
 	return nil
 }

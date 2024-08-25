@@ -2,12 +2,13 @@ package engine
 
 import (
 	"github.com/jakecoffman/cp"
+	"github.com/lucb31/game-engine-go/engine/loot"
 )
 
 type TreeEntity struct {
 	// Dependencies
 	*BaseEntityImpl
-	loot  *LootTable
+	loot  loot.LootTable
 	shape *cp.Shape
 }
 
@@ -22,7 +23,7 @@ func NewTree(em EntityRemover, pos cp.Vector) (*TreeEntity, error) {
 		return nil, err
 	}
 	t := &TreeEntity{BaseEntityImpl: base}
-	loot := &LootTable{Gold: 10}
+	loot := loot.NewGoldLootTable(10)
 
 	// Init body
 	treeBody := cp.NewKinematicBody()
@@ -48,7 +49,7 @@ func (p *TreeEntity) Draw(t RenderingTarget) error {
 
 var HarvestableCollisionFilter = cp.NewShapeFilter(0, HarvestableCategory, PlayerCategory)
 
-func (p *TreeEntity) Id() GameEntityId      { return p.id }
-func (p *TreeEntity) SetId(id GameEntityId) { p.id = id }
-func (p *TreeEntity) Shape() *cp.Shape      { return p.shape }
-func (p *TreeEntity) LootTable() *LootTable { return p.loot }
+func (p *TreeEntity) Id() GameEntityId          { return p.id }
+func (p *TreeEntity) SetId(id GameEntityId)     { p.id = id }
+func (p *TreeEntity) Shape() *cp.Shape          { return p.shape }
+func (p *TreeEntity) LootTable() loot.LootTable { return p.loot }

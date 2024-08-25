@@ -54,7 +54,7 @@ func NewBaseCreepManager(em GameEntityManager) (*BaseCreepManager, error) {
 	return cm, nil
 }
 
-func NewDefaultCreepManager(em GameEntityManager, asset *CharacterAsset, goldManager GoldManager) (*BaseCreepManager, error) {
+func NewDefaultCreepManager(em GameEntityManager, asset *CharacterAsset) (*BaseCreepManager, error) {
 	if asset == nil || em == nil {
 		return nil, fmt.Errorf("Invalid arguments")
 	}

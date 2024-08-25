@@ -8,6 +8,7 @@ import (
 	"github.com/lucb31/game-engine-go/bin/assets"
 	"github.com/lucb31/game-engine-go/engine"
 	"github.com/lucb31/game-engine-go/engine/hud"
+	"github.com/lucb31/game-engine-go/engine/loot"
 )
 
 type TDGame struct {
@@ -15,7 +16,7 @@ type TDGame struct {
 	screenWidth, screenHeight int
 	creepManager              engine.CreepManager
 	towerManager              *TowerManager
-	goldManager               engine.GoldManager
+	goldManager               loot.GoldManager
 	hud                       *hud.GameHUD
 	castle                    *CastleEntity
 }
@@ -105,7 +106,7 @@ func (game *TDGame) initialize() error {
 	w.AddEntity(game.castle)
 
 	// Setup gold management
-	game.goldManager, err = engine.NewInMemoryGoldManager()
+	game.goldManager, err = loot.NewInMemoryGoldManager()
 	if err != nil {
 		return err
 	}
@@ -120,7 +121,7 @@ func (game *TDGame) initialize() error {
 	if err != nil {
 		return fmt.Errorf("Cannot initialize creep management: Could not find npc asset")
 	}
-	game.creepManager, err = engine.NewDefaultCreepManager(w, npcAsset, game.goldManager)
+	game.creepManager, err = engine.NewDefaultCreepManager(w, npcAsset)
 	if err != nil {
 		return err
 	}

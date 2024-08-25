@@ -6,6 +6,7 @@ import (
 
 	"github.com/jakecoffman/cp"
 	"github.com/lucb31/game-engine-go/engine"
+	"github.com/lucb31/game-engine-go/engine/loot"
 )
 
 type TowerEntity struct {
@@ -110,5 +111,5 @@ func (t *TowerEntity) DrawRange(screen engine.RenderingTarget) {
 	screen.StrokeCircle(t.shape.Body().Position().X, t.shape.Body().Position().Y, float32(t.gun.FireRange()), 2.0, color.RGBA{255, 0, 0, 0}, false)
 }
 
-func (n *TowerEntity) Shape() *cp.Shape             { return n.shape }
-func (n *TowerEntity) LootTable() *engine.LootTable { return engine.EmptyLootTable() }
+func (n *TowerEntity) Shape() *cp.Shape          { return n.shape }
+func (n *TowerEntity) LootTable() loot.LootTable { return loot.NewEmptyLootTable() }

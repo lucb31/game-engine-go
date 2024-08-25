@@ -12,13 +12,14 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/lucb31/game-engine-go/engine"
+	"github.com/lucb31/game-engine-go/engine/loot"
 	"golang.org/x/image/font/gofont/goregular"
 )
 
 type ShopMenu struct {
 	// Dependencies
 	ui          *ebitenui.UI
-	inventory   engine.Inventory
+	inventory   loot.Inventory
 	playerStats engine.GameEntityStatReadWriter
 
 	// UI
@@ -30,45 +31,56 @@ type ShopMenu struct {
 }
 
 type ShopItemSlot struct {
-	item             *GameItem
+	item             *loot.GameItem
 	buyButton        *widget.Button
 	rerollButton     *widget.Button
 	priceLabel       *widget.Text
 	descriptionLabel *widget.Text
 }
 
-// TODO: move struct to engine package
-type GameItem struct {
-	Price           int64
-	Description     string
-	ApplyItemEffect func(p engine.GameEntityStatReadWriter) error
+func (i *ShopItemSlot) ApplyItemEffect(tar engine.GameEntityStatReadWriter) error {
+	effect, ok := itemEffects[i.item.ItemEffectId]
+	if !ok {
+		return fmt.Errorf("Unknown item efect id: %d", i.item.ItemEffectId)
+	}
+	return effect(tar)
 }
 
-// Pool of all available items in the shop
-// TODO: Move to survival package
-var availableItems = []GameItem{
-	{Price: 50, Description: "+10 Max Health", ApplyItemEffect: func(p engine.GameEntityStatReadWriter) error {
+type ItemEffect func(p engine.GameEntityStatReadWriter) error
+
+var itemEffects = map[loot.ItemEffectId]ItemEffect{
+	loot.ItemEffectAddMaxHealth: func(p engine.GameEntityStatReadWriter) error {
 		// Need to increase both max health & current health
 		p.SetMaxHealth(p.MaxHealth() + 10.0)
 		p.SetHealth(p.Health() + 10.0)
 		return nil
-	}},
-	{Price: 50, Description: "+10 Movement speed", ApplyItemEffect: func(p engine.GameEntityStatReadWriter) error {
+	},
+	loot.ItemEffectAddMovementSpeed: func(p engine.GameEntityStatReadWriter) error {
 		p.SetMovementSpeed(p.MovementSpeed() + 10.0)
 		return nil
-	}},
-	{Price: 50, Description: "+10 Armor", ApplyItemEffect: func(p engine.GameEntityStatReadWriter) error {
+	},
+	loot.ItemEffectAddArmor: func(p engine.GameEntityStatReadWriter) error {
 		p.SetArmor(p.Armor() + 10.0)
 		return nil
-	}},
-	{Price: 50, Description: "+10 Power", ApplyItemEffect: func(p engine.GameEntityStatReadWriter) error {
+	},
+	loot.ItemEffectAddPower: func(p engine.GameEntityStatReadWriter) error {
 		p.SetPower(p.Power() + 10.0)
 		return nil
-	}},
-	{Price: 50, Description: "+0.2 Atk speed", ApplyItemEffect: func(p engine.GameEntityStatReadWriter) error {
+	},
+	loot.ItemEffectAddAtkSpeed: func(p engine.GameEntityStatReadWriter) error {
 		p.SetAtkSpeed(p.AtkSpeed() + 0.2)
 		return nil
-	}},
+	},
+}
+
+// Pool of all available items in the shop
+// TODO: Move static list to survival package
+var availableItems = []loot.GameItem{
+	{Price: 50, Description: "+10 Max Health", ItemEffectId: loot.ItemEffectAddMaxHealth},
+	{Price: 50, Description: "+10 Movement speed", ItemEffectId: loot.ItemEffectAddMovementSpeed},
+	{Price: 50, Description: "+10 Armor", ItemEffectId: loot.ItemEffectAddArmor},
+	{Price: 50, Description: "+10 Power", ItemEffectId: loot.ItemEffectAddPower},
+	{Price: 50, Description: "+0.2 Atk Speed", ItemEffectId: loot.ItemEffectAddAtkSpeed},
 }
 
 const (
@@ -76,7 +88,7 @@ const (
 	rerollPrice = 10
 )
 
-func NewShopMenu(inventory engine.Inventory, playerStats engine.GameEntityStatReadWriter) (*ShopMenu, error) {
+func NewShopMenu(inventory loot.Inventory, playerStats engine.GameEntityStatReadWriter) (*ShopMenu, error) {
 	shop := &ShopMenu{inventory: inventory, playerStats: playerStats}
 	return shop, nil
 }
@@ -93,22 +105,24 @@ func (s *ShopMenu) RerollItemSlot(idx int) {
 }
 
 func (s *ShopMenu) BuyHandler(idx int) {
-	item := s.itemSlots[idx].item
-	if !s.inventory.CanAfford(item.Price) {
-		fmt.Println("Cannot afford item", item)
+	shopItem := s.itemSlots[idx]
+	gameItem := shopItem.item
+	if !s.inventory.CanAfford(gameItem.Price) {
+		fmt.Println("Cannot afford item", gameItem)
 		return
 	}
-	newBalance, err := s.inventory.Spend(item.Price)
+	newBalance, err := s.inventory.Spend(gameItem.Price)
 	if err != nil {
 		fmt.Println("Error removing item cost", err.Error())
 		return
 	}
-	err = item.ApplyItemEffect(s.playerStats)
+
+	err = shopItem.ApplyItemEffect(s.playerStats)
 	if err != nil {
 		fmt.Println("Error applying item effect", err.Error())
 		return
 	}
-	fmt.Printf("Bought item %v, new balance %d\n", item, newBalance)
+	fmt.Printf("Bought item %v, new balance %d\n", gameItem, newBalance)
 
 	s.RerollItemSlot(idx)
 }

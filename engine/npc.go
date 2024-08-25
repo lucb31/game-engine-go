@@ -2,6 +2,7 @@ package engine
 
 import (
 	"github.com/jakecoffman/cp"
+	"github.com/lucb31/game-engine-go/engine/loot"
 )
 
 type NpcEntity struct {
@@ -9,7 +10,7 @@ type NpcEntity struct {
 
 	// Logic
 	GameEntityStats
-	loot *LootTable
+	loot loot.LootTable
 
 	// Rendering
 	asset       *CharacterAsset
@@ -67,7 +68,7 @@ func NewNpc(remover EntityRemover, asset *CharacterAsset, opts NpcOpts) (*NpcEnt
 	npc.maxHealth = 100.0
 	npc.movementSpeed = 75.0
 	npc.power = 20.0
-	npc.loot = EmptyLootTable()
+	npc.loot = loot.NewEmptyLootTable()
 
 	// AI
 	npc.loopWaypoints = false
@@ -86,7 +87,7 @@ func NewNpc(remover EntityRemover, asset *CharacterAsset, opts NpcOpts) (*NpcEnt
 		npc.power = opts.BasePower
 	}
 	if opts.GoldValue > 0 {
-		npc.loot.Gold = opts.GoldValue
+		npc.loot = loot.NewGoldLootTable(opts.GoldValue)
 	}
 	if opts.StartingPos.Length() > 0 {
 		body.SetPosition(opts.StartingPos)
@@ -104,9 +105,9 @@ func (n *NpcEntity) Draw(t RenderingTarget) error {
 	return n.asset.Draw(t, n.animation, n.shape)
 }
 
-func (n *NpcEntity) Shape() *cp.Shape      { return n.shape }
-func (n *NpcEntity) IsVulnerable() bool    { return true }
-func (n *NpcEntity) LootTable() *LootTable { return n.loot }
+func (n *NpcEntity) Shape() *cp.Shape          { return n.shape }
+func (n *NpcEntity) IsVulnerable() bool        { return true }
+func (n *NpcEntity) LootTable() loot.LootTable { return n.loot }
 
 func (n *NpcEntity) defaultMovementAI(body *cp.Body, gravity cp.Vector, damping float64, dt float64) {
 	n.simpleWaypointAlgorithm(body, dt)

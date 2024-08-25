@@ -1,4 +1,4 @@
-package engine
+package loot
 
 type GoldManager interface {
 	Add(int64) (int64, error)

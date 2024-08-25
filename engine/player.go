@@ -5,6 +5,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/jakecoffman/cp"
+	"github.com/lucb31/game-engine-go/engine/loot"
 )
 
 type Orientation uint8
@@ -22,7 +23,7 @@ type Player struct {
 	animationManager AnimationController
 	asset            *CharacterAsset
 	projectileAsset  *ProjectileAsset
-	inventory        Inventory
+	inventory        loot.Inventory
 
 	// Physics
 	shape *cp.Shape
@@ -100,7 +101,7 @@ func NewPlayer(world GameEntityManager, asset *CharacterAsset, projectileAsset *
 	}
 
 	// Init inventory
-	p.inventory, err = NewInventory()
+	p.inventory, err = loot.NewInventory()
 	if err != nil {
 		return nil, err
 	}
@@ -180,11 +181,11 @@ func (p *Player) IsVulnerable() bool {
 
 func (p *Player) SetAxe(axe HarvestingTool) { p.axe = axe }
 
-func (p *Player) Id() GameEntityId      { return p.id }
-func (p *Player) SetId(id GameEntityId) { p.id = id }
-func (p *Player) Shape() *cp.Shape      { return p.shape }
-func (p *Player) LootTable() *LootTable { return EmptyLootTable() }
-func (p *Player) Inventory() Inventory  { return p.inventory }
+func (p *Player) Id() GameEntityId          { return p.id }
+func (p *Player) SetId(id GameEntityId)     { p.id = id }
+func (p *Player) Shape() *cp.Shape          { return p.shape }
+func (p *Player) LootTable() loot.LootTable { return loot.NewEmptyLootTable() }
+func (p *Player) Inventory() loot.Inventory { return p.inventory }
 
 func (p *Player) calculateVelocity(body *cp.Body, gravity cp.Vector, damping float64, dt float64) {
 	// Check for interaction inputs
