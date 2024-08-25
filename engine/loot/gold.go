@@ -1,6 +1,6 @@
 package loot
 
-type GoldManager interface {
+type ResourceManager interface {
 	Add(int64) (int64, error)
 	Refund(int64) (int64, error)
 	Remove(int64) (int64, error)
@@ -9,16 +9,16 @@ type GoldManager interface {
 	Revenue() int64
 }
 
-type InMemoryGoldManager struct {
+type InMemoryResourceManager struct {
 	balance int64
 	revenue int64
 }
 
-func NewInMemoryGoldManager() (*InMemoryGoldManager, error) {
-	return &InMemoryGoldManager{}, nil
+func NewInMemoryResourceManager() (*InMemoryResourceManager, error) {
+	return &InMemoryResourceManager{}, nil
 }
 
-func (g *InMemoryGoldManager) Add(amount int64) (int64, error) {
+func (g *InMemoryResourceManager) Add(amount int64) (int64, error) {
 	g.balance += amount
 	if amount > 0 {
 		g.revenue += amount
@@ -26,22 +26,22 @@ func (g *InMemoryGoldManager) Add(amount int64) (int64, error) {
 	return g.balance, nil
 }
 
-func (g *InMemoryGoldManager) Refund(amount int64) (int64, error) {
+func (g *InMemoryResourceManager) Refund(amount int64) (int64, error) {
 	g.balance += amount
 	return g.balance, nil
 }
 
-func (g *InMemoryGoldManager) Remove(amount int64) (int64, error) {
+func (g *InMemoryResourceManager) Remove(amount int64) (int64, error) {
 	g.balance -= amount
 	return g.balance, nil
 }
 
-func (g *InMemoryGoldManager) Balance() int64 {
+func (g *InMemoryResourceManager) Balance() int64 {
 	return g.balance
 }
 
-func (g *InMemoryGoldManager) CanAfford(amount int64) bool {
+func (g *InMemoryResourceManager) CanAfford(amount int64) bool {
 	return g.balance >= amount
 }
 
-func (g *InMemoryGoldManager) Revenue() int64 { return g.revenue }
+func (g *InMemoryResourceManager) Revenue() int64 { return g.revenue }

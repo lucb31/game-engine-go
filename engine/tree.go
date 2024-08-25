@@ -23,7 +23,8 @@ func NewTree(em EntityRemover, pos cp.Vector) (*TreeEntity, error) {
 		return nil, err
 	}
 	t := &TreeEntity{BaseEntityImpl: base}
-	loot := loot.NewGoldLootTable(10)
+	loot := loot.NewResourcesLootTable()
+	loot.AddWood(5)
 
 	// Init body
 	treeBody := cp.NewKinematicBody()

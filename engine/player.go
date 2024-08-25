@@ -133,6 +133,7 @@ func (p *Player) DrawPlayerStats(t RenderingTarget) error {
 	ebitenutil.DebugPrintAt(t.Screen(), fmt.Sprintf("Armor %.2f", p.Armor()), t.Screen().Bounds().Dx()-125, 95)
 	ebitenutil.DebugPrintAt(t.Screen(), fmt.Sprintf("AtkSpeed %.2f", p.AtkSpeed()), t.Screen().Bounds().Dx()-125, 110)
 	ebitenutil.DebugPrintAt(t.Screen(), fmt.Sprintf("Can harvest: %v", p.axe.InRange()), t.Screen().Bounds().Dx()-125, 125)
+	ebitenutil.DebugPrintAt(t.Screen(), fmt.Sprintf("Wood: %d", p.inventory.WoodManager().Balance()), t.Screen().Bounds().Dx()-125, 140)
 	return nil
 }
 

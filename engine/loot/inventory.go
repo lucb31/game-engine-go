@@ -1,56 +1,59 @@
 package loot
 
+import "fmt"
+
 type Inventory interface {
-	Add(LootTable) error
-	CanAfford(int64) bool
-	Balance() int64
-	Revenue() int64
-	Spend(int64) (int64, error)
+	GoldManager() ResourceManager
+	WoodManager() ResourceManager
+	AddLoot(LootTable) error
 }
 
 type InMemoryInventory struct {
-	goldManager GoldManager
+	goldManager ResourceManager
+	woodManager ResourceManager
 }
 
 func NewInventory() (*InMemoryInventory, error) {
-	goldManager, err := NewInMemoryGoldManager()
+	goldManager, err := NewInMemoryResourceManager()
 	if err != nil {
 		return nil, err
 	}
 	// Add starting gold
 	goldManager.Add(5000)
 
-	inv := &InMemoryInventory{goldManager: goldManager}
+	woodManager, err := NewInMemoryResourceManager()
+	if err != nil {
+		return nil, err
+	}
+
+	inv := &InMemoryInventory{goldManager: goldManager, woodManager: woodManager}
 	return inv, nil
 }
 
-func (i *InMemoryInventory) Add(loot LootTable) error {
+func (i *InMemoryInventory) AddLoot(loot LootTable) error {
+	// Evaluate loot table
 	lootResult := loot.Result()
-	// FIX: Currently only supports gold drops. Ignores all other
+
+	// Add loot table results to inventory
 	for _, lootItem := range lootResult {
-		goldItem, ok := lootItem.(*GoldItem)
-		if ok {
-			_, err := i.goldManager.Add(goldItem.Value())
+		fmt.Println("processing loot item", lootItem)
+		switch v := lootItem.(type) {
+		case *GoldItem:
+			_, err := i.goldManager.Add(v.Value())
 			if err != nil {
 				return err
 			}
+		case *WoodItem:
+			_, err := i.woodManager.Add(v.Value())
+			if err != nil {
+				return err
+			}
+		default:
+			return fmt.Errorf("Dont know how to handle loot item: %v", lootItem)
 		}
 	}
 	return nil
 }
 
-func (i *InMemoryInventory) Balance() int64 {
-	return i.goldManager.Balance()
-}
-
-func (i *InMemoryInventory) Revenue() int64 {
-	return i.goldManager.Revenue()
-}
-
-func (i *InMemoryInventory) CanAfford(amount int64) bool {
-	return i.goldManager.CanAfford(amount)
-}
-
-func (i *InMemoryInventory) Spend(amount int64) (int64, error) {
-	return i.goldManager.Remove(amount)
-}
+func (i *InMemoryInventory) GoldManager() ResourceManager { return i.goldManager }
+func (i *InMemoryInventory) WoodManager() ResourceManager { return i.woodManager }

@@ -138,7 +138,7 @@ func projectileCollisionHandler(arb *cp.Arbiter, space *cp.Space, userData inter
 			fmt.Println("ERROR: Expected game entity for defender")
 			return false
 		}
-		if err = lootReceiver.Inventory().Add(defenderEntity.LootTable()); err != nil {
+		if err = lootReceiver.Inventory().AddLoot(defenderEntity.LootTable()); err != nil {
 			fmt.Println("Error while adding loot: ", err.Error())
 		}
 	}

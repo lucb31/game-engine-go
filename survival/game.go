@@ -189,9 +189,9 @@ func NewSurvivalGame(screenWidth, screenHeight int) (*SurvivalGame, error) {
 
 func (g *SurvivalGame) SetSpeed(speed float64) { g.world.GameSpeed = speed }
 func (g *SurvivalGame) GameOver() bool         { return g.world.IsOver() }
-func (g *SurvivalGame) Balance() int64         { return g.world.Player().Inventory().Balance() }
+func (g *SurvivalGame) Balance() int64         { return g.world.Player().Inventory().GoldManager().Balance() }
 func (g *SurvivalGame) Score() hud.ScoreValue {
-	return hud.ScoreValue(g.world.Player().Inventory().Revenue())
+	return hud.ScoreValue(g.world.Player().Inventory().GoldManager().Revenue())
 }
 func (g *SurvivalGame) CastleProgress() hud.ProgressInfo { return hud.ProgressInfo{} }
 func (g *SurvivalGame) CreepProgress() hud.ProgressInfo  { return g.creepManager.Progress() }

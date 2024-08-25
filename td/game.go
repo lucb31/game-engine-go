@@ -16,7 +16,7 @@ type TDGame struct {
 	screenWidth, screenHeight int
 	creepManager              engine.CreepManager
 	towerManager              *TowerManager
-	goldManager               loot.GoldManager
+	goldManager               loot.ResourceManager
 	hud                       *hud.GameHUD
 	castle                    *CastleEntity
 }
@@ -106,7 +106,7 @@ func (game *TDGame) initialize() error {
 	w.AddEntity(game.castle)
 
 	// Setup gold management
-	game.goldManager, err = loot.NewInMemoryGoldManager()
+	game.goldManager, err = loot.NewInMemoryResourceManager()
 	if err != nil {
 		return err
 	}

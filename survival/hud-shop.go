@@ -107,11 +107,11 @@ func (s *ShopMenu) RerollItemSlot(idx int) {
 func (s *ShopMenu) BuyHandler(idx int) {
 	shopItem := s.itemSlots[idx]
 	gameItem := shopItem.item
-	if !s.inventory.CanAfford(gameItem.Price) {
+	if !s.inventory.GoldManager().CanAfford(gameItem.Price) {
 		fmt.Println("Cannot afford item", gameItem)
 		return
 	}
-	newBalance, err := s.inventory.Spend(gameItem.Price)
+	newBalance, err := s.inventory.GoldManager().Remove(gameItem.Price)
 	if err != nil {
 		fmt.Println("Error removing item cost", err.Error())
 		return
@@ -128,11 +128,11 @@ func (s *ShopMenu) BuyHandler(idx int) {
 }
 
 func (s *ShopMenu) RerollHandler(idx int) {
-	if !s.inventory.CanAfford(rerollPrice) {
+	if !s.inventory.GoldManager().CanAfford(rerollPrice) {
 		fmt.Println("Cannot afford to reroll")
 		return
 	}
-	newBalance, err := s.inventory.Spend(rerollPrice)
+	newBalance, err := s.inventory.GoldManager().Remove(rerollPrice)
 	if err != nil {
 		fmt.Println("Error removing item cost", err.Error())
 		return
@@ -161,11 +161,11 @@ func (s *ShopMenu) Update() {
 		if slot.buyButton == nil {
 			continue
 		}
-		slot.buyButton.GetWidget().Disabled = !s.inventory.CanAfford(slot.item.Price)
+		slot.buyButton.GetWidget().Disabled = !s.inventory.GoldManager().CanAfford(slot.item.Price)
 		if slot.rerollButton == nil {
 			continue
 		}
-		slot.rerollButton.GetWidget().Disabled = !s.inventory.CanAfford(rerollPrice)
+		slot.rerollButton.GetWidget().Disabled = !s.inventory.GoldManager().CanAfford(rerollPrice)
 	}
 }
 

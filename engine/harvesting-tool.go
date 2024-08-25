@@ -95,7 +95,9 @@ func (ht *WoodHarvestingTool) HarvestNearest() error {
 			return err
 		}
 		// Add loot for harvesting target
-		ht.owner.Inventory().Add(ht.target.LootTable())
+		if err := ht.owner.Inventory().AddLoot(ht.target.LootTable()); err != nil {
+			return err
+		}
 
 		// Reset harvesting tool
 		ht.harvestingTimer.Stop()

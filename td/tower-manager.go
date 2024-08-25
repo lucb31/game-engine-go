@@ -14,7 +14,7 @@ import (
 
 type TowerManager struct {
 	world          engine.GameEntityManager
-	goldManager    loot.GoldManager
+	goldManager    loot.ResourceManager
 	assetManager   engine.AssetManager
 	worldMapReader engine.WorldMapReader
 
@@ -44,7 +44,7 @@ var buildableTiles = []engine.MapTile{25, 26, 27, 28, 29, 31, 32, 33, 34, 37, 38
 func NewTowerManager(
 	world engine.GameEntityManager,
 	am engine.AssetManager,
-	goldManager loot.GoldManager,
+	goldManager loot.ResourceManager,
 	worldMapReader engine.WorldMapReader) (*TowerManager, error) {
 	return &TowerManager{world: world, assetManager: am, goldManager: goldManager, worldMapReader: worldMapReader}, nil
 }
