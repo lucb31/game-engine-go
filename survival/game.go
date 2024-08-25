@@ -109,6 +109,10 @@ func (game *SurvivalGame) initMap() error {
 	}
 
 	// test item
+	woodAsset, err := game.world.AssetManager.CharacterAsset("wood")
+	if err != nil {
+		return err
+	}
 	item, err := engine.NewItemEntity(game.world, cp.Vector{1750, 800})
 	if err != nil {
 		return err
@@ -116,6 +120,7 @@ func (game *SurvivalGame) initMap() error {
 	loot := loot.NewResourcesLootTable()
 	loot.AddWood(500)
 	item.SetLootTable(loot)
+	item.SetAsset(woodAsset)
 	game.world.AddEntity(item)
 
 	return nil

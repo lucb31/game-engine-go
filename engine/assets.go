@@ -262,6 +262,20 @@ var characterResources []characterResource = []characterResource{
 		2.0,
 		6.0,
 	},
+	{
+		"wood",
+		assets.Wood,
+		128,
+		128,
+		map[string]GameAssetAnimation{
+			"idle":  {StartTile: 6, FrameCount: 1},
+			"spawn": {StartTile: 0, FrameCount: 6},
+		},
+		-32,
+		-40,
+		0.5,
+		6.0,
+	},
 }
 
 // Load characters

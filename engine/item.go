@@ -9,6 +9,7 @@ import (
 type ItemEntity struct {
 	*BaseEntityImpl
 	shape *cp.Shape
+	asset *CharacterAsset
 	loot  loot.LootTable
 }
 
@@ -34,12 +35,20 @@ func NewItemEntity(em EntityRemover, pos cp.Vector) (*ItemEntity, error) {
 	return item, nil
 }
 
-// TODO: Add asset
 func (i *ItemEntity) Draw(t RenderingTarget) error {
-	DrawRectBoundingBox(t, i.shape)
+	if i.asset != nil {
+		if err := i.asset.Draw(t, "idle", i.shape); err != nil {
+			return err
+		}
+	} else {
+		if err := DrawRectBoundingBox(t, i.shape); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
 func (i *ItemEntity) SetLootTable(loot loot.LootTable) { i.loot = loot }
+func (i *ItemEntity) SetAsset(asset *CharacterAsset)   { i.asset = asset }
 func (i *ItemEntity) LootTable() loot.LootTable        { return i.loot }
 func (i *ItemEntity) Shape() *cp.Shape                 { return i.shape }
