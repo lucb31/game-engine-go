@@ -5,7 +5,6 @@ import (
 	"image/color"
 	"math/rand"
 
-	"github.com/ebitenui/ebitenui"
 	"github.com/ebitenui/ebitenui/image"
 	"github.com/ebitenui/ebitenui/widget"
 	"github.com/golang/freetype/truetype"
@@ -18,7 +17,6 @@ import (
 
 type ShopMenu struct {
 	// Dependencies
-	ui          *ebitenui.UI
 	inventory   loot.Inventory
 	playerStats engine.GameEntityStatReadWriter
 
@@ -90,6 +88,7 @@ const (
 
 func NewShopMenu(inventory loot.Inventory, playerStats engine.GameEntityStatReadWriter) (*ShopMenu, error) {
 	shop := &ShopMenu{inventory: inventory, playerStats: playerStats}
+	shop.init()
 	return shop, nil
 }
 
@@ -141,6 +140,7 @@ func (s *ShopMenu) RerollHandler(idx int) {
 
 	s.RerollItemSlot(idx)
 }
+
 func (s *ShopMenu) Update() {
 	// Toggle shop visibility with B
 	if inpututil.IsKeyJustPressed(ebiten.KeyB) {
@@ -173,8 +173,7 @@ func defaultApplyItemEffect(p engine.GameEntityStatReadWriter) error {
 	return fmt.Errorf("Missing implementation")
 }
 
-func (s *ShopMenu) SetUI(ui *ebitenui.UI) {
-	s.ui = ui
+func (s *ShopMenu) init() {
 	// Init
 	// construct a new container that serves as the root of the UI hierarchy
 	rootContainer := widget.NewContainer(
@@ -267,8 +266,9 @@ func (s *ShopMenu) SetUI(ui *ebitenui.UI) {
 	}
 	rootContainer.GetWidget().Visibility = widget.Visibility_Hide
 	s.shopContainer = rootContainer
-	s.ui.Container.AddChild(rootContainer)
 }
+
+func (s *ShopMenu) RootContainer() *widget.Container { return s.shopContainer }
 
 func loadButtonImage() (*widget.ButtonImage, error) {
 	idle := image.NewNineSliceColor(color.NRGBA{R: 0, G: 170, B: 0, A: 255})

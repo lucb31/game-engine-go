@@ -30,7 +30,7 @@ type GameInfo interface {
 
 type SubMenu interface {
 	Update()
-	SetUI(*ebitenui.UI)
+	RootContainer() *widget.Container
 }
 
 type GameHUD struct {
@@ -100,7 +100,7 @@ func (h *GameHUD) Update() {
 
 func (h *GameHUD) AddSubMenu(menu SubMenu) {
 	h.subMenus = append(h.subMenus, menu)
-	menu.SetUI(h.ui)
+	h.ui.Container.AddChild(menu.RootContainer())
 }
 
 func (h *GameHUD) SaveScore(score ScoreValue) {
