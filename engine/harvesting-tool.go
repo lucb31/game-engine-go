@@ -34,7 +34,8 @@ const (
 
 type WoodHarvestingTool struct {
 	// Dependencies
-	owner GameEntityWithInventory
+	owner GameEntity
+	em    GameEntityManager
 
 	// Stats
 	harvestingRange float64
@@ -45,14 +46,14 @@ type WoodHarvestingTool struct {
 	target          Harvestable
 }
 
-func NewWoodHarvestingTool(itp IngameTimeProvider, owner GameEntityWithInventory) (*WoodHarvestingTool, error) {
+func NewWoodHarvestingTool(em GameEntityManager, owner GameEntity) (*WoodHarvestingTool, error) {
 	if owner == nil {
 		return nil, fmt.Errorf("Cannot init wood harvesting tool without owner")
 	}
-	ht := &WoodHarvestingTool{owner: owner}
+	ht := &WoodHarvestingTool{owner: owner, em: em}
 	// Setup timer
 	var err error
-	if ht.harvestingTimer, err = NewIngameTimer(itp); err != nil {
+	if ht.harvestingTimer, err = NewIngameTimer(em); err != nil {
 		return nil, err
 	}
 	// Set defaults
@@ -79,7 +80,7 @@ func (ht *WoodHarvestingTool) Harvesting() bool { return ht.harvestingTimer.Acti
 
 func (ht *WoodHarvestingTool) HarvestNearest() error {
 	// Initiate if not already harvesting
-	if !ht.harvestingTimer.Active() {
+	if !ht.Harvesting() {
 		target := ht.Nearest()
 		if target == nil {
 			return fmt.Errorf("Nothin in range")
@@ -92,14 +93,20 @@ func (ht *WoodHarvestingTool) HarvestNearest() error {
 
 	// Check if done
 	if ht.harvestingTimer.Elapsed() > ht.harvestingSpeed {
-		fmt.Println("We're done!")
+		fmt.Println("Finished harvesting")
 		if err := ht.target.Destroy(); err != nil {
 			return err
 		}
-		// Add loot for harvesting target
-		if err := ht.owner.Inventory().AddLoot(ht.target.LootTable()); err != nil {
+
+		// Drop loot
+		if err := ht.em.DropLoot(ht.target.LootTable(), ht.owner.Shape().Body().Position()); err != nil {
 			return err
 		}
+
+		// Add loot for harvesting target
+		// if err := ht.owner.Inventory().AddLoot(ht.target.LootTable()); err != nil {
+		// 	return err
+		// }
 
 		// Reset harvesting tool
 		ht.harvestingTimer.Stop()

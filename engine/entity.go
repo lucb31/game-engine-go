@@ -61,6 +61,7 @@ type GameEntityManager interface {
 	AddEntity(object GameEntity) error
 	Space() *cp.Space
 	DamageModel() damage.DamageModel
+	DropLoot(loot loot.LootTable, pos cp.Vector) error
 	EndGame()
 }
 

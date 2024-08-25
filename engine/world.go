@@ -9,6 +9,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/vector"
 	"github.com/jakecoffman/cp"
 	"github.com/lucb31/game-engine-go/engine/damage"
+	"github.com/lucb31/game-engine-go/engine/loot"
 )
 
 // ///////////////
@@ -156,6 +157,23 @@ func (w *GameWorld) AddCombinedLayer(mapData []byte, tileset *Tileset) error {
 
 func (w *GameWorld) AddLayer(mapData []byte, tileset *Tileset) error {
 	return w.WorldMap.AddLayer(mapData, tileset)
+}
+
+// Dropping items is done by evaluating the input loot table &
+// spawning item sprites with guaranteed drops for every result of the original loot table
+func (w *GameWorld) DropLoot(lootTable loot.LootTable, pos cp.Vector) error {
+	for _, lootableItem := range lootTable.Result() {
+		itemEntity, err := NewItemEntity(w, pos)
+		if err != nil {
+			return err
+		}
+		copyOfLootTable := loot.NewGuaranteedLootTable(lootableItem)
+		itemEntity.SetLootTable(copyOfLootTable)
+		if err := w.AddEntity(itemEntity); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (w *GameWorld) EndGame()                        { w.gameOver = true }
