@@ -230,7 +230,13 @@ func (w *GameWorld) drawDebugBoundingBoxes(screen *ebiten.Image) {
 
 // Debugging info for entities
 func (w *GameWorld) drawEntityDebugInfo(screen *ebiten.Image) {
-	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("# Objects: %d", len(w.objects)), 10, 30)
+	visibleObjects := 0
+	for _, obj := range w.objects {
+		if w.camera.IsVisible(obj) {
+			visibleObjects++
+		}
+	}
+	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("# Visible Objects: (%d / %d)", visibleObjects, len(w.objects)), 10, 30)
 	shapes := 0
 	projectiles := 0
 	npcs := 0

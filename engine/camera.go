@@ -60,19 +60,8 @@ func NewBaseCamera(width, height int) (*BaseCamera, error) {
 	return cam, nil
 }
 
-// Simple algorithm that checks if top left of entity bounding box is within cam bounds
 func (c *BaseCamera) IsVisible(entity GameEntity) bool {
-	absBodyTopLeft := TopLeftBBPosition(entity.Shape())
-	relBodyTopLeft := c.AbsToRel(absBodyTopLeft)
-
-	// Check bounds
-	if relBodyTopLeft.X < 0 || relBodyTopLeft.X > float64(c.ViewportWidth()) {
-		return false
-	}
-	if relBodyTopLeft.Y < 0 || relBodyTopLeft.Y > float64(c.viewportHeight) {
-		return false
-	}
-	return true
+	return c.shape.BB().Intersects(entity.Shape().BB())
 }
 
 // Replacement for screen.DrawImage
