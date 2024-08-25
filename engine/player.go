@@ -220,7 +220,7 @@ func (p *Player) Inventory() loot.Inventory { return p.inventory }
 func (p *Player) calculateVelocity(body *cp.Body, gravity cp.Vector, damping float64, dt float64) {
 	p.controller.Update()
 	// Check for interaction inputs
-	if p.controller.Interaction() {
+	if p.controller.Interacting() {
 		itemInRange := p.ItemInRange()
 		if itemInRange != nil {
 			// Check for item pickups
@@ -228,10 +228,17 @@ func (p *Player) calculateVelocity(body *cp.Body, gravity cp.Vector, damping flo
 				fmt.Println("Could not pickup item", err.Error())
 				return
 			}
+			// Reset interaction state
+			p.controller.SetInteracting(false)
 		} else if p.axe.InRange() {
 			// Check for axe harvesting
 			if err := p.axe.HarvestNearest(); err != nil {
 				fmt.Println("Could not harvest", err.Error())
+				return
+			}
+			// Done, Reset interaction state
+			if !p.axe.Harvesting() {
+				p.controller.SetInteracting(false)
 				return
 			}
 			// Stop movement,animate and early return. Other inputs will be ignored

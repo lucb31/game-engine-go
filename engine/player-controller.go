@@ -14,7 +14,8 @@ type PlayerController interface {
 	CalcVelocity(max float64) cp.Vector
 	Orientation() Orientation
 	// True WHILE interaction is ongoing
-	Interaction() bool
+	Interacting() bool
+	SetInteracting(bool)
 	Update()
 }
 
@@ -34,6 +35,8 @@ type KeyboardPlayerController struct {
 	dashDirection       cp.Vector
 
 	orientation Orientation
+
+	interacting bool
 }
 
 func NewKeyboardPlayerController(ac AnimationController, igt IngameTimeProvider) (*KeyboardPlayerController, error) {
@@ -98,6 +101,14 @@ func (c *KeyboardPlayerController) Update() {
 	} else {
 		c.movingWestTimer.Stop()
 	}
+
+	// Reading interaction inputs
+	if inpututil.IsKeyJustPressed(ebiten.KeyE) {
+		c.interacting = true
+	}
+	if inpututil.IsKeyJustReleased(ebiten.KeyE) {
+		c.interacting = false
+	}
 }
 
 func (c *KeyboardPlayerController) CalcVelocity(maxVelocity float64) cp.Vector {
@@ -123,9 +134,10 @@ func (c *KeyboardPlayerController) CalcVelocity(maxVelocity float64) cp.Vector {
 	return totalVel
 }
 
-func (c *KeyboardPlayerController) Interaction() bool {
-	return ebiten.IsKeyPressed(ebiten.KeyE)
+func (c *KeyboardPlayerController) Interacting() bool {
+	return c.interacting
 }
+func (c *KeyboardPlayerController) SetInteracting(val bool) { c.interacting = false }
 
 func (c *KeyboardPlayerController) Orientation() Orientation { return c.orientation }
 
