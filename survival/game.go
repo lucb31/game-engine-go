@@ -120,7 +120,9 @@ func (game *SurvivalGame) initMap() error {
 	loot := loot.NewResourcesLootTable()
 	loot.AddWood(500)
 	item.SetLootTable(loot)
-	item.SetAsset(woodAsset)
+	if err := item.SetAsset(woodAsset); err != nil {
+		return err
+	}
 	game.world.AddEntity(item)
 
 	return nil

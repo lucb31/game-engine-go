@@ -1,6 +1,8 @@
 package engine
 
 import (
+	"fmt"
+
 	"github.com/jakecoffman/cp"
 	"github.com/lucb31/game-engine-go/engine/loot"
 )
@@ -14,7 +16,6 @@ type NpcEntity struct {
 
 	// Rendering
 	asset       *CharacterAsset
-	animation   string
 	orientation Orientation
 
 	// Physics
@@ -61,7 +62,6 @@ func NewNpc(remover EntityRemover, asset *CharacterAsset, opts NpcOpts) (*NpcEnt
 
 	// Asset
 	npc.asset = asset
-	npc.animation = "idle_east"
 
 	// Logic
 	npc.armor = 0.0
@@ -102,7 +102,7 @@ func NewNpc(remover EntityRemover, asset *CharacterAsset, opts NpcOpts) (*NpcEnt
 
 func (n *NpcEntity) Draw(t RenderingTarget) error {
 	n.asset.DrawHealthbar(t, n.shape, n.health, n.maxHealth)
-	return n.asset.Draw(t, n.animation, n.shape)
+	return n.asset.Draw(t, n.shape, n.orientation)
 }
 
 func (n *NpcEntity) Shape() *cp.Shape          { return n.shape }
@@ -118,7 +118,10 @@ func (n *NpcEntity) simpleWaypointAlgorithm(body *cp.Body, dt float64) {
 	// No movement if no active wayPoint
 	if n.currentWpIndex == -1 || n.currentWpIndex > len(n.wayPoints)-1 {
 		body.SetVelocityVector(cp.Vector{})
-		n.animation = calculateWalkingAnimation(body.Velocity(), n.orientation)
+		if err := n.asset.AnimationController().Loop("idle"); err != nil {
+			fmt.Println("error animating npc", err.Error())
+			return
+		}
 		return
 	}
 	destination := n.wayPoints[n.currentWpIndex]
@@ -153,6 +156,8 @@ func (n *NpcEntity) moveTowards(body *cp.Body, dest cp.Vector) float64 {
 	body.SetVelocityVector(vel)
 	// Update active animation & orientation
 	n.orientation = updateOrientation(n.orientation, vel)
-	n.animation = calculateWalkingAnimation(vel, n.orientation)
+	if err := n.asset.AnimationController().Loop("walk"); err != nil {
+		fmt.Println("error looping", err.Error())
+	}
 	return diff.Length()
 }

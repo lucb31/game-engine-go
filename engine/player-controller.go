@@ -98,7 +98,7 @@ func (c *KeyboardPlayerController) CalcVelocity(maxVelocity, gameTime float64) c
 	if vel.Length() > 5.0 {
 		animation = "walk"
 	}
-	c.animationController.Loop(animation, c.orientation)
+	c.animationController.Loop(animation)
 
 	return totalVel
 }
@@ -127,11 +127,7 @@ func (c *KeyboardPlayerController) calcVelFromDash(vel cp.Vector, gameTime float
 			}
 
 			// Queue animation
-			orientation := West
-			if c.dashDirection.X < 0 {
-				orientation = ^West
-			}
-			c.animationController.Play("dash", 2, orientation)
+			c.animationController.Play("dash")
 			diff = 0
 		}
 	}

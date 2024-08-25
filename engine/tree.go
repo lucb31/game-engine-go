@@ -47,7 +47,7 @@ func NewTree(em EntityRemover, pos cp.Vector, asset *CharacterAsset) (*TreeEntit
 }
 
 func (p *TreeEntity) Draw(t RenderingTarget) error {
-	p.asset.Draw(t, "idle", p.shape)
+	p.asset.Draw(t, p.shape, 0)
 	return nil
 }
 

@@ -44,7 +44,7 @@ func NewCastle(world engine.EntityRemover, asset *engine.CharacterAsset, cb game
 }
 
 func (t *CastleEntity) Draw(screen engine.RenderingTarget) error {
-	return t.asset.Draw(screen, t.animation, t.shape)
+	return t.asset.Draw(screen, t.shape, 0)
 }
 
 func (e *CastleEntity) OnNpcHit(npc *engine.NpcEntity) {

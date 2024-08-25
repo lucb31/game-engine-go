@@ -44,7 +44,9 @@ func (n *NpcAggro) aggroMovementAI(body *cp.Body, gravity cp.Vector, damping flo
 		// fmt.Println("Could not find wp to go to", err.Error())
 		// Idle
 		body.SetVelocityVector(cp.Vector{})
-		n.animation = calculateWalkingAnimation(body.Velocity(), n.orientation)
+		if err := n.asset.AnimationController().Loop("idle"); err != nil {
+			fmt.Println("Error looping", err.Error())
+		}
 		return
 	}
 	n.moveTowards(body, nextReachableWaypoint)
@@ -234,7 +236,7 @@ func (n *NpcAggro) waypointAlgorithmWithCollisionDetection(body *cp.Body) {
 
 	// Idle
 	body.SetVelocityVector(cp.Vector{})
-	n.animation = calculateWalkingAnimation(body.Velocity(), n.orientation)
+	n.asset.AnimationController().Loop("walk")
 }
 
 // DEBUG: Draw connecting lines between npcs & waypoints

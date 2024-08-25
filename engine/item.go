@@ -37,7 +37,7 @@ func NewItemEntity(em EntityRemover, pos cp.Vector) (*ItemEntity, error) {
 
 func (i *ItemEntity) Draw(t RenderingTarget) error {
 	if i.asset != nil {
-		if err := i.asset.Draw(t, "idle", i.shape); err != nil {
+		if err := i.asset.Draw(t, i.shape, 0); err != nil {
 			return err
 		}
 	} else {
@@ -49,6 +49,15 @@ func (i *ItemEntity) Draw(t RenderingTarget) error {
 }
 
 func (i *ItemEntity) SetLootTable(loot loot.LootTable) { i.loot = loot }
-func (i *ItemEntity) SetAsset(asset *CharacterAsset)   { i.asset = asset }
-func (i *ItemEntity) LootTable() loot.LootTable        { return i.loot }
-func (i *ItemEntity) Shape() *cp.Shape                 { return i.shape }
+func (i *ItemEntity) SetAsset(asset *CharacterAsset) error {
+	i.asset = asset
+	if err := i.asset.AnimationController().Loop("idle"); err != nil {
+		return err
+	}
+	if err := i.asset.AnimationController().Play("spawn"); err != nil {
+		return err
+	}
+	return nil
+}
+func (i *ItemEntity) LootTable() loot.LootTable { return i.loot }
+func (i *ItemEntity) Shape() *cp.Shape          { return i.shape }

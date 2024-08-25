@@ -42,7 +42,7 @@ type WoodHarvestingTool struct {
 	harvestingSpeed float64
 
 	// State
-	harvestingTimer *IngameTimer
+	harvestingTimer Timer
 	target          Harvestable
 }
 

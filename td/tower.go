@@ -104,7 +104,7 @@ func (t *TowerEntity) Update(body *cp.Body, dt float64) {
 
 func (t *TowerEntity) Draw(screen engine.RenderingTarget) error {
 	t.DrawRange(screen)
-	return t.asset.Draw(screen, t.animation, t.shape)
+	return t.asset.Draw(screen, t.shape, 0)
 }
 
 func (t *TowerEntity) DrawRange(screen engine.RenderingTarget) {

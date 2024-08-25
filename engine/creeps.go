@@ -25,10 +25,10 @@ type BaseCreepManager struct {
 	creepsSpawned int
 	creepsAlive   int
 	// Timer to control creep spawns during an active wave
-	creepSpawnTimer *IngameTimer
+	creepSpawnTimer Timer
 
 	// Timer to control idle time between waves
-	spawnIdleTimer *IngameTimer
+	spawnIdleTimer Timer
 }
 
 const idleTimeAfterWaveFinished = 10.0

@@ -7,82 +7,88 @@ import (
 )
 
 type AnimationController interface {
-	Play(animation string, animationSpeed int, orientation Orientation) error
-	Loop(animation string, orientation Orientation) error
-	Draw(RenderingTarget, *cp.Shape) error
+	Draw(RenderingTarget, *cp.Shape, Orientation) error
+	// Play the given animation once
+	Play(animation string) error
+	Loop(animation string) error
+}
+
+type AnimationAsset interface {
+	DrawAnimationTile(t RenderingTarget, shape *cp.Shape, animation *GameAssetAnimation, animationTile int, o Orientation) error
+	Animation(animation string) (*GameAssetAnimation, error)
 }
 
 type BaseAnimationManager struct {
-	asset *CharacterAsset
+	asset AnimationAsset
 
-	playingAnimation string
-	// Frame count when playing animation was started
-	playingAnimationSinceFrame int64
-	playingAnimationSpeed      int
-	loopAnimation              string
+	playingAnimation      *GameAssetAnimation
+	playingAnimationTimer Timer
+
+	loopAnimation         *GameAssetAnimation
+	loopingAnimationTimer Timer
 }
 
-func NewAnimationManager(asset *CharacterAsset) (*BaseAnimationManager, error) {
+func NewAnimationManager(asset AnimationAsset, itp AnimationTimeProvider) (*BaseAnimationManager, error) {
+	if itp == nil {
+		return nil, fmt.Errorf("No valid itp provided")
+	}
 	am := &BaseAnimationManager{}
 	am.asset = asset
 
-	am.playingAnimation = "idle_east"
+	var err error
+	if am.playingAnimationTimer, err = NewAnimationTimer(itp); err != nil {
+		return nil, err
+	}
+	if am.loopingAnimationTimer, err = NewAnimationTimer(itp); err != nil {
+		return nil, err
+	}
+	am.loopingAnimationTimer.Start()
+
 	return am, nil
 }
 
-// Play the given animation once with given speed
-func (a *BaseAnimationManager) Play(baseAnimation string, speed int, orientation Orientation) error {
-	orientationAffix := "_east"
-	if orientation&West == 0 {
-		orientationAffix = "_west"
+func (a *BaseAnimationManager) Play(animationKey string) error {
+	var err error
+	a.playingAnimation, err = a.asset.Animation(animationKey)
+	if err != nil {
+		return err
 	}
-	animation := baseAnimation + orientationAffix
-	_, ok := a.asset.Animations[animation]
-	if !ok {
-		return fmt.Errorf("Unknown animation: %s", animation)
-	}
-	// fmt.Println("Gonna play", animation, speed)
-	a.playingAnimation = animation
-	a.playingAnimationSpeed = speed
-	a.playingAnimationSinceFrame = *a.asset.currentFrame
+	a.playingAnimationTimer.Start()
 	return nil
 }
 
-func (a *BaseAnimationManager) Loop(baseAnimation string, orientation Orientation) error {
-	orientationAffix := "_east"
-	if orientation&West == 0 {
-		orientationAffix = "_west"
+func (a *BaseAnimationManager) Loop(animationKey string) error {
+	var err error
+	a.loopAnimation, err = a.asset.Animation(animationKey)
+	if err != nil {
+		return err
 	}
-	animation := baseAnimation + orientationAffix
-	_, ok := a.asset.Animations[animation]
-	if !ok {
-		return fmt.Errorf("Unknown animation: %s", animation)
-	}
-	a.loopAnimation = animation
 	return nil
 }
 
-func (a *BaseAnimationManager) Draw(t RenderingTarget, shape *cp.Shape) error {
+func (a *BaseAnimationManager) Draw(t RenderingTarget, shape *cp.Shape, o Orientation) error {
 	// Check if there is an animation currently playing, if not, play loop
-	if a.playingAnimationSinceFrame == 0 {
-		return a.asset.Draw(t, a.loopAnimation, shape)
+	if !a.playingAnimationTimer.Active() || a.playingAnimation == nil {
+		currentAnimationTile := 0
+		if a.loopAnimation.FrameCount > 1 && a.loopAnimation.Speed > 0 {
+			currentAnimationTile = int(a.loopingAnimationTimer.Elapsed()/a.loopAnimation.Speed) % a.loopAnimation.FrameCount
+		}
+		return a.asset.DrawAnimationTile(t, shape, a.loopAnimation, currentAnimationTile, o)
 	}
 
 	// Calculate how many frames the animation has to play
-	animation := a.asset.Animations[a.playingAnimation]
-	animationSpeed := a.playingAnimationSpeed
-	totalAnimationFrames := animationSpeed * animation.FrameCount
-	diff := *a.asset.currentFrame - a.playingAnimationSinceFrame
+	totalAnimationFrames := a.playingAnimation.Speed * float64(a.playingAnimation.FrameCount)
+	diff := a.playingAnimationTimer.Elapsed()
 
 	// Not finished playing
-	if diff < int64(totalAnimationFrames) {
+	if diff < float64(totalAnimationFrames) {
 		// Calculate current animation tile
-		currentAnimationTile := int(diff / int64(animationSpeed))
-		return a.asset.DrawAnimationTile(t, animation, int(currentAnimationTile), shape)
+		currentAnimationTile := int(diff / float64(a.playingAnimation.Speed))
+		return a.asset.DrawAnimationTile(t, shape, a.playingAnimation, int(currentAnimationTile), o)
 	}
 
 	// Finished playing, back to loop
-	// fmt.Println("finished playing", a.playingAnimation)
-	a.playingAnimationSinceFrame = 0
-	return a.asset.Draw(t, a.loopAnimation, shape)
+	a.playingAnimationTimer.Stop()
+	a.loopingAnimationTimer.Start()
+	return a.asset.DrawAnimationTile(t, shape, a.loopAnimation, 0, o)
 }

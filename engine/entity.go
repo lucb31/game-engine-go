@@ -52,12 +52,17 @@ type EntityRemover interface {
 }
 
 type IngameTimeProvider interface {
-	GetIngameTime() float64
+	IngameTime() float64
+}
+
+type AnimationTimeProvider interface {
+	AnimationTime() float64
 }
 
 type GameEntityManager interface {
 	EntityRemover
 	IngameTimeProvider
+	AnimationTimeProvider
 	AddEntity(object GameEntity) error
 	Space() *cp.Space
 	DamageModel() damage.DamageModel

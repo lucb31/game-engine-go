@@ -37,11 +37,15 @@ type GameWorld struct {
 	Width    int64
 	Height   int64
 	// Number of frames drawn. Used for animation
+	// TODO: Needs to be replaced by animationTime
 	FrameCount int64
 	// Integral of Physical time steps. Used for game sim
-	gameTime     *float64
-	AssetManager AssetManager
-	space        *cp.Space
+	gameTime *float64
+
+	// Integral of time steps that continues after game over. Used for animation sim
+	animationTime float64
+	AssetManager  AssetManager
+	space         *cp.Space
 
 	// Game logic
 	gameOver    bool
@@ -90,12 +94,13 @@ func (w *GameWorld) Draw(screen *ebiten.Image) {
 }
 
 func (w *GameWorld) Update() {
+	dt := w.GameSpeed / 60.0
 	w.FrameCount++
+	w.animationTime += dt
 	// Stop updating if game over
 	if w.gameOver {
 		return
 	}
-	dt := w.GameSpeed / 60.0
 	*w.gameTime += dt
 	w.space.Step(dt)
 	// Delete objects scheduled for deletion
@@ -178,7 +183,8 @@ func (w *GameWorld) DropLoot(lootTable loot.LootTable, pos cp.Vector) error {
 
 func (w *GameWorld) EndGame()                        { w.gameOver = true }
 func (w *GameWorld) Space() *cp.Space                { return w.space }
-func (w *GameWorld) GetIngameTime() float64          { return *w.gameTime }
+func (w *GameWorld) IngameTime() float64             { return *w.gameTime }
+func (w *GameWorld) AnimationTime() float64          { return w.animationTime }
 func (w *GameWorld) IsOver() bool                    { return w.gameOver }
 func (w *GameWorld) DamageModel() damage.DamageModel { return w.damageModel }
 func (w *GameWorld) Player() *Player                 { return w.player }
@@ -189,7 +195,7 @@ func (w *GameWorld) drawCombatLog() {
 	for idx, entry := range entries {
 		// Cleanup: Remove entries older than X seconds
 		maxTimeDiff := 1.5
-		timeDiff := w.GetIngameTime() - entry.GameTime
+		timeDiff := w.IngameTime() - entry.GameTime
 		if timeDiff > maxTimeDiff {
 			if err := log.RemoveByIdx(idx); err != nil {
 				fmt.Println("Could not remove log entry", entry, err.Error())
@@ -298,7 +304,7 @@ func NewWorld(width int64, height int64) (*GameWorld, error) {
 		GameSpeed:   1.0,
 	}
 	// Initialize assets
-	am, err := NewAssetManager(&w.FrameCount)
+	am, err := NewAssetManager(&w, &w.FrameCount)
 	if err != nil {
 		return nil, err
 	}

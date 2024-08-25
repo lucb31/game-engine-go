@@ -17,13 +17,12 @@ const (
 
 type Player struct {
 	// Dependencies
-	id               GameEntityId
-	world            GameEntityManager
-	controller       PlayerController
-	animationManager AnimationController
-	asset            *CharacterAsset
-	projectileAsset  *ProjectileAsset
-	inventory        loot.Inventory
+	id              GameEntityId
+	world           GameEntityManager
+	controller      PlayerController
+	asset           *CharacterAsset
+	projectileAsset *ProjectileAsset
+	inventory       loot.Inventory
 
 	// Physics
 	shape *cp.Shape
@@ -36,7 +35,7 @@ type Player struct {
 	axe HarvestingTool
 
 	// Eyeframes
-	eyeframesTimer *IngameTimer
+	eyeframesTimer Timer
 }
 
 const (
@@ -80,17 +79,11 @@ func NewPlayer(world GameEntityManager, asset *CharacterAsset, projectileAsset *
 	}
 	// Play shooting animation when gun shoots
 	p.gun.SetShootingAnimationCallback(func(f float64, orientation Orientation) {
-		p.animationManager.Play("shoot", 2, orientation)
+		p.asset.AnimationController().Play("shoot")
 	})
 
-	// Init animation controller
-	p.animationManager, err = NewAnimationManager(p.asset)
-	if err != nil {
-		return nil, err
-	}
-
 	// Init input controller
-	p.controller, err = NewKeyboardPlayerController(p.animationManager)
+	p.controller, err = NewKeyboardPlayerController(p.asset.AnimationController())
 	if err != nil {
 		return nil, err
 	}
@@ -120,12 +113,12 @@ func (p *Player) Draw(t RenderingTarget) error {
 	}
 	// Play death animation loop when dead
 	if p.health <= 0 {
-		err := p.animationManager.Loop("dead", p.controller.Orientation())
+		err := p.asset.AnimationController().Loop("dead")
 		if err != nil {
 			fmt.Println("could not loop death animation", err.Error())
 		}
 	}
-	return p.animationManager.Draw(t, p.shape)
+	return p.asset.Draw(t, p.shape, p.controller.Orientation())
 }
 
 // TODO: Needs to move to proper hud
@@ -155,7 +148,7 @@ func (p *Player) DrawPlayerStats(t RenderingTarget) error {
 
 func (p *Player) Destroy() error {
 	// Play dying animation
-	err := p.animationManager.Play("die", 5, p.controller.Orientation())
+	err := p.asset.AnimationController().Play("die")
 	if err != nil {
 		fmt.Println("Could not play dying animation", err.Error())
 	}
@@ -172,14 +165,14 @@ func (p *Player) OnPlayerHit(arb *cp.Arbiter, space *cp.Space, userData interfac
 		fmt.Println("Collsion handler error: Expected npc but did not receive one")
 		return false
 	}
-	_, err := p.world.DamageModel().ApplyDamage(npc, p, p.world.GetIngameTime())
+	_, err := p.world.DamageModel().ApplyDamage(npc, p, p.world.IngameTime())
 	if err != nil {
 		fmt.Println("Error during player npc collision damage calc", err.Error())
 		return false
 	}
 
 	// Play on hit animation
-	err = p.animationManager.Play("hit", 5, p.controller.Orientation())
+	err = p.asset.AnimationController().Play("hit")
 	if err != nil {
 		fmt.Println("Could not play on hit animation", err.Error())
 	}
@@ -242,7 +235,7 @@ func (p *Player) calculateVelocity(body *cp.Body, gravity cp.Vector, damping flo
 			}
 			// Stop movement,animate and early return. Other inputs will be ignored
 			body.SetVelocity(0, 0)
-			p.animationManager.Loop("harvest", p.controller.Orientation())
+			p.asset.AnimationController().Loop("harvest")
 			return
 		}
 	}
@@ -260,6 +253,6 @@ func (p *Player) calculateVelocity(body *cp.Body, gravity cp.Vector, damping flo
 	}
 
 	// Update velocity based on inputs
-	velocity := p.controller.CalcVelocity(p.MovementSpeed(), p.world.GetIngameTime())
+	velocity := p.controller.CalcVelocity(p.MovementSpeed(), p.world.IngameTime())
 	body.SetVelocityVector(velocity)
 }

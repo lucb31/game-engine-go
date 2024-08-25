@@ -65,7 +65,7 @@ func (g *BasicGun) FireRange() float64 { return g.fireRange }
 
 func (g *BasicGun) RemainingReloadTime() float64 {
 	nextBulletAt := g.lastProjectileFired + 1/g.FireRate()
-	now := g.em.GetIngameTime()
+	now := g.em.IngameTime()
 	return nextBulletAt - now
 }
 

@@ -21,9 +21,11 @@ type AssetManagerImpl struct {
 	Tilesets         map[string]Tileset
 	characterAssets  map[string]CharacterAsset
 	projectileAssets map[string]ProjectileAsset
+	itp              IngameTimeProvider
 }
 
-func NewAssetManager(frameCount *int64) (*AssetManagerImpl, error) {
+// TODO: Deprecate frame count
+func NewAssetManager(atp AnimationTimeProvider, frameCount *int64) (*AssetManagerImpl, error) {
 	am := &AssetManagerImpl{}
 	var err error
 
@@ -32,7 +34,7 @@ func NewAssetManager(frameCount *int64) (*AssetManagerImpl, error) {
 		return nil, err
 	}
 
-	am.characterAssets, err = loadCharacterAssets(frameCount)
+	am.characterAssets, err = loadCharacterAssets(atp)
 	if err != nil {
 		return nil, err
 	}
@@ -111,56 +113,44 @@ type characterResource struct {
 	Animations           map[string]GameAssetAnimation
 	OffsetX, OffsetY     float64
 	Scale                float64
-	AnimationSpeed       float64
 }
+
+const defaultAnimationSpeed = 0.08
 
 // TODO: Load these from config file
 var characterResources []characterResource = []characterResource{
-	{
-		"player",
-		assets.Player,
-		48,
-		48,
-		map[string]GameAssetAnimation{
-			"walk_east": {StartTile: 24, FrameCount: 6},
-			"walk_west": {StartTile: 24, FrameCount: 6, Flip: true},
-			"idle_east": {StartTile: 6, FrameCount: 6},
-			"idle_west": {StartTile: 6, FrameCount: 6, Flip: true},
-			"dash_east": {StartTile: 42, FrameCount: 4},
-			"dash_west": {StartTile: 42, FrameCount: 4, Flip: true},
-		},
-		-44,
-		-60,
-		1.8,
-		6.0,
-	},
+	// {
+	// 	"player",
+	// 	assets.Player,
+	// 	48,
+	// 	48,
+	// 	map[string]GameAssetAnimation{
+	// 		"walk": {24, 6, 0.2},
+	// 		"idle": { 6, 6},
+	// 		"dash": { 42, FrameCount: 4},
+	// 	},
+	// 	-44,
+	// 	-60,
+	// 	1.8,
+	// },
 	{
 		"ranger",
 		assets.Ranger,
 		288,
 		128,
 		map[string]GameAssetAnimation{
-			"walk_east":    {StartTile: 22, FrameCount: 10},
-			"walk_west":    {StartTile: 22, FrameCount: 10, Flip: true},
-			"idle_east":    {StartTile: 0, FrameCount: 12},
-			"idle_west":    {StartTile: 0, FrameCount: 12, Flip: true},
-			"dash_east":    {StartTile: 198, FrameCount: 11},
-			"dash_west":    {StartTile: 198, FrameCount: 11, Flip: true},
-			"hit_east":     {StartTile: 330, FrameCount: 6},
-			"hit_west":     {StartTile: 330, FrameCount: 6, Flip: true},
-			"die_east":     {StartTile: 352, FrameCount: 18},
-			"die_west":     {StartTile: 352, FrameCount: 18, Flip: true},
-			"dead_east":    {StartTile: 370, FrameCount: 1},
-			"dead_west":    {StartTile: 370, FrameCount: 1, Flip: true},
-			"shoot_east":   {StartTile: 242, FrameCount: 14},
-			"shoot_west":   {StartTile: 242, FrameCount: 14, Flip: true},
-			"harvest_east": {StartTile: 220, FrameCount: 10},
-			"harvest_west": {StartTile: 220, FrameCount: 10, Flip: true},
+			"walk":    {StartTile: 22, FrameCount: 10, Speed: defaultAnimationSpeed},
+			"idle":    {StartTile: 0, FrameCount: 12, Speed: defaultAnimationSpeed},
+			"dash":    {StartTile: 198, FrameCount: 11, Speed: defaultAnimationSpeed},
+			"hit":     {StartTile: 330, FrameCount: 6, Speed: defaultAnimationSpeed},
+			"die":     {StartTile: 352, FrameCount: 18, Speed: defaultAnimationSpeed},
+			"dead":    {StartTile: 370, FrameCount: 1, Speed: defaultAnimationSpeed},
+			"shoot":   {StartTile: 242, FrameCount: 14, Speed: 0.05},
+			"harvest": {StartTile: 220, FrameCount: 10, Speed: defaultAnimationSpeed},
 		},
 		-115,
 		-85,
 		0.8,
-		5.0,
 	},
 	{
 		"npc-torch",
@@ -168,15 +158,12 @@ var characterResources []characterResource = []characterResource{
 		192,
 		192,
 		map[string]GameAssetAnimation{
-			"walk_east": {StartTile: 6, FrameCount: 6},
-			"walk_west": {StartTile: 6, FrameCount: 6, Flip: true},
-			"idle_east": {StartTile: 0, FrameCount: 6},
-			"idle_west": {StartTile: 0, FrameCount: 6, Flip: true},
+			"walk": {StartTile: 6, FrameCount: 6, Speed: defaultAnimationSpeed},
+			"idle": {StartTile: 0, FrameCount: 6, Speed: defaultAnimationSpeed},
 		},
 		-40,
 		-37,
 		0.4,
-		6.0,
 	},
 	{
 		"npc-orc",
@@ -184,15 +171,12 @@ var characterResources []characterResource = []characterResource{
 		100,
 		100,
 		map[string]GameAssetAnimation{
-			"walk_east": {StartTile: 8, FrameCount: 6},
-			"walk_west": {StartTile: 8, FrameCount: 6, Flip: true},
-			"idle_east": {StartTile: 0, FrameCount: 6},
-			"idle_west": {StartTile: 0, FrameCount: 6, Flip: true},
+			"walk": {StartTile: 8, FrameCount: 6, Speed: defaultAnimationSpeed},
+			"idle": {StartTile: 0, FrameCount: 6, Speed: defaultAnimationSpeed},
 		},
 		-60,
 		-60,
 		1.2,
-		6.0,
 	},
 	{
 		"npc-slime",
@@ -200,15 +184,12 @@ var characterResources []characterResource = []characterResource{
 		24,
 		24,
 		map[string]GameAssetAnimation{
-			"walk_east": {StartTile: 0, FrameCount: 2},
-			"walk_west": {StartTile: 0, FrameCount: 2, Flip: true},
-			"idle_east": {StartTile: 0, FrameCount: 2},
-			"idle_west": {StartTile: 0, FrameCount: 2, Flip: true},
+			"walk": {StartTile: 0, FrameCount: 2, Speed: defaultAnimationSpeed},
+			"idle": {StartTile: 0, FrameCount: 2, Speed: defaultAnimationSpeed},
 		},
 		-16,
 		-16,
 		1.5,
-		6.0,
 	},
 	{
 		"tower-blue",
@@ -216,12 +197,11 @@ var characterResources []characterResource = []characterResource{
 		256,
 		256,
 		map[string]GameAssetAnimation{
-			"idle": {StartTile: 0, FrameCount: 4},
+			"idle": {StartTile: 0, FrameCount: 4, Speed: defaultAnimationSpeed},
 		},
 		-28,
 		-20,
 		0.22,
-		6.0,
 	},
 	{
 		"tower-red",
@@ -229,12 +209,11 @@ var characterResources []characterResource = []characterResource{
 		256,
 		256,
 		map[string]GameAssetAnimation{
-			"idle": {StartTile: 0, FrameCount: 1},
+			"idle": {StartTile: 0, FrameCount: 1, Speed: defaultAnimationSpeed},
 		},
 		-28,
 		-30,
 		0.22,
-		6.0,
 	},
 	{
 		"castle",
@@ -247,7 +226,6 @@ var characterResources []characterResource = []characterResource{
 		-44,
 		-28,
 		0.44,
-		6.0,
 	},
 	{
 		"tree",
@@ -260,7 +238,6 @@ var characterResources []characterResource = []characterResource{
 		-16,
 		-32,
 		2.0,
-		6.0,
 	},
 	{
 		"wood",
@@ -268,33 +245,40 @@ var characterResources []characterResource = []characterResource{
 		128,
 		128,
 		map[string]GameAssetAnimation{
-			"idle":  {StartTile: 6, FrameCount: 1},
-			"spawn": {StartTile: 0, FrameCount: 6},
+			"idle":  {StartTile: 3, FrameCount: 1},
+			"spawn": {StartTile: 0, FrameCount: 6, Speed: defaultAnimationSpeed},
 		},
 		-32,
 		-40,
 		0.5,
-		6.0,
 	},
 }
 
 // Load characters
-func loadCharacterAssets(frameCount *int64) (map[string]CharacterAsset, error) {
+func loadCharacterAssets(atp AnimationTimeProvider) (map[string]CharacterAsset, error) {
 	characters := map[string]CharacterAsset{}
 	for _, res := range characterResources {
 		tileset, err := loadTileset(res.ImageData, res.TileSizeX, res.TileSizeY, res.Scale)
 		if err != nil {
 			return nil, err
 		}
-		asset := CharacterAsset{
-			Tileset:        *tileset,
-			Animations:     res.Animations,
-			animationSpeed: res.AnimationSpeed,
-			offsetX:        res.OffsetX,
-			offsetY:        res.OffsetY,
-			currentFrame:   frameCount,
+		asset, err := NewCharacterAsset(atp)
+		if err != nil {
+			return nil, err
 		}
-		characters[res.Key] = asset
+		asset.Tileset = *tileset
+		asset.Animations = res.Animations
+		asset.offsetX = res.OffsetX
+		asset.offsetY = res.OffsetY
+		var initialAnimation string
+		for key := range res.Animations {
+			initialAnimation = key
+			break
+		}
+		if err := asset.AnimationController().Loop(initialAnimation); err != nil {
+			return nil, err
+		}
+		characters[res.Key] = *asset
 	}
 	return characters, nil
 }

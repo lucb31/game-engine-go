@@ -12,36 +12,50 @@ import (
 type GameAssetAnimation struct {
 	StartTile  int
 	FrameCount int
-	Flip       bool
+	Speed      float64
 }
 
 type CharacterAsset struct {
-	Animations     map[string]GameAssetAnimation
-	Tileset        Tileset
-	animationSpeed float64
-	currentFrame   *int64
-	offsetX        float64
-	offsetY        float64
+	animationManager AnimationController
+	Animations       map[string]GameAssetAnimation
+	Tileset          Tileset
+	offsetX          float64
+	offsetY          float64
+}
+
+func NewCharacterAsset(atp AnimationTimeProvider) (*CharacterAsset, error) {
+	a := &CharacterAsset{}
+	animationManager, err := NewAnimationManager(a, atp)
+	if err != nil {
+		return nil, err
+	}
+	a.animationManager = animationManager
+	return a, nil
 }
 
 // Get animation tile
-func (a *CharacterAsset) GetTile(animation GameAssetAnimation, animationTile int) (*ebiten.Image, error) {
+// Could also move this to animation manager
+func (a *CharacterAsset) GetTile(animation *GameAssetAnimation, animationTile int, flip bool) (*ebiten.Image, error) {
+	if animation == nil {
+		return nil, fmt.Errorf("No animation provided")
+	}
 	tileIdx := animation.StartTile + animationTile
 	subIm, err := a.Tileset.GetTile(tileIdx)
 	if err != nil {
 		return nil, err
 	}
-	if animation.Flip {
+	if flip {
 		return FlipHorizontal(subIm), nil
 	}
 	return subIm, nil
 }
 
-func (a *CharacterAsset) DrawAnimationTile(t RenderingTarget, animation GameAssetAnimation, animationTile int, shape *cp.Shape) error {
+func (a *CharacterAsset) DrawAnimationTile(t RenderingTarget, shape *cp.Shape, animation *GameAssetAnimation, animationTile int, o Orientation) error {
 	if DEBUG_RENDER_COLLISION_BOXES {
 		DrawRectBoundingBox(t, shape)
 	}
-	subIm, err := a.GetTile(animation, animationTile)
+	flip := o&West == 0
+	subIm, err := a.GetTile(animation, animationTile, flip)
 	if err != nil {
 		return fmt.Errorf("Error animating character: %s", err.Error())
 	}
@@ -53,14 +67,19 @@ func (a *CharacterAsset) DrawAnimationTile(t RenderingTarget, animation GameAsse
 	return nil
 }
 
-func (a *CharacterAsset) Draw(t RenderingTarget, activeAnimation string, shape *cp.Shape) error {
-	animation, ok := a.Animations[activeAnimation]
-	if !ok {
-		return fmt.Errorf("Unknown animation %s", activeAnimation)
-	}
-	animationFrame := int(float64(*a.currentFrame)/a.animationSpeed) % animation.FrameCount
-	return a.DrawAnimationTile(t, animation, animationFrame, shape)
+func (a *CharacterAsset) Draw(t RenderingTarget, shape *cp.Shape, o Orientation) error {
+	return a.animationManager.Draw(t, shape, o)
 }
+
+func (a *CharacterAsset) Animation(animationKey string) (*GameAssetAnimation, error) {
+	animation, ok := a.Animations[animationKey]
+	if !ok {
+		return nil, fmt.Errorf("Unknown animation %s", animationKey)
+	}
+	return &animation, nil
+}
+
+func (a *CharacterAsset) AnimationController() AnimationController { return a.animationManager }
 
 func (a *CharacterAsset) DrawHealthbar(t RenderingTarget, shape *cp.Shape, health, maxHealth float64) {
 	width := shape.BB().R - shape.BB().L
@@ -87,20 +106,6 @@ func (a *CharacterAsset) DrawHealthbar(t RenderingTarget, shape *cp.Shape, healt
 		color.RGBA{255, 0, 0, 255},
 		false,
 	)
-}
-
-func calculateWalkingAnimation(vel cp.Vector, orientation Orientation) string {
-	animation := "idle_"
-	if vel.Length() > 5.0 {
-		animation = "walk_"
-	}
-
-	// Append horizontal orientation
-	orientationString := "east"
-	if orientation&West == 0 {
-		orientationString = "west"
-	}
-	return animation + orientationString
 }
 
 func updateOrientation(prev Orientation, vel cp.Vector) Orientation {
