@@ -161,19 +161,37 @@ func (game *SurvivalGame) initialize() error {
 	}
 
 	// Init hud
-	game.hud, err = hud.NewHUD(game)
+	game.hud, err = game.initHud()
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (g *SurvivalGame) initHud() (*hud.GameHUD, error) {
+	// Init base
+	base, err := hud.NewHUD(g)
+	if err != nil {
+		return nil, err
 	}
 
 	// Init shop
-	shop, err := NewShopMenu(player.Inventory(), player)
+	inventory := g.world.Player().Inventory()
+	shop, err := NewShopMenu(inventory, g.world.Player())
 	if err != nil {
-		return err
+		return nil, err
 	}
-	game.hud.AddSubMenu(shop)
+	base.AddSubMenu(shop)
 
-	return nil
+	// Init inventory
+	inventoryHud, err := hud.NewInventoryHud(inventory)
+	if err != nil {
+		return nil, err
+	}
+	base.AddSubMenu(inventoryHud)
+
+	return base, nil
 }
 
 // Constructor: Initialize parts of game that are constant even after restarting
@@ -189,7 +207,6 @@ func NewSurvivalGame(screenWidth, screenHeight int) (*SurvivalGame, error) {
 
 func (g *SurvivalGame) SetSpeed(speed float64) { g.world.GameSpeed = speed }
 func (g *SurvivalGame) GameOver() bool         { return g.world.IsOver() }
-func (g *SurvivalGame) Balance() int64         { return g.world.Player().Inventory().GoldManager().Balance() }
 func (g *SurvivalGame) Score() hud.ScoreValue {
 	return hud.ScoreValue(g.world.Player().Inventory().GoldManager().Revenue())
 }

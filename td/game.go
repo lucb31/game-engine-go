@@ -157,7 +157,6 @@ func (g *TDGame) GameOver() bool                   { return g.world.IsOver() }
 func (g *TDGame) CreepProgress() hud.ProgressInfo  { return g.creepManager.Progress() }
 func (g *TDGame) CastleProgress() hud.ProgressInfo { return g.castle.GetHealthBar() }
 func (g *TDGame) SetSpeed(speed float64)           { g.world.GameSpeed = speed }
-func (g *TDGame) Balance() int64                   { return g.goldManager.Balance() }
 func (g *TDGame) Score() hud.ScoreValue {
 	return hud.ScoreValue(float64(g.goldManager.Revenue()))
 }

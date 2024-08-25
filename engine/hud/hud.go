@@ -20,8 +20,6 @@ type GameInfo interface {
 	CastleProgress() ProgressInfo
 	// Interface for speed slider to set game speed
 	SetSpeed(float64)
-	// Current money
-	Balance() int64
 	// Game over will be displayed if true
 	GameOver() bool
 	// Current score
@@ -41,7 +39,6 @@ type GameHUD struct {
 	creepLabel        *widget.Text
 	castleHealth      *widget.ProgressBar
 	speedSlider       *widget.Slider
-	goldLabel         *widget.Text
 	gameOverContainer *widget.Container
 	gameOverScore     *widget.Text
 
@@ -70,7 +67,6 @@ func NewHUD(game GameInfo) (*GameHUD, error) {
 	hud.creepProgress, hud.creepLabel = initCreepProgressBar(rootContainer)
 	hud.castleHealth = initCastleHealthProgressBar(rootContainer)
 	hud.speedSlider = hud.initGameSpeedSlider(rootContainer)
-	hud.goldLabel = initGoldLabel(rootContainer)
 	hud.gameOverContainer = hud.initGameOverContainer(rootContainer)
 
 	// This adds the root container to the UI, so that it will be rendered.
@@ -89,7 +85,6 @@ func (h *GameHUD) Update() {
 	h.ui.Update()
 	h.updateCreepProgress()
 	h.updateCastleHealth()
-	h.updateGold()
 	h.updateGameOver()
 
 	// Draw submenus
@@ -252,34 +247,6 @@ func progressBarWithLabel(root *widget.Container, label string, anchor widget.An
 	return progressBar, labelText
 }
 
-func initGoldLabel(root *widget.Container) *widget.Text {
-	container := widget.NewContainer(
-		widget.ContainerOpts.Layout(widget.NewStackedLayout()),
-		widget.ContainerOpts.WidgetOpts(
-			widget.WidgetOpts.LayoutData(widget.AnchorLayoutData{
-				HorizontalPosition: widget.AnchorLayoutPositionCenter,
-				VerticalPosition:   widget.AnchorLayoutPositionEnd,
-				Padding:            widget.Insets{Bottom: 30, Right: 8},
-			}),
-		),
-	)
-
-	// Init label
-	ttfFont, err := truetype.Parse(goregular.TTF)
-	if err != nil {
-		log.Fatal("Error Parsing Font", err)
-	}
-	fontFace := truetype.NewFace(ttfFont, &truetype.Options{
-		Size: 16,
-	})
-	labelText := widget.NewText(
-		widget.TextOpts.Text("", fontFace, color.RGBA{244, 228, 0, 1}),
-	)
-	container.AddChild(labelText)
-	root.AddChild(container)
-	return labelText
-}
-
 func (hud *GameHUD) initGameOverContainer(root *widget.Container) *widget.Container {
 	container := widget.NewContainer(
 		widget.ContainerOpts.Layout(widget.NewRowLayout(
@@ -344,10 +311,6 @@ func (h *GameHUD) updateCastleHealth() {
 	h.castleHealth.Min = progress.Min
 	h.castleHealth.Max = progress.Max
 	h.castleHealth.SetCurrent(progress.Current)
-}
-
-func (h *GameHUD) updateGold() {
-	h.goldLabel.Label = fmt.Sprintf("Gold: %d", h.game.Balance())
 }
 
 func (h *GameHUD) updateGameOver() {
