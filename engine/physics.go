@@ -8,21 +8,21 @@ import (
 	"github.com/lucb31/game-engine-go/engine/damage"
 )
 
-type CustomCollisionType cp.CollisionType
-
 const (
-	PlayerCollision CustomCollisionType = iota + 1
+	PlayerCollision cp.CollisionType = iota + 1
 	ProjectileCollision
 	NpcCollision
+	ItemCollision
 )
 
 const (
-	PlayerCategory      uint = 1
-	NpcCategory         uint = 1 << 1
-	OuterWallsCategory  uint = 1 << 2
-	HarvestableCategory uint = 1 << 3
-	TowerCategory       uint = 1 << 4
-	ProjectileCategory  uint = 1 << 5
+	PlayerCategory      uint = 1 << iota
+	NpcCategory         uint = 1 << iota
+	OuterWallsCategory  uint = 1 << iota
+	HarvestableCategory uint = 1 << iota
+	TowerCategory       uint = 1 << iota
+	ProjectileCategory  uint = 1 << iota
+	ItemCategory        uint = 1 << iota
 )
 
 // Used to pass damage model and in game timer to collision callback
@@ -34,10 +34,16 @@ type HandlerUserData struct {
 func NewPhysicsSpace(damageModel damage.DamageModel, gameTime *float64) (*cp.Space, error) {
 	// Initialize physics
 	space := cp.NewSpace()
-	// Register collision handlers
+	// Register Projectile - NPC collision handler
 	handler := space.NewCollisionHandler(cp.CollisionType(ProjectileCollision), cp.CollisionType(NpcCollision))
 	handler.UserData = HandlerUserData{damageModel, gameTime}
 	handler.BeginFunc = projectileCollisionHandler
+
+	// Disable all collision with items
+	itemHandler := space.NewWildcardCollisionHandler(ItemCollision)
+	itemHandler.BeginFunc = disableCollisionHandler
+
+	// Register projectile wildcard handler to remove stray projectiles
 	space.NewWildcardCollisionHandler(cp.CollisionType(ProjectileCollision)).PostSolveFunc = removeProjectile
 	return space, nil
 }
@@ -145,6 +151,10 @@ func projectileCollisionHandler(arb *cp.Arbiter, space *cp.Space, userData inter
 
 	// Remove projectile
 	projectile.Destroy()
+	return false
+}
+
+func disableCollisionHandler(arb *cp.Arbiter, space *cp.Space, userData interface{}) bool {
 	return false
 }
 

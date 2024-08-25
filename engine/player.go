@@ -42,6 +42,7 @@ type Player struct {
 const (
 	playerWidth                    = 40
 	playerHeight                   = 40
+	playerPickupRange              = 30.0
 	invulnerableForSecondsAfterHit = 0.5
 )
 
@@ -114,6 +115,9 @@ func (p *Player) Draw(t RenderingTarget) error {
 	if err := p.DrawPlayerStats(t); err != nil {
 		return err
 	}
+	if err := p.DrawInteractionHud(t); err != nil {
+		return err
+	}
 	// Play death animation loop when dead
 	if p.health <= 0 {
 		err := p.animationManager.Loop("dead", p.controller.Orientation())
@@ -124,6 +128,20 @@ func (p *Player) Draw(t RenderingTarget) error {
 	return p.animationManager.Draw(t, p.shape)
 }
 
+// TODO: Needs to move to proper hud
+func (p *Player) DrawInteractionHud(t RenderingTarget) error {
+	var harvestMessage string
+	if p.ItemInRange() != nil {
+		harvestMessage = "Press E to pick up"
+	} else if p.axe.Harvesting() {
+		harvestMessage = "Harvesting..."
+	} else if p.axe.InRange() {
+		harvestMessage = "Press E to harvest"
+	}
+	ebitenutil.DebugPrintAt(t.Screen(), harvestMessage, t.Screen().Bounds().Dx()/2-50, t.Screen().Bounds().Dy()/2+25)
+	return nil
+}
+
 func (p *Player) DrawPlayerStats(t RenderingTarget) error {
 	ebitenutil.DebugPrintAt(t.Screen(), "Player stats", t.Screen().Bounds().Dx()-125, 20)
 	ebitenutil.DebugPrintAt(t.Screen(), fmt.Sprintf("Power %.2f", p.Power()), t.Screen().Bounds().Dx()-125, 35)
@@ -132,7 +150,6 @@ func (p *Player) DrawPlayerStats(t RenderingTarget) error {
 	ebitenutil.DebugPrintAt(t.Screen(), fmt.Sprintf("Speed %.2f", p.MovementSpeed()), t.Screen().Bounds().Dx()-125, 80)
 	ebitenutil.DebugPrintAt(t.Screen(), fmt.Sprintf("Armor %.2f", p.Armor()), t.Screen().Bounds().Dx()-125, 95)
 	ebitenutil.DebugPrintAt(t.Screen(), fmt.Sprintf("AtkSpeed %.2f", p.AtkSpeed()), t.Screen().Bounds().Dx()-125, 110)
-	ebitenutil.DebugPrintAt(t.Screen(), fmt.Sprintf("Can harvest: %v", p.axe.InRange()), t.Screen().Bounds().Dx()-125, 125)
 	return nil
 }
 
@@ -179,8 +196,28 @@ func (p *Player) IsVulnerable() bool {
 	return p.eyeframesTimer.Elapsed() > invulnerableForSecondsAfterHit
 }
 
-func (p *Player) SetAxe(axe HarvestingTool) { p.axe = axe }
+func (p *Player) ItemInRange() *ItemEntity {
+	queryInfo := p.shape.Space().PointQueryNearest(p.shape.Body().Position(), playerPickupRange, cp.NewShapeFilter(cp.NO_GROUP, cp.ALL_CATEGORIES, ItemCategory))
+	if queryInfo.Shape != nil {
+		item, ok := queryInfo.Shape.Body().UserData.(*ItemEntity)
+		if !ok {
+			fmt.Println("Error: Expected item, but received sth else")
+		}
+		return item
+	}
+	return nil
+}
 
+func (p *Player) ItemPickup(item *ItemEntity) error {
+	if err := p.Inventory().AddLoot(item.loot); err != nil {
+		return err
+	}
+
+	// Remove item sprite
+	return item.Destroy()
+}
+
+func (p *Player) SetAxe(axe HarvestingTool) { p.axe = axe }
 func (p *Player) Id() GameEntityId          { return p.id }
 func (p *Player) SetId(id GameEntityId)     { p.id = id }
 func (p *Player) Shape() *cp.Shape          { return p.shape }
@@ -190,8 +227,15 @@ func (p *Player) Inventory() loot.Inventory { return p.inventory }
 func (p *Player) calculateVelocity(body *cp.Body, gravity cp.Vector, damping float64, dt float64) {
 	// Check for interaction inputs
 	if p.controller.Interaction() {
-		// Check for axe harvesting
-		if p.axe.InRange() {
+		itemInRange := p.ItemInRange()
+		if itemInRange != nil {
+			// Check for item pickups
+			if err := p.ItemPickup(itemInRange); err != nil {
+				fmt.Println("Could not pickup item", err.Error())
+				return
+			}
+		} else if p.axe.InRange() {
+			// Check for axe harvesting
 			if err := p.axe.HarvestNearest(); err != nil {
 				fmt.Println("Could not harvest", err.Error())
 				return

@@ -9,6 +9,7 @@ import (
 	"github.com/lucb31/game-engine-go/bin/assets"
 	"github.com/lucb31/game-engine-go/engine"
 	"github.com/lucb31/game-engine-go/engine/hud"
+	"github.com/lucb31/game-engine-go/engine/loot"
 )
 
 type SurvivalGame struct {
@@ -106,6 +107,16 @@ func (game *SurvivalGame) initMap() error {
 			game.world.AddEntity(tree)
 		}
 	}
+
+	// test item
+	item, err := engine.NewItemEntity(game.world, cp.Vector{1750, 800})
+	if err != nil {
+		return err
+	}
+	loot := loot.NewResourcesLootTable()
+	loot.AddWood(500)
+	item.SetLootTable(loot)
+	game.world.AddEntity(item)
 
 	return nil
 }

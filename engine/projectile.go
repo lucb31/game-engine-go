@@ -73,8 +73,7 @@ func NewProjectile(gun Gun, remover EntityRemover, asset *ProjectileAsset) (*Pro
 	body.UserData = p
 
 	p.shape = cp.NewBox(body, 16, 16, 0)
-	p.shape.SetElasticity(0)
-	p.shape.SetFriction(0)
+	p.shape.SetSensor(true)
 	p.shape.SetCollisionType(cp.CollisionType(ProjectileCollision))
 	p.shape.SetFilter(ProjectileCollisionFilter())
 	p.velocity = defaultProjectileSpeed

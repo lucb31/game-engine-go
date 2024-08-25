@@ -9,6 +9,8 @@ import (
 type HarvestingTool interface {
 	// Returns true if there is a harvestable entity within range
 	InRange() bool
+	// Returns true if currently harvesting
+	Harvesting() bool
 	// Returns nil if nothing in range
 	Nearest() Harvestable
 
@@ -72,9 +74,8 @@ func (ht *WoodHarvestingTool) Nearest() Harvestable {
 	return harvestable
 }
 
-func (ht *WoodHarvestingTool) InRange() bool {
-	return ht.Nearest() != nil
-}
+func (ht *WoodHarvestingTool) InRange() bool    { return ht.Nearest() != nil }
+func (ht *WoodHarvestingTool) Harvesting() bool { return ht.harvestingTimer.Active() }
 
 func (ht *WoodHarvestingTool) HarvestNearest() error {
 	// Initiate if not already harvesting
