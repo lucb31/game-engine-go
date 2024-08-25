@@ -9,8 +9,7 @@ import (
 )
 
 type TowerEntity struct {
-	id    engine.GameEntityId
-	world engine.GameEntityManager
+	*engine.BaseEntityImpl
 
 	// Rendering
 	asset     *engine.CharacterAsset
@@ -23,8 +22,12 @@ type TowerEntity struct {
 	gun engine.Gun
 }
 
-func NewTowerEntity(world engine.GameEntityManager, asset *engine.CharacterAsset) (*TowerEntity, error) {
-	tower := &TowerEntity{world: world, asset: asset, animation: "idle"}
+func NewTowerEntity(world engine.EntityRemover, asset *engine.CharacterAsset) (*TowerEntity, error) {
+	base, err := engine.NewBaseEntity(world)
+	if err != nil {
+		return nil, err
+	}
+	tower := &TowerEntity{BaseEntityImpl: base, asset: asset, animation: "idle"}
 	body := cp.NewBody(1, cp.INFINITY)
 	body.SetPosition(cp.Vector{X: 70, Y: 70})
 	body.SetType(cp.BODY_KINEMATIC)
@@ -107,8 +110,5 @@ func (t *TowerEntity) DrawRange(screen engine.RenderingTarget) {
 	screen.StrokeCircle(t.shape.Body().Position().X, t.shape.Body().Position().Y, float32(t.gun.FireRange()), 2.0, color.RGBA{255, 0, 0, 0}, false)
 }
 
-func (t *TowerEntity) Destroy() error               { return t.world.RemoveEntity(t) }
-func (n *TowerEntity) Id() engine.GameEntityId      { return n.id }
-func (n *TowerEntity) SetId(id engine.GameEntityId) { n.id = id }
 func (n *TowerEntity) Shape() *cp.Shape             { return n.shape }
 func (n *TowerEntity) LootTable() *engine.LootTable { return engine.EmptyLootTable() }

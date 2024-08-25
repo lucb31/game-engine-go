@@ -119,7 +119,7 @@ func (w *GameWorld) AddEntity(object GameEntity) error {
 }
 
 // Removes an object from the world by scheduling for deletion
-func (w *GameWorld) RemoveEntity(object GameEntity) error {
+func (w *GameWorld) RemoveEntity(object BaseEntity) error {
 	idToDelete := object.Id()
 	// Check for duplicates
 	for _, id := range w.objectIdsToDelete {
@@ -158,12 +158,12 @@ func (w *GameWorld) AddLayer(mapData []byte, tileset *Tileset) error {
 	return w.WorldMap.AddLayer(mapData, tileset)
 }
 
-func (w *GameWorld) GetEntities() *map[GameEntityId]GameEntity { return &w.objects }
-func (w *GameWorld) EndGame()                                  { w.gameOver = true }
-func (w *GameWorld) Space() *cp.Space                          { return w.space }
-func (w *GameWorld) GetIngameTime() float64                    { return *w.gameTime }
-func (w *GameWorld) IsOver() bool                              { return w.gameOver }
-func (w *GameWorld) DamageModel() damage.DamageModel           { return w.damageModel }
+func (w *GameWorld) EndGame()                        { w.gameOver = true }
+func (w *GameWorld) Space() *cp.Space                { return w.space }
+func (w *GameWorld) GetIngameTime() float64          { return *w.gameTime }
+func (w *GameWorld) IsOver() bool                    { return w.gameOver }
+func (w *GameWorld) DamageModel() damage.DamageModel { return w.damageModel }
+func (w *GameWorld) Player() *Player                 { return w.player }
 
 func (w *GameWorld) drawCombatLog() {
 	log := w.damageModel.DamageLog()

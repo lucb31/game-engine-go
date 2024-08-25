@@ -10,6 +10,7 @@ type DamageRecord struct {
 	GameTime float64
 	Damage   float64
 	Pos      cp.Vector
+	Fatal    bool
 }
 
 type DamageLog interface {

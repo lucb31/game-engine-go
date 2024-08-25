@@ -5,8 +5,7 @@ import (
 )
 
 type NpcEntity struct {
-	id      GameEntityId
-	remover EntityRemover
+	*BaseEntityImpl
 
 	// Logic
 	GameEntityStats
@@ -41,7 +40,11 @@ func NpcCollisionFilter() cp.ShapeFilter {
 }
 
 func NewNpc(remover EntityRemover, asset *CharacterAsset, opts NpcOpts) (*NpcEntity, error) {
-	npc := &NpcEntity{remover: remover}
+	base, err := NewBaseEntity(remover)
+	if err != nil {
+		return nil, err
+	}
+	npc := &NpcEntity{BaseEntityImpl: base}
 	// Physics model
 	body := cp.NewBody(1, cp.INFINITY)
 	body.SetPosition(cp.Vector{X: 48, Y: 16})
@@ -101,12 +104,6 @@ func (n *NpcEntity) Draw(t RenderingTarget) error {
 	return n.asset.Draw(t, n.animation, n.shape)
 }
 
-func (n *NpcEntity) Destroy() error {
-	return n.remover.RemoveEntity(n)
-}
-
-func (n *NpcEntity) Id() GameEntityId      { return n.id }
-func (n *NpcEntity) SetId(id GameEntityId) { n.id = id }
 func (n *NpcEntity) Shape() *cp.Shape      { return n.shape }
 func (n *NpcEntity) IsVulnerable() bool    { return true }
 func (n *NpcEntity) LootTable() *LootTable { return n.loot }

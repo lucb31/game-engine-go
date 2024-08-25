@@ -16,7 +16,6 @@ type CreepManager interface {
 
 type BaseCreepManager struct {
 	entityManager GameEntityManager
-	goldManager   GoldManager
 	creepProvider CreepProvider
 
 	// Configuration params for currently active wave
@@ -42,8 +41,8 @@ type Wave struct {
 	HealthScalingFunc  func(baseHealth float64) float64
 }
 
-func NewBaseCreepManager(em GameEntityManager, goldManager GoldManager) (*BaseCreepManager, error) {
-	cm := &BaseCreepManager{entityManager: em, goldManager: goldManager}
+func NewBaseCreepManager(em GameEntityManager) (*BaseCreepManager, error) {
+	cm := &BaseCreepManager{entityManager: em}
 	var err error
 	if cm.creepSpawnTimer, err = NewIngameTimer(em); err != nil {
 		return nil, err
@@ -59,7 +58,7 @@ func NewDefaultCreepManager(em GameEntityManager, asset *CharacterAsset, goldMan
 	if asset == nil || em == nil {
 		return nil, fmt.Errorf("Invalid arguments")
 	}
-	cm, err := NewBaseCreepManager(em, goldManager)
+	cm, err := NewBaseCreepManager(em)
 	if err != nil {
 		return nil, err
 	}
@@ -97,17 +96,14 @@ func (c *BaseCreepManager) Update() error {
 	return nil
 }
 
-func (c *BaseCreepManager) RemoveEntity(entity GameEntity) error {
-	loot := *entity.LootTable()
+// Special entity remove callback required to keep track of alive creeps
+func (c *BaseCreepManager) RemoveEntity(entity BaseEntity) error {
 	// Remove npc from game world
 	if err := c.entityManager.RemoveEntity(entity); err != nil {
 		return err
 	}
 	c.creepsAlive--
-	// Add gold for kill
-	// TODO: Should be handled via event-based damage / loot system
-	_, err := c.goldManager.Add(loot.Gold)
-	return err
+	return nil
 }
 
 func (c *BaseCreepManager) Progress() hud.ProgressInfo {

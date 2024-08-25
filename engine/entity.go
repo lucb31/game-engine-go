@@ -9,21 +9,40 @@ import (
 
 type GameEntityId int
 type GameEntity interface {
-	Id() GameEntityId
-	SetId(GameEntityId)
+	BaseEntity
+	Lootable
 	Shape() *cp.Shape
 	Draw(RenderingTarget) error
-	Lootable
 }
 
 // Interface for an entity that can provide loot
 type Lootable interface {
 	LootTable() *LootTable
+}
+
+type BaseEntity interface {
+	Id() GameEntityId
+	SetId(GameEntityId)
 	Destroy() error
 }
 
+type BaseEntityImpl struct {
+	remover EntityRemover
+	id      GameEntityId
+}
+
+func NewBaseEntity(remover EntityRemover) (*BaseEntityImpl, error) {
+	return &BaseEntityImpl{remover: remover}, nil
+}
+
+func (b *BaseEntityImpl) Id() GameEntityId      { return b.id }
+func (b *BaseEntityImpl) SetId(id GameEntityId) { b.id = id }
+func (b *BaseEntityImpl) Destroy() error {
+	return b.remover.RemoveEntity(b)
+}
+
 type EntityRemover interface {
-	RemoveEntity(object GameEntity) error
+	RemoveEntity(object BaseEntity) error
 }
 
 type IngameTimeProvider interface {
@@ -34,7 +53,6 @@ type GameEntityManager interface {
 	EntityRemover
 	IngameTimeProvider
 	AddEntity(object GameEntity) error
-	GetEntities() *map[GameEntityId](GameEntity)
 	Space() *cp.Space
 	DamageModel() damage.DamageModel
 	EndGame()

@@ -6,20 +6,22 @@ import (
 
 type TreeEntity struct {
 	// Dependencies
-	em EntityRemover
-
-	id    GameEntityId
+	*BaseEntityImpl
 	loot  *LootTable
 	shape *cp.Shape
 }
 
 const (
-	treeWidth  = 16
-	treeHeight = 32
+	treeWidth  = 32
+	treeHeight = 64
 )
 
 func NewTree(em EntityRemover, pos cp.Vector) (*TreeEntity, error) {
-	t := &TreeEntity{}
+	base, err := NewBaseEntity(em)
+	if err != nil {
+		return nil, err
+	}
+	t := &TreeEntity{BaseEntityImpl: base}
 	loot := &LootTable{Gold: 10}
 
 	// Init body
@@ -34,7 +36,6 @@ func NewTree(em EntityRemover, pos cp.Vector) (*TreeEntity, error) {
 	shape.SetFilter(HarvestableCollisionFilter)
 	t.shape = shape
 	t.loot = loot
-	t.em = em
 
 	return t, nil
 }
@@ -51,7 +52,3 @@ func (p *TreeEntity) Id() GameEntityId      { return p.id }
 func (p *TreeEntity) SetId(id GameEntityId) { p.id = id }
 func (p *TreeEntity) Shape() *cp.Shape      { return p.shape }
 func (p *TreeEntity) LootTable() *LootTable { return p.loot }
-
-func (p *TreeEntity) Destroy() error {
-	return p.em.RemoveEntity(p)
-}

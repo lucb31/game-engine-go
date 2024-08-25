@@ -18,7 +18,7 @@ import (
 type ShopMenu struct {
 	// Dependencies
 	ui          *ebitenui.UI
-	goldManager engine.GoldManager
+	inventory   engine.Inventory
 	playerStats engine.GameEntityStatReadWriter
 
 	// UI
@@ -76,8 +76,8 @@ const (
 	rerollPrice = 10
 )
 
-func NewShopMenu(goldManager engine.GoldManager, playerStats engine.GameEntityStatReadWriter) (*ShopMenu, error) {
-	shop := &ShopMenu{goldManager: goldManager, playerStats: playerStats}
+func NewShopMenu(inventory engine.Inventory, playerStats engine.GameEntityStatReadWriter) (*ShopMenu, error) {
+	shop := &ShopMenu{inventory: inventory, playerStats: playerStats}
 	return shop, nil
 }
 
@@ -94,11 +94,11 @@ func (s *ShopMenu) RerollItemSlot(idx int) {
 
 func (s *ShopMenu) BuyHandler(idx int) {
 	item := s.itemSlots[idx].item
-	if !s.goldManager.CanAfford(item.Price) {
+	if !s.inventory.CanAfford(item.Price) {
 		fmt.Println("Cannot afford item", item)
 		return
 	}
-	newBalance, err := s.goldManager.Remove(item.Price)
+	newBalance, err := s.inventory.Spend(item.Price)
 	if err != nil {
 		fmt.Println("Error removing item cost", err.Error())
 		return
@@ -114,11 +114,11 @@ func (s *ShopMenu) BuyHandler(idx int) {
 }
 
 func (s *ShopMenu) RerollHandler(idx int) {
-	if !s.goldManager.CanAfford(rerollPrice) {
+	if !s.inventory.CanAfford(rerollPrice) {
 		fmt.Println("Cannot afford to reroll")
 		return
 	}
-	newBalance, err := s.goldManager.Remove(rerollPrice)
+	newBalance, err := s.inventory.Spend(rerollPrice)
 	if err != nil {
 		fmt.Println("Error removing item cost", err.Error())
 		return
@@ -147,11 +147,11 @@ func (s *ShopMenu) Update() {
 		if slot.buyButton == nil {
 			continue
 		}
-		slot.buyButton.GetWidget().Disabled = !s.goldManager.CanAfford(slot.item.Price)
+		slot.buyButton.GetWidget().Disabled = !s.inventory.CanAfford(slot.item.Price)
 		if slot.rerollButton == nil {
 			continue
 		}
-		slot.rerollButton.GetWidget().Disabled = !s.goldManager.CanAfford(rerollPrice)
+		slot.rerollButton.GetWidget().Disabled = !s.inventory.CanAfford(rerollPrice)
 	}
 }
 

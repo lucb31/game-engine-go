@@ -22,6 +22,7 @@ type Player struct {
 	animationManager AnimationController
 	asset            *CharacterAsset
 	projectileAsset  *ProjectileAsset
+	inventory        Inventory
 
 	// Physics
 	shape *cp.Shape
@@ -98,6 +99,12 @@ func NewPlayer(world GameEntityManager, asset *CharacterAsset, projectileAsset *
 		return nil, err
 	}
 
+	// Init inventory
+	p.inventory, err = NewInventory()
+	if err != nil {
+		return nil, err
+	}
+
 	return p, nil
 }
 
@@ -162,7 +169,7 @@ func (p *Player) OnPlayerHit(arb *cp.Arbiter, space *cp.Space, userData interfac
 	// Register eyeframe timeout
 	p.eyeframesTimer.Start()
 
-	npc.Destroy()
+	// npc.Destroy()
 	return false
 }
 
@@ -177,6 +184,7 @@ func (p *Player) Id() GameEntityId      { return p.id }
 func (p *Player) SetId(id GameEntityId) { p.id = id }
 func (p *Player) Shape() *cp.Shape      { return p.shape }
 func (p *Player) LootTable() *LootTable { return EmptyLootTable() }
+func (p *Player) Inventory() Inventory  { return p.inventory }
 
 func (p *Player) calculateVelocity(body *cp.Body, gravity cp.Vector, damping float64, dt float64) {
 	// Check for interaction inputs

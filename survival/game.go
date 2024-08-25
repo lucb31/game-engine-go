@@ -14,7 +14,6 @@ import (
 type SurvivalGame struct {
 	world        *engine.GameWorld
 	camera       engine.Camera
-	goldManager  engine.GoldManager
 	creepManager engine.CreepManager
 
 	hud                       *hud.GameHUD
@@ -142,16 +141,8 @@ func (game *SurvivalGame) initialize() error {
 	}
 	game.world.SetCamera(camera)
 
-	// Setup gold management
-	game.goldManager, err = engine.NewInMemoryGoldManager()
-	if err != nil {
-		return err
-	}
-	// Add starting gold
-	game.goldManager.Add(50)
-
 	// Setup creep management
-	game.creepManager, err = engine.NewBaseCreepManager(w, game.goldManager)
+	game.creepManager, err = engine.NewBaseCreepManager(w)
 	if err != nil {
 		return err
 	}
@@ -176,7 +167,7 @@ func (game *SurvivalGame) initialize() error {
 	}
 
 	// Init shop
-	shop, err := NewShopMenu(game.goldManager, player)
+	shop, err := NewShopMenu(player.Inventory(), player)
 	if err != nil {
 		return err
 	}
@@ -196,10 +187,12 @@ func NewSurvivalGame(screenWidth, screenHeight int) (*SurvivalGame, error) {
 	return game, nil
 }
 
-func (g *SurvivalGame) SetSpeed(speed float64)           { g.world.GameSpeed = speed }
-func (g *SurvivalGame) GameOver() bool                   { return g.world.IsOver() }
-func (g *SurvivalGame) Balance() int64                   { return g.goldManager.Balance() }
-func (g *SurvivalGame) Score() hud.ScoreValue            { return hud.ScoreValue(g.goldManager.Revenue()) }
+func (g *SurvivalGame) SetSpeed(speed float64) { g.world.GameSpeed = speed }
+func (g *SurvivalGame) GameOver() bool         { return g.world.IsOver() }
+func (g *SurvivalGame) Balance() int64         { return g.world.Player().Inventory().Balance() }
+func (g *SurvivalGame) Score() hud.ScoreValue {
+	return hud.ScoreValue(g.world.Player().Inventory().Revenue())
+}
 func (g *SurvivalGame) CastleProgress() hud.ProgressInfo { return hud.ProgressInfo{} }
 func (g *SurvivalGame) CreepProgress() hud.ProgressInfo  { return g.creepManager.Progress() }
 

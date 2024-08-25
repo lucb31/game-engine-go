@@ -18,6 +18,7 @@ type HarvestingTool interface {
 }
 
 type Harvestable interface {
+	BaseEntity
 	Lootable
 }
 
@@ -30,7 +31,7 @@ const (
 
 type WoodHarvestingTool struct {
 	// Dependencies
-	owner GameEntity
+	owner GameEntityWithInventory
 
 	// Stats
 	harvestingRange float64
@@ -41,7 +42,7 @@ type WoodHarvestingTool struct {
 	target          Harvestable
 }
 
-func NewWoodHarvestingTool(itp IngameTimeProvider, owner GameEntity) (*WoodHarvestingTool, error) {
+func NewWoodHarvestingTool(itp IngameTimeProvider, owner GameEntityWithInventory) (*WoodHarvestingTool, error) {
 	if owner == nil {
 		return nil, fmt.Errorf("Cannot init wood harvesting tool without owner")
 	}
@@ -93,6 +94,10 @@ func (ht *WoodHarvestingTool) HarvestNearest() error {
 		if err := ht.target.Destroy(); err != nil {
 			return err
 		}
+		// Add loot for harvesting target
+		ht.owner.Inventory().Add(ht.target.LootTable())
+
+		// Reset harvesting tool
 		ht.harvestingTimer.Stop()
 		ht.target = nil
 	}

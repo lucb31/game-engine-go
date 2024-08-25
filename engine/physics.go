@@ -125,10 +125,24 @@ func projectileCollisionHandler(arb *cp.Arbiter, space *cp.Space, userData inter
 	}
 	damageModel := handlerData.damageModel
 	// Calculate & apply damage with COPY of projectile
-	_, err := damageModel.ApplyDamage(projectile, defender, *handlerData.gameTime)
+	damageResult, err := damageModel.ApplyDamage(projectile, defender, *handlerData.gameTime)
 	if err != nil {
 		fmt.Println("Could not apply damage", err.Error())
 	}
+
+	// Check if we need to distribute loot
+	lootReceiver, isLootReceiver := projectile.gun.Owner().(GameEntityWithInventory)
+	if damageResult.Fatal && isLootReceiver {
+		defenderEntity, isGameEntity := defender.(GameEntity)
+		if !isGameEntity {
+			fmt.Println("ERROR: Expected game entity for defender")
+			return false
+		}
+		if err = lootReceiver.Inventory().Add(defenderEntity.LootTable()); err != nil {
+			fmt.Println("Error while adding loot: ", err.Error())
+		}
+	}
+
 	// Remove projectile
 	projectile.Destroy()
 	return false

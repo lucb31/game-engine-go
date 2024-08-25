@@ -13,9 +13,7 @@ func ProjectileCollisionFilter() cp.ShapeFilter {
 }
 
 type Projectile struct {
-	// Entity management
-	id    GameEntityId
-	world GameEntityManager
+	*BaseEntityImpl
 
 	// Physics
 	shape    *cp.Shape
@@ -59,11 +57,15 @@ func (a *ProjectileAsset) Draw(t RenderingTarget, position cp.Vector, angleInRad
 	return nil
 }
 
-func NewProjectile(gun Gun, world GameEntityManager, asset *ProjectileAsset) (*Projectile, error) {
+func NewProjectile(gun Gun, remover EntityRemover, asset *ProjectileAsset) (*Projectile, error) {
 	if asset.Image == nil {
 		return nil, fmt.Errorf("Failed to instantiate projectile. No asset provided")
 	}
-	p := &Projectile{world: world, asset: asset}
+	base, err := NewBaseEntity(remover)
+	if err != nil {
+		return nil, err
+	}
+	p := &Projectile{BaseEntityImpl: base, asset: asset}
 	body := cp.NewKinematicBody()
 	body.SetPosition(gun.Owner().Shape().Body().Position())
 	body.SetVelocityUpdateFunc(p.calculateVelocity)
@@ -85,22 +87,17 @@ func (p *Projectile) Draw(t RenderingTarget) error {
 	return p.asset.Draw(t, p.shape.Body().Position(), angle)
 }
 
-func (p *Projectile) Id() GameEntityId      { return p.id }
-func (p *Projectile) SetId(id GameEntityId) { p.id = id }
 func (p *Projectile) Shape() *cp.Shape      { return p.shape }
 func (p *Projectile) Power() float64        { return p.gun.Power() }
 func (p *Projectile) AtkSpeed() float64     { return 1.0 }
 func (p *Projectile) LootTable() *LootTable { return EmptyLootTable() }
-func (p *Projectile) Destroy() error {
-	return p.world.RemoveEntity(p)
-}
 
 func (p *Projectile) calculateVelocity(body *cp.Body, gravity cp.Vector, damping float64, dt float64) {
 	// Remove guided projectile if target no longer exists
 	if p.target != nil {
-		// TODO: Utilize physics space query to find target. Then we can remove the whole "GetEntities" idea
-		_, ok := (*p.world.GetEntities())[p.target.Id()]
-		if !ok {
+		targetStillExists := p.shape.Space().ContainsBody(p.target.Shape().Body())
+		if !targetStillExists {
+			fmt.Println("Removing projectile: Target no longer exists")
 			p.Destroy()
 			return
 		}
