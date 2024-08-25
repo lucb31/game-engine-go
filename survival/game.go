@@ -91,18 +91,20 @@ func (game *SurvivalGame) initMap() error {
 		return err
 	}
 
-	// Init trees
+	// Init forest
 	treeAsset, err := game.world.AssetManager.CharacterAsset("tree")
 	if err != nil {
 		return err
 	}
-	for i := range 10 {
-		pos := cp.Vector{float64(i * 100), float64(i * 100)}
-		tree, err := engine.NewTree(game.world, pos, treeAsset)
-		if err != nil {
-			return err
+	for row := range 10 {
+		for col := range 10 {
+			pos := cp.Vector{700 + float64(col*34), 700 + float64(row*66)}
+			tree, err := engine.NewTree(game.world, pos, treeAsset)
+			if err != nil {
+				return err
+			}
+			game.world.AddEntity(tree)
 		}
-		game.world.AddEntity(tree)
 	}
 
 	return nil
