@@ -245,7 +245,7 @@ var characterResources []characterResource = []characterResource{
 		128,
 		128,
 		map[string]GameAssetAnimation{
-			"idle":  {StartTile: 3, FrameCount: 1},
+			"idle":  {StartTile: 5, FrameCount: 1},
 			"spawn": {StartTile: 0, FrameCount: 6, Speed: defaultAnimationSpeed},
 		},
 		-32,

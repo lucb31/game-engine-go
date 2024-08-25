@@ -53,6 +53,7 @@ func (a *BaseAnimationManager) Play(animationKey string) error {
 	if err != nil {
 		return err
 	}
+	a.playingAnimationTimer.Stop()
 	a.playingAnimationTimer.Start()
 	return nil
 }
@@ -84,7 +85,7 @@ func (a *BaseAnimationManager) Draw(t RenderingTarget, shape *cp.Shape, o Orient
 	if diff < float64(totalAnimationFrames) {
 		// Calculate current animation tile
 		currentAnimationTile := int(diff / float64(a.playingAnimation.Speed))
-		return a.asset.DrawAnimationTile(t, shape, a.playingAnimation, int(currentAnimationTile), o)
+		return a.asset.DrawAnimationTile(t, shape, a.playingAnimation, currentAnimationTile, o)
 	}
 
 	// Finished playing, back to loop

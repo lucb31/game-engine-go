@@ -24,11 +24,12 @@ type BaseCreepManager struct {
 	// Active wave
 	creepsSpawned int
 	creepsAlive   int
+	waveCleared   bool
 	// Timer to control creep spawns during an active wave
-	creepSpawnTimer Timer
+	creepSpawnTimeout Timeout
 
 	// Timer to control idle time between waves
-	spawnIdleTimer Timer
+	spawnIdleTimeout Timeout
 }
 
 const idleTimeAfterWaveFinished = 10.0
@@ -44,12 +45,14 @@ type Wave struct {
 func NewBaseCreepManager(em GameEntityManager) (*BaseCreepManager, error) {
 	cm := &BaseCreepManager{entityManager: em}
 	var err error
-	if cm.creepSpawnTimer, err = NewIngameTimer(em); err != nil {
+	if cm.creepSpawnTimeout, err = NewIngameTimeout(em); err != nil {
 		return nil, err
 	}
-	if cm.spawnIdleTimer, err = NewIngameTimer(em); err != nil {
+	if cm.spawnIdleTimeout, err = NewIngameTimeout(em); err != nil {
 		return nil, err
 	}
+	// Start with a idle phase
+	cm.spawnIdleTimeout.Set(idleTimeAfterWaveFinished)
 
 	return cm, nil
 }
@@ -72,27 +75,27 @@ func NewDefaultCreepManager(em GameEntityManager, asset *CharacterAsset) (*BaseC
 
 func (c *BaseCreepManager) Update() error {
 	// As long as the idle timer is running, we're not supposed to do anything
-	if c.spawnIdleTimer.Elapsed() < idleTimeAfterWaveFinished {
+	if !c.spawnIdleTimeout.Done() {
 		return nil
 	}
 
-	// Stop idle timer & spawn next wave
-	if c.spawnIdleTimer.Active() {
-		if err := c.NextWave(); err != nil {
-			return err
-		}
-		c.spawnIdleTimer.Stop()
+	// Wave ongoing: Check if creeps to spawn left
+	if c.creepsSpawned < c.activeWave.TotalCreepsToSpawn {
+		return c.spawnCreep()
+	}
+	// All creaps dead, start idle timeout & update status
+	if !c.waveCleared && c.creepsAlive == 0 {
+		fmt.Println("Wave cleared. Setting idle timeout")
+		c.waveCleared = true
+		c.spawnIdleTimeout.Set(idleTimeAfterWaveFinished)
+		return nil
+	}
+	// Next wave ready: Spawn next wave, if cleared & timeout done
+	if c.waveCleared {
+		fmt.Println("Spawning next wave")
+		return c.NextWave()
 	}
 
-	// Check if creeps to spawn left
-	if c.creepsSpawned < c.activeWave.TotalCreepsToSpawn {
-		if err := c.spawnCreep(); err != nil {
-			return err
-		}
-	} else if c.creepsAlive == 0 {
-		// Wave cleared, start idle timer
-		c.spawnIdleTimer.Start()
-	}
 	return nil
 }
 
@@ -109,9 +112,9 @@ func (c *BaseCreepManager) RemoveEntity(entity BaseEntity) error {
 func (c *BaseCreepManager) Progress() hud.ProgressInfo {
 	label := fmt.Sprintf("Wave %d", c.activeWave.Round)
 	// While idle timer is active, show remaining timeout
-	if c.spawnIdleTimer.Active() {
+	if !c.spawnIdleTimeout.Done() {
 		label := "DAY"
-		current := int((idleTimeAfterWaveFinished - c.spawnIdleTimer.Elapsed()) / idleTimeAfterWaveFinished * 100)
+		current := int((idleTimeAfterWaveFinished - c.spawnIdleTimeout.Elapsed()) / idleTimeAfterWaveFinished * 100)
 		return hud.ProgressInfo{Min: 0, Max: 100, Current: current, Label: label}
 	}
 	// While wave is spawning show wave progress
@@ -126,7 +129,7 @@ func (c *BaseCreepManager) SetProvider(p CreepProvider) error {
 
 func (c *BaseCreepManager) spawnCreep() error {
 	// Timeout until creep spawn timer over
-	if c.creepSpawnTimer.Elapsed() < 1/c.activeWave.WaveTicksPerSecond {
+	if !c.creepSpawnTimeout.Done() {
 		return nil
 	}
 
@@ -142,7 +145,7 @@ func (c *BaseCreepManager) spawnCreep() error {
 	}
 
 	// Update metrics
-	c.creepSpawnTimer.Start()
+	c.creepSpawnTimeout.Set(1 / c.activeWave.WaveTicksPerSecond)
 	return nil
 }
 
@@ -165,6 +168,7 @@ func (c *BaseCreepManager) NextWave() error {
 	c.activeWave = &wave
 	c.creepsAlive = 0
 	c.creepsSpawned = 0
-	fmt.Printf("Wave cleared! Starting wave %v...\n", c.activeWave)
+	fmt.Printf("Starting wave %v...\n", c.activeWave)
+	c.creepSpawnTimeout.Set(1 / wave.WaveTicksPerSecond)
 	return nil
 }

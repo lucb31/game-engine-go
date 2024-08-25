@@ -35,7 +35,7 @@ type Player struct {
 	axe HarvestingTool
 
 	// Eyeframes
-	eyeframesTimer Timer
+	eyeframesTimeout Timeout
 }
 
 const (
@@ -83,13 +83,13 @@ func NewPlayer(world GameEntityManager, asset *CharacterAsset, projectileAsset *
 	})
 
 	// Init input controller
-	p.controller, err = NewKeyboardPlayerController(p.asset.AnimationController())
+	p.controller, err = NewKeyboardPlayerController(p.asset.AnimationController(), p.world)
 	if err != nil {
 		return nil, err
 	}
 
 	// Init eyeframe timer
-	p.eyeframesTimer, err = NewIngameTimer(world)
+	p.eyeframesTimeout, err = NewIngameTimeout(world)
 	if err != nil {
 		return nil, err
 	}
@@ -178,7 +178,7 @@ func (p *Player) OnPlayerHit(arb *cp.Arbiter, space *cp.Space, userData interfac
 	}
 
 	// Register eyeframe timeout
-	p.eyeframesTimer.Start()
+	p.eyeframesTimeout.Set(invulnerableForSecondsAfterHit)
 
 	// npc.Destroy()
 	return false
@@ -186,7 +186,7 @@ func (p *Player) OnPlayerHit(arb *cp.Arbiter, space *cp.Space, userData interfac
 
 // Player invulnerable for a brief period after being hit
 func (p *Player) IsVulnerable() bool {
-	return p.eyeframesTimer.Elapsed() > invulnerableForSecondsAfterHit
+	return p.eyeframesTimeout.Done()
 }
 
 func (p *Player) ItemInRange() *ItemEntity {
@@ -218,6 +218,7 @@ func (p *Player) LootTable() loot.LootTable { return loot.NewEmptyLootTable() }
 func (p *Player) Inventory() loot.Inventory { return p.inventory }
 
 func (p *Player) calculateVelocity(body *cp.Body, gravity cp.Vector, damping float64, dt float64) {
+	p.controller.Update()
 	// Check for interaction inputs
 	if p.controller.Interaction() {
 		itemInRange := p.ItemInRange()
@@ -253,6 +254,6 @@ func (p *Player) calculateVelocity(body *cp.Body, gravity cp.Vector, damping flo
 	}
 
 	// Update velocity based on inputs
-	velocity := p.controller.CalcVelocity(p.MovementSpeed(), p.world.IngameTime())
+	velocity := p.controller.CalcVelocity(p.MovementSpeed())
 	body.SetVelocityVector(velocity)
 }

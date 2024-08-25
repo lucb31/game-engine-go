@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"fmt"
 	"math"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -10,30 +11,54 @@ import (
 
 // Parses user input and translates into player movement
 type PlayerController interface {
-	CalcVelocity(max, t float64) cp.Vector
+	CalcVelocity(max float64) cp.Vector
 	Orientation() Orientation
 	// True WHILE interaction is ongoing
 	Interaction() bool
+	Update()
 }
 
 type KeyboardPlayerController struct {
+	// Dependencies
 	animationController AnimationController
+
 	// General movement
-	movingEastSince  float64
-	movingWestSince  float64
-	movingNorthSince float64
-	movingSouthSince float64
+	movingEastTimer  Timer
+	movingWestTimer  Timer
+	movingNorthTimer Timer
+	movingSouthTimer Timer
 
 	// Dash
-	dashingSince  float64
-	dashDirection cp.Vector
+	dashActiveTimer     Timer
+	dashCooldownTimeout Timeout
+	dashDirection       cp.Vector
 
 	orientation Orientation
 }
 
-func NewKeyboardPlayerController(ac AnimationController) (*KeyboardPlayerController, error) {
+func NewKeyboardPlayerController(ac AnimationController, igt IngameTimeProvider) (*KeyboardPlayerController, error) {
 	c := &KeyboardPlayerController{}
 	c.animationController = ac
+	var err error
+	if c.movingEastTimer, err = NewIngameTimer(igt); err != nil {
+		return nil, err
+	}
+	if c.movingWestTimer, err = NewIngameTimer(igt); err != nil {
+		return nil, err
+	}
+	if c.movingSouthTimer, err = NewIngameTimer(igt); err != nil {
+		return nil, err
+	}
+	if c.movingNorthTimer, err = NewIngameTimer(igt); err != nil {
+		return nil, err
+	}
+	if c.dashActiveTimer, err = NewIngameTimer(igt); err != nil {
+		return nil, err
+	}
+	if c.dashCooldownTimeout, err = NewIngameTimeout(igt); err != nil {
+		return nil, err
+	}
+	c.dashCooldownTimeout.Set(dashCooldownInSeconds)
 	return c, nil
 }
 
@@ -47,48 +72,43 @@ const (
 	dashCooldownInSeconds = 2.0
 )
 
-func (c *KeyboardPlayerController) CalcVelocity(maxVelocity, gameTime float64) cp.Vector {
-	// Reading inputs
+func (c *KeyboardPlayerController) Update() {
+	// Reading movement inputs
 	if ebiten.IsKeyPressed(ebiten.KeyW) {
-		c.movingSouthSince = 0
-		if c.movingNorthSince == 0 {
-			c.movingNorthSince = gameTime
-		}
+		c.movingSouthTimer.Stop()
+		c.movingNorthTimer.Start()
 	} else {
-		c.movingNorthSince = 0
+		c.movingNorthTimer.Stop()
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyS) {
-		c.movingNorthSince = 0
-		if c.movingSouthSince == 0 {
-			c.movingSouthSince = gameTime
-		}
+		c.movingNorthTimer.Stop()
+		c.movingSouthTimer.Start()
 	} else {
-		c.movingSouthSince = 0
+		c.movingSouthTimer.Stop()
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyD) {
-		c.movingWestSince = 0
-		if c.movingEastSince == 0 {
-			c.movingEastSince = gameTime
-		}
+		c.movingWestTimer.Stop()
+		c.movingEastTimer.Start()
 	} else {
-		c.movingEastSince = 0
+		c.movingEastTimer.Stop()
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyA) {
-		c.movingEastSince = 0
-		if c.movingWestSince == 0 {
-			c.movingWestSince = gameTime
-		}
+		c.movingEastTimer.Stop()
+		c.movingWestTimer.Start()
 	} else {
-		c.movingWestSince = 0
+		c.movingWestTimer.Stop()
 	}
+}
+
+func (c *KeyboardPlayerController) CalcVelocity(maxVelocity float64) cp.Vector {
 	// Apply smoothened velocity
 	vel := cp.Vector{
-		X: smoothenVel(c.movingEastSince, gameTime, maxVelocity) - smoothenVel(c.movingWestSince, gameTime, maxVelocity),
-		Y: smoothenVel(c.movingSouthSince, gameTime, maxVelocity) - smoothenVel(c.movingNorthSince, gameTime, maxVelocity),
+		X: smoothenVel(c.movingEastTimer.Elapsed(), maxVelocity) - smoothenVel(c.movingWestTimer.Elapsed(), maxVelocity),
+		Y: smoothenVel(c.movingSouthTimer.Elapsed(), maxVelocity) - smoothenVel(c.movingNorthTimer.Elapsed(), maxVelocity),
 	}
 
 	// Add up velocity from walking & dashing
-	totalVel := vel.Add(c.calcVelFromDash(vel, gameTime))
+	totalVel := vel.Add(c.calcVelFromDash(vel))
 
 	// Update orientation
 	if totalVel.Length() > 0.0 {
@@ -109,38 +129,35 @@ func (c *KeyboardPlayerController) Interaction() bool {
 
 func (c *KeyboardPlayerController) Orientation() Orientation { return c.orientation }
 
-func (c *KeyboardPlayerController) calcVelFromDash(vel cp.Vector, gameTime float64) cp.Vector {
-	diff := gameTime - c.dashingSince
+func (c *KeyboardPlayerController) calcVelFromDash(vel cp.Vector) cp.Vector {
 	// Register new dashes
-	if inpututil.IsKeyJustPressed(ebiten.KeySpace) {
-		// Timeout
-		if diff > dashCooldownInSeconds {
-			c.dashingSince = gameTime
-			// While moving, dash in direction of movement
-			// While standing still, dash in direction of last horizontal movement
-			if vel.Length() > 0 {
-				c.dashDirection = vel.Normalize()
-			} else if c.orientation&West == 0 {
-				c.dashDirection = cp.Vector{X: -1, Y: 0}
-			} else {
-				c.dashDirection = cp.Vector{X: 1, Y: 0}
-			}
-
-			// Queue animation
-			c.animationController.Play("dash")
-			diff = 0
+	if c.dashCooldownTimeout.Done() && inpututil.IsKeyJustPressed(ebiten.KeySpace) {
+		fmt.Println("New dash queued")
+		// While moving, dash in direction of movement
+		// While standing still, dash in direction of last horizontal movement
+		if vel.Length() > 0 {
+			c.dashDirection = vel.Normalize()
+		} else if c.orientation&West == 0 {
+			c.dashDirection = cp.Vector{X: -1, Y: 0}
+		} else {
+			c.dashDirection = cp.Vector{X: 1, Y: 0}
 		}
+
+		// Queue animation
+		c.animationController.Play("dash")
+		c.dashActiveTimer.Start()
+		c.dashCooldownTimeout.Set(dashCooldownInSeconds)
 	}
 	// Nothing to do if no dash ongoing
-	if c.dashingSince == 0 {
+	if !c.dashActiveTimer.Active() {
 		return cp.Vector{}
 	}
 	// Check if dashing finished
-	if diff > dashDurationInSeconds {
-		c.dashingSince = 0
+	if c.dashActiveTimer.Elapsed() > dashDurationInSeconds {
+		c.dashActiveTimer.Stop()
 		return cp.Vector{}
 	}
-	progressInRampUp := diff / dashDurationInSeconds
+	progressInRampUp := c.dashActiveTimer.Elapsed() / dashDurationInSeconds
 	smoothenedProgress := easeInOutCubic(progressInRampUp)
 	dashVelocity := dashDistance / dashDurationInSeconds
 	smoothenedVelocity := smoothenedProgress * dashVelocity
@@ -151,12 +168,11 @@ func (c *KeyboardPlayerController) calcVelFromDash(vel cp.Vector, gameTime float
 
 // Smoothen input value by comparing time difference between start and end time to ramp up time
 // and applying easing function
-func smoothenVel(startAt, gameTime, maxVel float64) float64 {
-	if startAt == 0 {
+func smoothenVel(elapsed, maxVel float64) float64 {
+	if elapsed == math.MaxFloat64 {
 		return 0
 	}
-	diff := gameTime - startAt
-	progressInRampUp := diff / rampUpTimeInSeconds
+	progressInRampUp := elapsed / rampUpTimeInSeconds
 	smoothenedProgress := easeOutExpo(progressInRampUp)
 	smoothenedVelocity := smoothenedProgress * maxVel
 	return smoothenedVelocity
