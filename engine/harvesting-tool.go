@@ -23,6 +23,7 @@ type Harvestable interface {
 }
 
 var HarvestToolCollisionFilter = cp.NewShapeFilter(cp.NO_GROUP, cp.ALL_CATEGORIES, HarvestableCategory)
+var HarvestableCollisionFilter = cp.NewShapeFilter(0, HarvestableCategory, PlayerCategory)
 
 const (
 	defaultHarvestingSpeed = 1.0

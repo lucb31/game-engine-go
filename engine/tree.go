@@ -8,8 +8,12 @@ import (
 type TreeEntity struct {
 	// Dependencies
 	*BaseEntityImpl
+
 	loot  loot.LootTable
 	shape *cp.Shape
+
+	// Visuals
+	asset *CharacterAsset
 }
 
 const (
@@ -17,12 +21,12 @@ const (
 	treeHeight = 64
 )
 
-func NewTree(em EntityRemover, pos cp.Vector) (*TreeEntity, error) {
+func NewTree(em EntityRemover, pos cp.Vector, asset *CharacterAsset) (*TreeEntity, error) {
 	base, err := NewBaseEntity(em)
 	if err != nil {
 		return nil, err
 	}
-	t := &TreeEntity{BaseEntityImpl: base}
+	t := &TreeEntity{BaseEntityImpl: base, asset: asset}
 	loot := loot.NewResourcesLootTable()
 	loot.AddWood(5)
 
@@ -42,13 +46,10 @@ func NewTree(em EntityRemover, pos cp.Vector) (*TreeEntity, error) {
 	return t, nil
 }
 
-// TODO: Currently only draws bounding box
 func (p *TreeEntity) Draw(t RenderingTarget) error {
-	DrawRectBoundingBox(t, p.shape)
+	p.asset.Draw(t, "idle", p.shape)
 	return nil
 }
-
-var HarvestableCollisionFilter = cp.NewShapeFilter(0, HarvestableCategory, PlayerCategory)
 
 func (p *TreeEntity) Id() GameEntityId          { return p.id }
 func (p *TreeEntity) SetId(id GameEntityId)     { p.id = id }

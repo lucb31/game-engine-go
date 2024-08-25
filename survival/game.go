@@ -92,9 +92,13 @@ func (game *SurvivalGame) initMap() error {
 	}
 
 	// Init trees
+	treeAsset, err := game.world.AssetManager.CharacterAsset("tree")
+	if err != nil {
+		return err
+	}
 	for i := range 10 {
 		pos := cp.Vector{float64(i * 100), float64(i * 100)}
-		tree, err := engine.NewTree(game.world, pos)
+		tree, err := engine.NewTree(game.world, pos, treeAsset)
 		if err != nil {
 			return err
 		}

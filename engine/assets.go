@@ -249,6 +249,19 @@ var characterResources []characterResource = []characterResource{
 		0.44,
 		6.0,
 	},
+	{
+		"tree",
+		assets.Tree,
+		16,
+		32,
+		map[string]GameAssetAnimation{
+			"idle": {StartTile: 0, FrameCount: 1},
+		},
+		-16,
+		-32,
+		2.0,
+		6.0,
+	},
 }
 
 // Load characters
