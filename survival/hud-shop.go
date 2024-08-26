@@ -3,6 +3,7 @@ package survival
 import (
 	"fmt"
 	"image/color"
+	"log"
 	"math/rand"
 
 	"github.com/ebitenui/ebitenui/image"
@@ -107,36 +108,36 @@ func (s *ShopMenu) BuyHandler(idx int) {
 	shopItem := s.itemSlots[idx]
 	gameItem := shopItem.item
 	if !s.inventory.GoldManager().CanAfford(gameItem.Price) {
-		fmt.Println("Cannot afford item", gameItem)
+		log.Println("Cannot afford item", gameItem)
 		return
 	}
 	newBalance, err := s.inventory.GoldManager().Remove(gameItem.Price)
 	if err != nil {
-		fmt.Println("Error removing item cost", err.Error())
+		log.Println("Error removing item cost", err.Error())
 		return
 	}
 
 	err = shopItem.ApplyItemEffect(s.playerStats)
 	if err != nil {
-		fmt.Println("Error applying item effect", err.Error())
+		log.Println("Error applying item effect", err.Error())
 		return
 	}
-	fmt.Printf("Bought item %v, new balance %d\n", gameItem, newBalance)
+	log.Printf("Bought item %v, new balance %d\n", gameItem, newBalance)
 
 	s.RerollItemSlot(idx)
 }
 
 func (s *ShopMenu) RerollHandler(idx int) {
 	if !s.inventory.GoldManager().CanAfford(rerollPrice) {
-		fmt.Println("Cannot afford to reroll")
+		log.Println("Cannot afford to reroll")
 		return
 	}
 	newBalance, err := s.inventory.GoldManager().Remove(rerollPrice)
 	if err != nil {
-		fmt.Println("Error removing item cost", err.Error())
+		log.Println("Error removing item cost", err.Error())
 		return
 	}
-	fmt.Printf("Rerolled item slot %d, new balance %d\n", idx, newBalance)
+	log.Printf("Rerolled item slot %d, new balance %d\n", idx, newBalance)
 
 	s.RerollItemSlot(idx)
 }
@@ -201,14 +202,14 @@ func (s *ShopMenu) init() {
 
 	ttfFont, err := truetype.Parse(goregular.TTF)
 	if err != nil {
-		fmt.Println("Error Parsing Font", err)
+		log.Println("Error Parsing Font", err)
 	}
 	fontFace := truetype.NewFace(ttfFont, &truetype.Options{
 		Size: 16,
 	})
 	buttonImage, err := loadButtonImage()
 	if err != nil {
-		fmt.Println("Could not load button image", err.Error())
+		log.Println("Could not load button image", err.Error())
 	}
 
 	// Initialize item slots

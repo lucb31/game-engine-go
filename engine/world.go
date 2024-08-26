@@ -3,6 +3,7 @@ package engine
 import (
 	"fmt"
 	"image/color"
+	"log"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -65,7 +66,7 @@ func (w *GameWorld) Draw(screen *ebiten.Image) {
 		for _, obj := range w.objects {
 			if w.camera.IsVisible(obj) {
 				if err := obj.Draw(w.camera); err != nil {
-					fmt.Printf("Error drawing object %d: %s \n", obj.Id(), err.Error())
+					log.Printf("Error drawing object %d: %s \n", obj.Id(), err.Error())
 				}
 			}
 		}
@@ -85,7 +86,7 @@ func (w *GameWorld) Draw(screen *ebiten.Image) {
 	// Render player
 	if w.player != nil {
 		if err := w.player.Draw(w.camera); err != nil {
-			fmt.Println("Error drawing player: ", err.Error())
+			log.Println("Error drawing player: ", err.Error())
 		}
 		ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Player pos: %s", w.player.shape.Body().Position()), 10, 90)
 	}
@@ -198,15 +199,15 @@ func (w *GameWorld) DamageModel() damage.DamageModel { return w.damageModel }
 func (w *GameWorld) Player() *Player                 { return w.player }
 
 func (w *GameWorld) drawCombatLog() {
-	log := w.damageModel.DamageLog()
-	entries := log.Entries()
+	damageLog := w.damageModel.DamageLog()
+	entries := damageLog.Entries()
 	for idx, entry := range entries {
 		// Cleanup: Remove entries older than X seconds
 		maxTimeDiff := 1.5
 		timeDiff := w.IngameTime() - entry.GameTime
 		if timeDiff > maxTimeDiff {
-			if err := log.RemoveByIdx(idx); err != nil {
-				fmt.Println("Could not remove log entry", entry, err.Error())
+			if err := damageLog.RemoveByIdx(idx); err != nil {
+				log.Fatalf("Could not remove log entry", entry, err.Error())
 			}
 			return
 		}
@@ -222,7 +223,7 @@ func (w *GameWorld) drawCombatLog() {
 func (w *GameWorld) removeObject(id GameEntityId) {
 	object, ok := w.objects[id]
 	if !ok {
-		fmt.Println("Oops, tried to delete unknown object", id)
+		log.Println("Oops, tried to delete unknown object", id)
 		return
 	}
 	w.space.RemoveShape(object.Shape())
@@ -283,6 +284,7 @@ func (w *GameWorld) drawEntityDebugInfo(screen *ebiten.Image) {
 	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("# Shapes: %d", shapes), 10, 45)
 	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("# Projectiles: %d", projectiles), 10, 60)
 	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("# Npcs: %d", npcs), 10, 75)
+	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("# Fps: %0.1f", ebiten.ActualFPS()), 10, 105)
 }
 
 func BoundingBoxFilter() cp.ShapeFilter {

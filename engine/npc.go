@@ -1,7 +1,7 @@
 package engine
 
 import (
-	"fmt"
+	"log"
 
 	"github.com/jakecoffman/cp"
 	"github.com/lucb31/game-engine-go/engine/loot"
@@ -119,7 +119,7 @@ func (n *NpcEntity) simpleWaypointAlgorithm(body *cp.Body, dt float64) {
 	if n.currentWpIndex == -1 || n.currentWpIndex > len(n.wayPoints)-1 {
 		body.SetVelocityVector(cp.Vector{})
 		if err := n.asset.AnimationController().Loop("idle"); err != nil {
-			fmt.Println("error animating npc", err.Error())
+			log.Fatalln("Error animating npc", err.Error())
 			return
 		}
 		return
@@ -157,7 +157,7 @@ func (n *NpcEntity) moveTowards(body *cp.Body, dest cp.Vector) float64 {
 	// Update active animation & orientation
 	n.orientation = updateOrientation(n.orientation, vel)
 	if err := n.asset.AnimationController().Loop("walk"); err != nil {
-		fmt.Println("error looping", err.Error())
+		log.Println("error looping", err.Error())
 	}
 	return diff.Length()
 }

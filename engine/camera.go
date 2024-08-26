@@ -3,6 +3,7 @@ package engine
 import (
 	"fmt"
 	"image/color"
+	"log"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -112,7 +113,7 @@ func (c *BaseCamera) SetScreen(screen *ebiten.Image) { c.screen = screen }
 func (c *BaseCamera) DrawDebugInfo() {
 	screen := c.screen
 	if screen == nil {
-		fmt.Println("No screen!")
+		log.Fatalln("Cannot draw debug info without screen")
 		return
 	}
 	// Draw camera position

@@ -2,6 +2,7 @@ package td
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/jakecoffman/cp"
@@ -27,14 +28,14 @@ func (g *TDGame) Update() error {
 		if ebiten.IsKeyPressed(ebiten.KeySpace) {
 			err := g.initialize()
 			if err != nil {
-				fmt.Println("Could not restart game: ", err.Error())
+				log.Println("Could not restart game: ", err.Error())
 			}
 		}
 		return nil
 	}
 	g.world.Update()
 	if err := g.creepManager.Update(); err != nil {
-		fmt.Println("Could not update creeps: ", err.Error())
+		log.Println("Could not update creeps: ", err.Error())
 	}
 	g.towerManager.Update()
 	g.hud.Update()
@@ -54,7 +55,7 @@ func (g *TDGame) Layout(outsideWidth, outsideHeight int) (int, int) {
 
 // Initialize all parts of the game world that need to be reset on restart
 func (game *TDGame) initialize() error {
-	fmt.Println("Initializing game")
+	log.Println("Initializing game")
 	// Init game world
 	width := int64(game.screenWidth)
 	height := int64(game.screenHeight)
@@ -165,8 +166,8 @@ func (g *TDGame) EndGame() {
 	g.world.EndGame()
 
 	// Keeping score
-	fmt.Printf("You've lost at wave %d \n", g.creepManager.Round())
+	log.Printf("You've lost at wave %d \n", g.creepManager.Round())
 	g.hud.SaveScore(g.Score())
 
-	fmt.Println("Waiting for restart...")
+	log.Println("Waiting for restart...")
 }

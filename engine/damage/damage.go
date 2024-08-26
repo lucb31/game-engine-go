@@ -2,6 +2,7 @@ package damage
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/jakecoffman/cp"
 )
@@ -49,7 +50,7 @@ func (m *BasicDamageModel) CalculateDamage(atk Attacker, def Defender) (float64,
 	damage := atk.Power() - def.Armor()
 	// Fix to never return negative damage
 	if damage < 0 {
-		fmt.Println("Warning: Negative damage, this should not happen")
+		log.Println("Warning: Negative damage, this should not happen")
 		return 0, nil
 	}
 	return damage, nil
@@ -69,7 +70,7 @@ func (m *BasicDamageModel) ApplyDamage(atk Attacker, def Defender, gameTime floa
 	rec := &DamageRecord{gameTime, damage, def.Shape().Body().Position(), newHealth <= 0.0}
 	err = m.damageLog.Add(*rec)
 	if err != nil {
-		fmt.Println("Could not log damage record. Continuing anyways...", *rec, err.Error())
+		log.Println("Could not log damage record. Continuing anyways...", *rec, err.Error())
 	}
 
 	if newHealth <= 0.0 {

@@ -1,7 +1,7 @@
 package engine
 
 import (
-	"fmt"
+	"log"
 
 	"github.com/jakecoffman/cp"
 	"github.com/lucb31/game-engine-go/engine/damage"
@@ -84,7 +84,7 @@ func (g *BasicGun) chooseTarget() GameEntity {
 	}
 	npc, ok := query.Shape.Body().UserData.(*NpcEntity)
 	if !ok {
-		fmt.Println("Expected npc target, but found something else", query.Shape.Body().UserData)
+		log.Println("Expected npc target, but found something else", query.Shape.Body().UserData)
 		return nil
 	}
 	return npc

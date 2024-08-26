@@ -2,6 +2,7 @@ package td
 
 import (
 	"fmt"
+	"log"
 	"math/rand"
 	"time"
 
@@ -65,13 +66,13 @@ func (t *TowerManager) Update() {
 				continue
 			}
 			if err := t.RemoveTower(pos); err != nil {
-				fmt.Println("Could not remove tower: ", err.Error())
+				log.Println("Could not remove tower: ", err.Error())
 			}
 		} else {
 			// Add tower on new touch
 			newTouches[id] = now
 			if err := t.AddTower(pos); err != nil {
-				fmt.Println("Could not add tower: ", err.Error())
+				log.Println("Could not add tower: ", err.Error())
 			}
 		}
 	}
@@ -81,7 +82,7 @@ func (t *TowerManager) Update() {
 	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
 		mx, my := ebiten.CursorPosition()
 		if err := t.AddTower(cp.Vector{float64(mx), float64(my)}); err != nil {
-			fmt.Println("Could not add tower: ", err.Error())
+			log.Println("Could not add tower: ", err.Error())
 		}
 	}
 
@@ -90,7 +91,7 @@ func (t *TowerManager) Update() {
 		mx, my := ebiten.CursorPosition()
 		err := t.RemoveTower(cp.Vector{float64(mx), float64(my)})
 		if err != nil {
-			fmt.Println("Could not remove tower: ", err.Error())
+			log.Println("Could not remove tower: ", err.Error())
 		}
 	}
 }

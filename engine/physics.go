@@ -1,8 +1,8 @@
 package engine
 
 import (
-	"fmt"
 	"image/color"
+	"log"
 
 	"github.com/jakecoffman/cp"
 	"github.com/lucb31/game-engine-go/engine/damage"
@@ -34,6 +34,9 @@ type HandlerUserData struct {
 func NewPhysicsSpace(damageModel damage.DamageModel, gameTime *float64) (*cp.Space, error) {
 	// Initialize physics
 	space := cp.NewSpace()
+	// NOTE: As long as we're not utilizing collision solvers, we dont need any iterations
+	// Therefore setting to min value: 1
+	space.Iterations = 1
 	// Register Projectile - NPC collision handler
 	handler := space.NewCollisionHandler(cp.CollisionType(ProjectileCollision), cp.CollisionType(NpcCollision))
 	handler.UserData = HandlerUserData{damageModel, gameTime}
@@ -97,7 +100,7 @@ func removeProjectile(arb *cp.Arbiter, space *cp.Space, userData interface{}) {
 
 	projectile, ok := a.UserData.(*Projectile)
 	if !ok {
-		fmt.Println("Type assertion for projectile collision failed. Did not receive valid Projectile")
+		log.Println("Type assertion for projectile collision failed. Did not receive valid Projectile")
 		return
 	}
 	collisionPartner, ok := b.UserData.(GameEntity)
@@ -105,7 +108,7 @@ func removeProjectile(arb *cp.Arbiter, space *cp.Space, userData interface{}) {
 	if ok && collisionPartner.Id() == projectile.gun.Owner().Id() {
 		return
 	}
-	fmt.Printf("Removing projectile after collision with %v \n", b.UserData)
+	log.Printf("Removing projectile after collision with %v \n", b.UserData)
 	projectile.Destroy()
 }
 
@@ -114,26 +117,26 @@ func projectileCollisionHandler(arb *cp.Arbiter, space *cp.Space, userData inter
 	a, b := arb.Bodies()
 	projectile, ok := a.UserData.(*Projectile)
 	if !ok {
-		fmt.Println("Type assertion for projectile collision failed. Did not receive valid Projectile")
+		log.Println("Type assertion for projectile collision failed. Did not receive valid Projectile")
 		return false
 	}
 	defender, ok := b.UserData.(damage.Defender)
 	if !ok {
-		fmt.Println("Type assertion for projectile collision failed. Did not receive valid Damage defender", b.UserData)
+		log.Println("Type assertion for projectile collision failed. Did not receive valid Damage defender", b.UserData)
 		return false
 	}
 
 	// Read damage model from userData
 	handlerData, ok := userData.(HandlerUserData)
 	if !ok {
-		fmt.Println("Could not read damage model")
+		log.Println("Could not read damage model")
 		return false
 	}
 	damageModel := handlerData.damageModel
 	// Calculate & apply damage with COPY of projectile
 	damageResult, err := damageModel.ApplyDamage(projectile, defender, *handlerData.gameTime)
 	if err != nil {
-		fmt.Println("Could not apply damage", err.Error())
+		log.Println("Could not apply damage", err.Error())
 	}
 
 	// Check if we need to distribute loot
@@ -141,11 +144,11 @@ func projectileCollisionHandler(arb *cp.Arbiter, space *cp.Space, userData inter
 	if damageResult.Fatal && isLootReceiver {
 		defenderEntity, isGameEntity := defender.(GameEntity)
 		if !isGameEntity {
-			fmt.Println("ERROR: Expected game entity for defender")
+			log.Println("ERROR: Expected game entity for defender")
 			return false
 		}
 		if err = lootReceiver.Inventory().AddLoot(defenderEntity.LootTable()); err != nil {
-			fmt.Println("Error while adding loot: ", err.Error())
+			log.Println("Error while adding loot: ", err.Error())
 		}
 	}
 

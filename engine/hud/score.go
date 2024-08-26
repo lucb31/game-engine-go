@@ -28,7 +28,6 @@ func NewScoreRecord(val ScoreValue) (*ScoreRecord, error) {
 
 func (r *ScoreRecord) StringSlice() []string {
 	res := []string{fmt.Sprint(r.Timestamp), fmt.Sprint(r.Score)}
-	fmt.Println("Returning ", res)
 	return res
 }
 

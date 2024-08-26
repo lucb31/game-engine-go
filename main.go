@@ -2,7 +2,7 @@ package main
 
 import (
 	"flag"
-	"fmt"
+	"log"
 
 	"github.com/lucb31/game-engine-go/survival"
 	"github.com/lucb31/game-engine-go/td"
@@ -40,6 +40,6 @@ func main() {
 	}
 
 	if err := ebiten.RunGame(g); err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 }

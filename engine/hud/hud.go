@@ -99,16 +99,16 @@ func (h *GameHUD) AddSubMenu(menu SubMenu) {
 }
 
 func (h *GameHUD) SaveScore(score ScoreValue) {
-	fmt.Printf("You've earned a score of %f\n", score)
+	log.Printf("You've earned a score of %f\n", score)
 	if h.scoreBoard.IsHighscore(score) {
-		fmt.Println("NEW HIGHSCORE!")
+		log.Println("NEW HIGHSCORE!")
 	}
 	err := h.scoreBoard.Save(score)
 	if err != nil {
-		fmt.Println("Could not save score", err.Error())
+		log.Println("Could not save score", err.Error())
 	}
 	if err = h.scoreBoard.Print(); err != nil {
-		fmt.Println("Could not print scoreboard", err.Error())
+		log.Println("Could not print scoreboard", err.Error())
 	}
 }
 

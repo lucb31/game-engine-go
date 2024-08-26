@@ -2,6 +2,7 @@ package engine
 
 import (
 	"fmt"
+	"log"
 	"math"
 
 	"github.com/lucb31/game-engine-go/engine/hud"
@@ -85,14 +86,14 @@ func (c *BaseCreepManager) Update() error {
 	}
 	// All creaps dead, start idle timeout & update status
 	if !c.waveCleared && c.creepsAlive == 0 {
-		fmt.Println("Wave cleared. Setting idle timeout")
+		log.Println("Wave cleared. Setting idle timeout")
 		c.waveCleared = true
 		c.spawnIdleTimeout.Set(idleTimeAfterWaveFinished)
 		return nil
 	}
 	// Next wave ready: Spawn next wave, if cleared & timeout done
 	if c.waveCleared {
-		fmt.Println("Spawning next wave")
+		log.Println("Spawning next wave")
 		return c.NextWave()
 	}
 
@@ -168,7 +169,7 @@ func (c *BaseCreepManager) NextWave() error {
 	c.activeWave = &wave
 	c.creepsAlive = 0
 	c.creepsSpawned = 0
-	fmt.Printf("Starting wave %v...\n", c.activeWave)
+	log.Printf("Starting wave %v...\n", c.activeWave)
 	c.creepSpawnTimeout.Set(1 / wave.WaveTicksPerSecond)
 	return nil
 }

@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"slices"
 	"strconv"
@@ -14,7 +15,7 @@ type CsvScoreBoard struct {
 }
 
 func NewCsvScoreKeeper(path string) (*CsvScoreBoard, error) {
-	fmt.Println("Initializing csv scoreboard")
+	log.Println("Initializing csv scoreboard")
 	return &CsvScoreBoard{path}, nil
 }
 
@@ -40,20 +41,15 @@ func (c *CsvScoreBoard) Save(score ScoreValue) error {
 func (c *CsvScoreBoard) IsHighscore(score ScoreValue) bool {
 	highscore := c.Highscore()
 	if highscore == nil {
-		return false
+		return true
 	}
 	return score >= highscore.Score
 }
 
 func (c *CsvScoreBoard) Highscore() *ScoreRecord {
-	_, err := c.readRecordsFromCsv()
-	if err != nil {
-		fmt.Println("Could not retrieve highscore: ", err.Error())
-		return nil
-	}
 	records, err := c.readRecordsFromCsv()
 	if err != nil {
-		fmt.Println("Could not retrieve highscore: ", err.Error())
+		log.Println("Could not retrieve highscore: ", err.Error())
 		return nil
 	}
 	if len(records) == 0 {
@@ -107,9 +103,9 @@ func (c *CsvScoreBoard) Print() error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("--- CSV Scoreboard ---")
+	log.Println("--- CSV Scoreboard ---")
 	for idx, score := range scores {
-		fmt.Printf("[%d]: %s\n", idx, score.String())
+		log.Printf("[%d]: %s\n", idx, score.String())
 	}
 	return nil
 

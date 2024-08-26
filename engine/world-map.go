@@ -2,6 +2,7 @@ package engine
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/jakecoffman/cp"
 )
@@ -20,7 +21,7 @@ func NewWorldMap(width, height int64) (*WorldMap, error) {
 // Draw all map layers
 func (w *WorldMap) Draw(camera Camera) {
 	if len(w.layers) == 0 {
-		fmt.Println("Empty world map. No layers defined")
+		log.Println("Empty world map. No layers defined")
 		return
 	}
 	for _, l := range w.layers {

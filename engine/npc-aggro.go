@@ -2,6 +2,7 @@ package engine
 
 import (
 	"fmt"
+	"log"
 	"math/rand"
 	"slices"
 
@@ -41,11 +42,11 @@ func (n *NpcAggro) aggroMovementAI(body *cp.Body, gravity cp.Vector, damping flo
 	dst := n.target.Shape().Body().Position()
 	nextReachableWaypoint, err := n.nextWaypointWithDijkstra(n.shape, dst)
 	if err != nil {
-		// fmt.Println("Could not find wp to go to", err.Error())
+		// log.Println("Could not find wp to go to", err.Error())
 		// Idle
 		body.SetVelocityVector(cp.Vector{})
 		if err := n.asset.AnimationController().Loop("idle"); err != nil {
-			fmt.Println("Error looping", err.Error())
+			log.Fatalln("Error looping", err.Error())
 		}
 		return
 	}
@@ -158,7 +159,7 @@ func (n *NpcAggro) nextWaypointWithDijkstra(srcShape *cp.Shape, dst cp.Vector) (
 	// We're going to have a problem. Dijkstra cannot help us here either
 	// Current solution is to perform some random movements, hoping that will unstuck the entity
 	if visibleWaypoints == 0 {
-		fmt.Println("NPC stuck! Trying to unstuck with random movement")
+		log.Println("NPC stuck! Trying to unstuck with random movement")
 		return srcShape.Body().Position().Add(cp.Vector{X: rand.Float64() * 5, Y: rand.Float64() * 5}), nil
 	}
 
@@ -171,7 +172,7 @@ func (n *NpcAggro) nextWaypointWithDijkstra(srcShape *cp.Shape, dst cp.Vector) (
 			return cp.Vector{}, strErr
 		}
 		_ = str
-		// fmt.Println("Graph data", str)
+		// log.Println("Graph data", str)
 		return cp.Vector{}, err
 	}
 	secondNodeInPathIdx := bestPath.Path[1]

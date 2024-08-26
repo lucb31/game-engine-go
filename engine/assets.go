@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"image"
 	_ "image/png"
+	"log"
 	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -328,7 +329,7 @@ func loadProjectileAssets(frameCount *int64) (map[string]ProjectileAsset, error)
 func loadTileset(data []byte, tileSizeX, tileSizeY int, scale float64) (*Tileset, error) {
 	im, err := loadImageFromBinaryPng(data)
 	if err != nil {
-		fmt.Println("Could not read assets!", err.Error())
+		log.Fatalln("Could not read assets!", err.Error())
 		return nil, err
 	}
 	ebitenImage := ebiten.NewImageFromImage(im)

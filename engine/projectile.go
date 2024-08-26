@@ -2,6 +2,7 @@ package engine
 
 import (
 	"fmt"
+	"log"
 	"math"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -97,7 +98,7 @@ func (p *Projectile) calculateVelocity(body *cp.Body, gravity cp.Vector, damping
 	if p.target != nil {
 		targetStillExists := p.shape.Space().ContainsBody(p.target.Shape().Body())
 		if !targetStillExists {
-			fmt.Println("Removing projectile: Target no longer exists")
+			log.Println("Removing projectile: Target no longer exists")
 			p.Destroy()
 			return
 		}

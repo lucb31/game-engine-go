@@ -2,6 +2,7 @@ package engine
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/jakecoffman/cp"
@@ -115,7 +116,7 @@ func (p *Player) Draw(t RenderingTarget) error {
 	if p.health <= 0 {
 		err := p.asset.AnimationController().Loop("dead")
 		if err != nil {
-			fmt.Println("could not loop death animation", err.Error())
+			log.Println("could not loop death animation", err.Error())
 		}
 	}
 	return p.asset.Draw(t, p.shape, p.controller.Orientation())
@@ -150,7 +151,7 @@ func (p *Player) Destroy() error {
 	// Play dying animation
 	err := p.asset.AnimationController().Play("die")
 	if err != nil {
-		fmt.Println("Could not play dying animation", err.Error())
+		log.Println("Could not play dying animation", err.Error())
 	}
 
 	// Trigger game over
@@ -162,19 +163,19 @@ func (p *Player) OnPlayerHit(arb *cp.Arbiter, space *cp.Space, userData interfac
 	_, b := arb.Bodies()
 	npc, ok := b.UserData.(*NpcEntity)
 	if !ok {
-		fmt.Println("Collsion handler error: Expected npc but did not receive one")
+		log.Println("Collsion handler error: Expected npc but did not receive one")
 		return false
 	}
 	_, err := p.world.DamageModel().ApplyDamage(npc, p, p.world.IngameTime())
 	if err != nil {
-		fmt.Println("Error during player npc collision damage calc", err.Error())
+		log.Println("Error during player npc collision damage calc", err.Error())
 		return false
 	}
 
 	// Play on hit animation
 	err = p.asset.AnimationController().Play("hit")
 	if err != nil {
-		fmt.Println("Could not play on hit animation", err.Error())
+		log.Println("Could not play on hit animation", err.Error())
 	}
 
 	// Register eyeframe timeout
@@ -194,7 +195,7 @@ func (p *Player) ItemInRange() *ItemEntity {
 	if queryInfo.Shape != nil {
 		item, ok := queryInfo.Shape.Body().UserData.(*ItemEntity)
 		if !ok {
-			fmt.Println("Error: Expected item, but received sth else")
+			log.Println("Error: Expected item, but received sth else")
 		}
 		return item
 	}
@@ -225,7 +226,7 @@ func (p *Player) calculateVelocity(body *cp.Body, gravity cp.Vector, damping flo
 		if itemInRange != nil {
 			// Check for item pickups
 			if err := p.ItemPickup(itemInRange); err != nil {
-				fmt.Println("Could not pickup item", err.Error())
+				log.Println("Could not pickup item", err.Error())
 				return
 			}
 			// Reset interaction state
@@ -233,7 +234,7 @@ func (p *Player) calculateVelocity(body *cp.Body, gravity cp.Vector, damping flo
 		} else if p.axe.InRange() {
 			// Check for axe harvesting
 			if err := p.axe.HarvestNearest(); err != nil {
-				fmt.Println("Could not harvest", err.Error())
+				log.Println("Could not harvest", err.Error())
 				return
 			}
 			// Done, Reset interaction state
@@ -250,13 +251,13 @@ func (p *Player) calculateVelocity(body *cp.Body, gravity cp.Vector, damping flo
 
 	// Abort all prev interactions
 	if err := p.axe.Abort(); err != nil {
-		fmt.Println("Could not abort harvest", err.Error())
+		log.Println("Could not abort harvest", err.Error())
 	}
 
 	// Automatically shoot
 	if !p.gun.IsReloading() {
 		if err := p.gun.Shoot(); err != nil {
-			fmt.Println("Error when trying to shoot player gun", err.Error())
+			log.Println("Error when trying to shoot player gun", err.Error())
 		}
 	}
 

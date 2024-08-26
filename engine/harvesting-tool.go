@@ -2,6 +2,7 @@ package engine
 
 import (
 	"fmt"
+	"log"
 	"math/rand"
 
 	"github.com/jakecoffman/cp"
@@ -71,7 +72,7 @@ func (ht *WoodHarvestingTool) Nearest() Harvestable {
 	}
 	harvestable, ok := query.Shape.Body().UserData.(Harvestable)
 	if !ok {
-		fmt.Println("Expected harvestable target, but found something else", query.Shape.Body().UserData)
+		log.Println("Expected harvestable target, but found something else", query.Shape.Body().UserData)
 		return nil
 	}
 	return harvestable
@@ -87,7 +88,7 @@ func (ht *WoodHarvestingTool) HarvestNearest() error {
 		if target == nil {
 			return fmt.Errorf("Nothin in range")
 		}
-		fmt.Println("Starting harvest", target)
+		log.Println("Starting harvest", target)
 		ht.target = target
 		ht.harvestingTimer.Start()
 		return nil
@@ -95,7 +96,7 @@ func (ht *WoodHarvestingTool) HarvestNearest() error {
 
 	// Check if done
 	if ht.harvestingTimer.Elapsed() > ht.harvestingSpeed {
-		fmt.Println("Finished harvesting")
+		log.Println("Finished harvesting")
 		if err := ht.target.Destroy(); err != nil {
 			return err
 		}
@@ -120,7 +121,7 @@ func (ht *WoodHarvestingTool) HarvestNearest() error {
 
 func (ht *WoodHarvestingTool) Abort() error {
 	if ht.harvestingTimer.Active() {
-		fmt.Println("aborting harvest")
+		log.Println("aborting harvest")
 		ht.harvestingTimer.Stop()
 	}
 	return nil

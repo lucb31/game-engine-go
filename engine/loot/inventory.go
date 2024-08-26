@@ -1,6 +1,9 @@
 package loot
 
-import "fmt"
+import (
+	"fmt"
+	"log"
+)
 
 type Inventory interface {
 	GoldManager() ResourceManager
@@ -36,7 +39,7 @@ func (i *InMemoryInventory) AddLoot(loot LootTable) error {
 
 	// Add loot table results to inventory
 	for _, lootItem := range lootResult {
-		fmt.Println("processing loot item", lootItem)
+		log.Println("processing loot item", lootItem)
 		switch v := lootItem.(type) {
 		case *GoldItem:
 			_, err := i.goldManager.Add(v.Value())

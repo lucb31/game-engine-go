@@ -3,6 +3,7 @@ package survival
 import (
 	"fmt"
 	"image"
+	"log"
 	"math/rand/v2"
 
 	"github.com/jakecoffman/cp"
@@ -105,11 +106,11 @@ func (p *SurvCreepProvider) calcCreepSpawnPosition(cam engine.Camera) (cp.Vector
 		// Check spawn area layer
 		tileAt, err := p.spawnAreaLayer.TileAt(cp.Vector{randX, randY})
 		if err != nil {
-			fmt.Printf("Error checking spawnable area. Retrying...\n")
+			log.Printf("Error checking spawnable area. Retrying...\n")
 			continue
 		}
 		if tileAt == -1 {
-			fmt.Printf("Not a spawnable area (%d). Retrying...\n", tileAt)
+			log.Printf("Not a spawnable area (%d). Retrying...\n", tileAt)
 			continue
 		}
 
@@ -118,7 +119,7 @@ func (p *SurvCreepProvider) calcCreepSpawnPosition(cam engine.Camera) (cp.Vector
 		cameraArea := image.Rect(int(topLeft.X), int(topLeft.Y), int(bottomRight.X), int(bottomRight.Y))
 		spawnPoint := image.Point{int(randX), int(randY)}
 		if spawnPoint.In(cameraArea) {
-			fmt.Println("Position within viewport. Retrying...", randX, randY, topLeft, bottomRight)
+			log.Println("Position within viewport. Retrying...", randX, randY, topLeft, bottomRight)
 			continue
 		}
 		return cp.Vector{X: randX, Y: randY}, nil

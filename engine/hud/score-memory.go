@@ -1,7 +1,7 @@
 package hud
 
 import (
-	"fmt"
+	"log"
 	"slices"
 )
 
@@ -10,7 +10,7 @@ type InMemoryScoreBoard struct {
 }
 
 func NewInMemoryScoreBoard() (*InMemoryScoreBoard, error) {
-	fmt.Println("Initializing in mem scoreboard")
+	log.Println("Initializing in mem scoreboard")
 	return &InMemoryScoreBoard{}, nil
 }
 
@@ -43,9 +43,9 @@ func (s *InMemoryScoreBoard) Highscore() *ScoreRecord {
 }
 
 func (s *InMemoryScoreBoard) Print() error {
-	fmt.Println("--- Memory Scoreboard ---")
+	log.Println("--- Memory Scoreboard ---")
 	for idx, score := range s.records {
-		fmt.Printf("[%d]: %s\n", idx, score.String())
+		log.Printf("[%d]: %s\n", idx, score.String())
 	}
 	return nil
 }

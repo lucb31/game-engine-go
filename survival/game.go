@@ -1,7 +1,7 @@
 package survival
 
 import (
-	"fmt"
+	"log"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
@@ -30,13 +30,13 @@ func (g *SurvivalGame) Update() error {
 		if inpututil.IsKeyJustPressed(ebiten.KeySpace) {
 			err := g.initialize()
 			if err != nil {
-				fmt.Println("Could not restart game: ", err.Error())
+				log.Println("Could not restart game: ", err.Error())
 			}
 		}
 		return nil
 	}
 	if err := g.creepManager.Update(); err != nil {
-		fmt.Println("Could not update creeps: ", err.Error())
+		log.Println("Could not update creeps: ", err.Error())
 	}
 
 	return nil
@@ -133,7 +133,7 @@ func (game *SurvivalGame) initialize() error {
 	game.worldHeight = int64(3840)
 	game.worldWidth = int64(3840)
 
-	fmt.Println("Initializing game")
+	log.Println("Initializing game")
 	// Init game world
 	w, err := engine.NewWorld(game.worldWidth, game.worldHeight)
 	if err != nil {
@@ -239,5 +239,5 @@ func (g *SurvivalGame) CreepProgress() hud.ProgressInfo  { return g.creepManager
 
 func (g *SurvivalGame) EndGame() {
 	g.world.EndGame()
-	fmt.Println("Waiting for restart...")
+	log.Println("Waiting for restart...")
 }

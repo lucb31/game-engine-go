@@ -1,7 +1,7 @@
 package td
 
 import (
-	"fmt"
+	"log"
 
 	"github.com/jakecoffman/cp"
 	"github.com/lucb31/game-engine-go/engine"
@@ -50,9 +50,9 @@ func (t *CastleEntity) Draw(screen engine.RenderingTarget) error {
 func (e *CastleEntity) OnNpcHit(npc *engine.NpcEntity) {
 	// TODO: Utilize damage model here
 	e.health -= 20
-	fmt.Printf("Castle has hit by npc %d. New health %f \n", npc.Id(), e.health)
+	log.Printf("Castle has hit by npc %d. New health %f \n", npc.Id(), e.health)
 	if err := npc.Destroy(); err != nil {
-		fmt.Println("Could not remove npc", err.Error())
+		log.Println("Could not remove npc", err.Error())
 	}
 	if e.health <= 0 {
 		e.Destroy()

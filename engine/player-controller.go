@@ -1,7 +1,7 @@
 package engine
 
 import (
-	"fmt"
+	"log"
 	"math"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -144,7 +144,7 @@ func (c *KeyboardPlayerController) Orientation() Orientation { return c.orientat
 func (c *KeyboardPlayerController) calcVelFromDash(vel cp.Vector) cp.Vector {
 	// Register new dashes
 	if c.dashCooldownTimeout.Done() && inpututil.IsKeyJustPressed(ebiten.KeySpace) {
-		fmt.Println("New dash queued")
+		log.Println("New dash queued")
 		// While moving, dash in direction of movement
 		// While standing still, dash in direction of last horizontal movement
 		if vel.Length() > 0 {
