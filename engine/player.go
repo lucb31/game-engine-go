@@ -255,7 +255,7 @@ func (p *Player) calculateVelocity(body *cp.Body, gravity cp.Vector, damping flo
 	}
 
 	// Automatically shoot
-	if !p.gun.IsReloading() {
+	if p.gun != nil && !p.gun.IsReloading() {
 		if err := p.gun.Shoot(); err != nil {
 			log.Println("Error when trying to shoot player gun", err.Error())
 		}

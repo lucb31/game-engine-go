@@ -13,6 +13,7 @@ const (
 	ProjectileCollision
 	NpcCollision
 	ItemCollision
+	CastleCollision
 )
 
 const (

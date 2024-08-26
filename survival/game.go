@@ -108,17 +108,6 @@ func (game *SurvivalGame) initMap() error {
 		}
 	}
 
-	// Init castle
-	castleAsset, err := game.world.AssetManager.CharacterAsset("castle")
-	if err != nil {
-		return err
-	}
-	game.castle, err = NewCastle(game.world, castleAsset, cp.Vector{1450, 1000}, game.world.EndGame)
-	if err != nil {
-		return err
-	}
-	game.world.AddEntity(game.castle)
-
 	return nil
 }
 
@@ -159,7 +148,33 @@ func (game *SurvivalGame) initialize() error {
 	}
 	game.world.SetCamera(camera)
 
-	// Setup creep management
+	// Init castle
+	game.castle, err = NewCastle(game.world, game.world.EndGame)
+	if err != nil {
+		return err
+	}
+	game.castle.SetPosition(cp.Vector{1450, 1000})
+	// Init asset
+	castleAsset, err := game.world.AssetManager.CharacterAsset("castle")
+	if err != nil {
+		return err
+	}
+	game.castle.SetAsset(castleAsset)
+	// Init gun
+	gunOpts := engine.BasicGunOpts{FireRange: 750.0, FireRatePerSecond: 2.0}
+	projAsset, err := game.world.AssetManager.ProjectileAsset("arrow")
+	if err != nil {
+		return err
+	}
+	gun, err := engine.NewAutoAimGun(game.world, game.castle, projAsset, gunOpts)
+	if err != nil {
+		return err
+	}
+	game.castle.SetGun(gun)
+	// Add to entity management
+	game.world.AddEntity(game.castle)
+
+	// Setup creep management (AFTER castle, so we can use it as target for npcs)
 	game.creepManager, err = engine.NewBaseCreepManager(w)
 	if err != nil {
 		return err
@@ -228,7 +243,7 @@ func (g *SurvivalGame) GameOver() bool         { return g.world.IsOver() }
 func (g *SurvivalGame) Score() hud.ScoreValue {
 	return hud.ScoreValue(g.world.Player().Inventory().GoldManager().Revenue())
 }
-func (g *SurvivalGame) CastleProgress() hud.ProgressInfo { return g.castle.GetHealthBar() }
+func (g *SurvivalGame) CastleProgress() hud.ProgressInfo { return g.castle.HealthBar() }
 func (g *SurvivalGame) CreepProgress() hud.ProgressInfo  { return g.creepManager.Progress() }
 
 func (g *SurvivalGame) EndGame() {

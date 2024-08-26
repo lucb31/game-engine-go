@@ -5,17 +5,16 @@ import (
 
 	"github.com/jakecoffman/cp"
 	"github.com/lucb31/game-engine-go/engine"
+	"github.com/lucb31/game-engine-go/engine/damage"
 	"github.com/lucb31/game-engine-go/engine/hud"
 	"github.com/lucb31/game-engine-go/engine/loot"
 )
 
-const startingHealth = float64(100.0)
-const CastleCollision = cp.CollisionType(200)
-
 type gameOverCallback = func()
 type CastleEntity struct {
 	id    engine.GameEntityId
-	world engine.EntityRemover
+	world engine.GameEntityManager
+	engine.GameEntityStats
 
 	// Logic
 	health float64
@@ -23,37 +22,74 @@ type CastleEntity struct {
 	// Rendering
 	asset *engine.CharacterAsset
 
+	// Gun
+	gun engine.Gun
+
 	// Physics
 	shape *cp.Shape
 
 	gameOverCallback gameOverCallback
 }
 
-func NewCastle(world engine.EntityRemover, asset *engine.CharacterAsset, pos cp.Vector, cb gameOverCallback) (*CastleEntity, error) {
-	c := &CastleEntity{world: world, asset: asset, health: startingHealth, gameOverCallback: cb}
+func NewCastle(world engine.GameEntityManager, cb gameOverCallback) (*CastleEntity, error) {
+	c := &CastleEntity{world: world, gameOverCallback: cb, GameEntityStats: engine.DefaultGameEntityStats()}
+	// Physical body
 	body := cp.NewKinematicBody()
-	body.SetPosition(pos)
+	body.SetVelocityUpdateFunc(c.calculateVelocity)
 	body.UserData = c
+
+	// Collision model
 	c.shape = cp.NewBox(body, 192, 128, 1)
 	c.shape.SetFilter(engine.TowerCollisionFilter())
-	c.shape.SetCollisionType(CastleCollision)
+	c.shape.SetCollisionType(engine.CastleCollision)
+
+	// Register npc collision handler
+	handler := world.Space().NewCollisionHandler(engine.CastleCollision, engine.NpcCollision)
+	handler.BeginFunc = c.OnCastleHit
+
 	return c, nil
 }
 
-func (t *CastleEntity) Draw(screen engine.RenderingTarget) error {
-	return t.asset.Draw(screen, t.shape, 0)
+func (e *CastleEntity) Draw(screen engine.RenderingTarget) error {
+	if e.asset != nil {
+		return e.asset.Draw(screen, e.shape, 0)
+	} else {
+		return engine.DrawRectBoundingBox(screen, e.shape)
+	}
 }
 
-func (e *CastleEntity) OnNpcHit(npc *engine.NpcEntity) {
-	// TODO: Utilize damage model here
-	e.health -= 20
-	log.Printf("Castle has hit by npc %d. New health %f \n", npc.Id(), e.health)
-	if err := npc.Destroy(); err != nil {
-		log.Println("Could not remove npc", err.Error())
+func (e *CastleEntity) calculateVelocity(body *cp.Body, gravity cp.Vector, damping float64, dt float64) {
+	// Automatically shoot
+	if e.gun != nil && !e.gun.IsReloading() {
+		if err := e.gun.Shoot(); err != nil {
+			log.Println("Error when trying to shoot caslte gun", err.Error())
+		}
 	}
-	if e.health <= 0 {
-		e.Destroy()
+}
+
+func (e *CastleEntity) OnCastleHit(arb *cp.Arbiter, space *cp.Space, userData interface{}) bool {
+	_, b := arb.Bodies()
+	npc, ok := b.UserData.(damage.Attacker)
+	if !ok {
+		log.Println("Error in castle on hit: Expected attacker but did not receive one")
+		return false
 	}
+	record, err := e.world.DamageModel().ApplyDamage(npc, e, e.world.IngameTime())
+	if err != nil {
+		log.Println("Error during castle npc collision damage calc", err.Error())
+		return false
+	}
+
+	entity, ok := b.UserData.(engine.GameEntity)
+	if !ok {
+		log.Println("Error during castle npc collision entity removal. Invalid entity provided")
+		return false
+	}
+
+	log.Println("Castle hit!", record)
+	// Remove npc (without loot)
+	entity.Destroy()
+	return false
 }
 
 func (e *CastleEntity) Destroy() error {
@@ -64,11 +100,15 @@ func (e *CastleEntity) Destroy() error {
 	e.gameOverCallback()
 	return nil
 }
-func (e *CastleEntity) Id() engine.GameEntityId      { return e.id }
-func (e *CastleEntity) SetId(id engine.GameEntityId) { e.id = id }
-func (e *CastleEntity) Shape() *cp.Shape             { return e.shape }
-func (e *CastleEntity) LootTable() loot.LootTable    { return loot.NewEmptyLootTable() }
+func (e *CastleEntity) Id() engine.GameEntityId               { return e.id }
+func (e *CastleEntity) SetId(id engine.GameEntityId)          { e.id = id }
+func (e *CastleEntity) Shape() *cp.Shape                      { return e.shape }
+func (e *CastleEntity) LootTable() loot.LootTable             { return loot.NewEmptyLootTable() }
+func (e *CastleEntity) SetAsset(asset *engine.CharacterAsset) { e.asset = asset }
+func (e *CastleEntity) SetGun(gun engine.Gun)                 { e.gun = gun }
+func (e *CastleEntity) SetPosition(pos cp.Vector)             { e.shape.Body().SetPosition(pos) }
+func (e *CastleEntity) IsVulnerable() bool                    { return true }
 
-func (e *CastleEntity) GetHealthBar() hud.ProgressInfo {
-	return hud.ProgressInfo{0, int(startingHealth), int(e.health), "Castle health"}
+func (e *CastleEntity) HealthBar() hud.ProgressInfo {
+	return hud.ProgressInfo{0, int(e.MaxHealth()), int(e.Health()), "Castle health"}
 }
