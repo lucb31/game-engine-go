@@ -14,6 +14,9 @@ type Tileset struct {
 func NewTileset(tilesetImage *ebiten.Image, tileSizeX, tileSizeY int, scale float64) (*Tileset, error) {
 	tileCols := int(tilesetImage.Bounds().Dx() / tileSizeX)
 	tileRows := int(tilesetImage.Bounds().Dy() / tileSizeY)
+	if tileCols == 0 || tileRows == 0 {
+		return nil, fmt.Errorf("Cannot initialize empty tileset. Tilesize (%d, %d), Tileset bounds (%d, %d)", tileSizeX, tileSizeY, tilesetImage.Bounds().Dx(), tilesetImage.Bounds().Dy())
+	}
 	tilesSetSize := tileCols * tileRows
 	images := make([]*ebiten.Image, tilesSetSize)
 
@@ -36,7 +39,7 @@ func NewTileset(tilesetImage *ebiten.Image, tileSizeX, tileSizeY int, scale floa
 
 func (t *Tileset) GetTile(tileIdx int) (*ebiten.Image, error) {
 	if tileIdx < 0 || tileIdx > len(t.images)-1 {
-		return nil, fmt.Errorf("Tileset out of bounds! Unknown index %d", tileIdx)
+		return nil, fmt.Errorf("Tileset out of bounds! Unknown index %d / %d", tileIdx, len(t.images)-1)
 	}
 	return t.images[tileIdx], nil
 }

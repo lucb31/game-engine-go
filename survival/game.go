@@ -9,13 +9,13 @@ import (
 	"github.com/lucb31/game-engine-go/bin/assets"
 	"github.com/lucb31/game-engine-go/engine"
 	"github.com/lucb31/game-engine-go/engine/hud"
-	"github.com/lucb31/game-engine-go/engine/loot"
 )
 
 type SurvivalGame struct {
 	world        *engine.GameWorld
 	camera       engine.Camera
 	creepManager engine.CreepManager
+	castle       *CastleEntity
 
 	hud                       *hud.GameHUD
 	worldWidth, worldHeight   int64
@@ -108,22 +108,16 @@ func (game *SurvivalGame) initMap() error {
 		}
 	}
 
-	// test item
-	woodAsset, err := game.world.AssetManager.CharacterAsset("wood")
+	// Init castle
+	castleAsset, err := game.world.AssetManager.CharacterAsset("castle")
 	if err != nil {
 		return err
 	}
-	item, err := engine.NewItemEntity(game.world, cp.Vector{1750, 800})
+	game.castle, err = NewCastle(game.world, castleAsset, cp.Vector{1450, 1000}, game.world.EndGame)
 	if err != nil {
 		return err
 	}
-	loot := loot.NewResourcesLootTable()
-	loot.AddWood(500)
-	item.SetLootTable(loot)
-	if err := item.SetAsset(woodAsset); err != nil {
-		return err
-	}
-	game.world.AddEntity(item)
+	game.world.AddEntity(game.castle)
 
 	return nil
 }
@@ -170,7 +164,7 @@ func (game *SurvivalGame) initialize() error {
 	if err != nil {
 		return err
 	}
-	provider, err := NewSurvCreepProvider(am, player, camera)
+	provider, err := NewSurvCreepProvider(am, game.castle, camera)
 	if err != nil {
 		return err
 	}
@@ -234,7 +228,7 @@ func (g *SurvivalGame) GameOver() bool         { return g.world.IsOver() }
 func (g *SurvivalGame) Score() hud.ScoreValue {
 	return hud.ScoreValue(g.world.Player().Inventory().GoldManager().Revenue())
 }
-func (g *SurvivalGame) CastleProgress() hud.ProgressInfo { return hud.ProgressInfo{} }
+func (g *SurvivalGame) CastleProgress() hud.ProgressInfo { return g.castle.GetHealthBar() }
 func (g *SurvivalGame) CreepProgress() hud.ProgressInfo  { return g.creepManager.Progress() }
 
 func (g *SurvivalGame) EndGame() {

@@ -211,7 +211,7 @@ var characterResources []characterResource = []characterResource{
 		"tower-blue",
 		assets.TowerBlue,
 		256,
-		256,
+		192,
 		map[string]GameAssetAnimation{
 			"idle": {StartTile: 0, FrameCount: 4, Speed: defaultAnimationSpeed},
 		},
@@ -223,7 +223,7 @@ var characterResources []characterResource = []characterResource{
 		"tower-red",
 		assets.TowerRed,
 		256,
-		256,
+		192,
 		map[string]GameAssetAnimation{
 			"idle": {StartTile: 0, FrameCount: 1, Speed: defaultAnimationSpeed},
 		},
@@ -235,13 +235,13 @@ var characterResources []characterResource = []characterResource{
 		"castle",
 		assets.Castle,
 		192,
-		192,
+		128,
 		map[string]GameAssetAnimation{
 			"idle": {StartTile: 0, FrameCount: 1},
 		},
-		-44,
-		-28,
-		0.44,
+		-96,
+		-64,
+		1.0,
 	},
 	{
 		"tree",
