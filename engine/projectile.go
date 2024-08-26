@@ -38,7 +38,7 @@ type ProjectileAsset struct {
 	animationSpeed int
 }
 
-const defaultProjectileSpeed = float64(300.0)
+const defaultProjectileSpeed = float64(400.0)
 
 func (a *ProjectileAsset) Draw(t RenderingTarget, position cp.Vector, angleInRad float64) error {
 	op := ebiten.DrawImageOptions{}

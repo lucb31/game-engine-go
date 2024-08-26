@@ -142,7 +142,7 @@ func projectileCollisionHandler(arb *cp.Arbiter, space *cp.Space, userData inter
 
 	// Check if we need to distribute loot
 	lootReceiver, isLootReceiver := projectile.gun.Owner().(GameEntityWithInventory)
-	if damageResult.Fatal && isLootReceiver {
+	if damageResult != nil && damageResult.Fatal && isLootReceiver {
 		defenderEntity, isGameEntity := defender.(GameEntity)
 		if !isGameEntity {
 			log.Println("ERROR: Expected game entity for defender")

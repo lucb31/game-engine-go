@@ -97,15 +97,19 @@ func (game *SurvivalGame) initMap() error {
 	if err != nil {
 		return err
 	}
-	for row := range 10 {
-		for col := range 10 {
-			pos := cp.Vector{700 + float64(col*34), 700 + float64(row*66)}
-			tree, err := engine.NewTree(game.world, pos, treeAsset)
-			if err != nil {
-				return err
-			}
-			game.world.AddEntity(tree)
+	forestRadius := 300.0
+	treeCount := 50
+	treeRadius := 32.0
+	// Spawn a bunch of random trees in proximity of the castle at 1450, 1000
+	treePositions := entityCircleDistribution(cp.Vector{750, 1000}, forestRadius, treeCount, treeRadius)
+	treePositions = append(treePositions, entityCircleDistribution(cp.Vector{2150, 1000}, forestRadius, treeCount, treeRadius)...)
+	treePositions = append(treePositions, entityCircleDistribution(cp.Vector{1450, 1650}, forestRadius, treeCount, treeRadius)...)
+	for _, pos := range treePositions {
+		tree, err := engine.NewTree(game.world, pos, treeAsset)
+		if err != nil {
+			return err
 		}
+		game.world.AddEntity(tree)
 	}
 
 	return nil

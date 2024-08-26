@@ -31,7 +31,7 @@ var HarvestToolCollisionFilter = cp.NewShapeFilter(cp.NO_GROUP, cp.ALL_CATEGORIE
 var HarvestableCollisionFilter = cp.NewShapeFilter(0, HarvestableCategory, PlayerCategory)
 
 const (
-	defaultHarvestingSpeed = 1.0
+	defaultHarvestingSpeed = 1.5
 	defaultHarvestingRange = 50.0
 )
 

@@ -6,8 +6,6 @@
 ## Parsing map data
 - BUG: Cannot draw fence on exact outer bounds. need to keep 1 tile buffer. Dont know why that is
 
-# Bugs
-- Dash cooldown not working correctly
 ## Priority
 - Add tutorial HUD menu
     - WASD to move
