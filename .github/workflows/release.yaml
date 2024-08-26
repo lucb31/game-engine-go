@@ -9,22 +9,23 @@ permissions:
     packages: write
 
 jobs:
-  release-linux-amd64:
-    name: release linux/amd64
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - name: Set up Go
-      uses: actions/setup-go@v4
-      with:
-        go-version: '1.22'
-    - name: Bundle assets
-      run: bash bundle.sh
-    - uses: wangyoucao577/go-release-action@v1
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        goos: linux
-        goarch: amd64
+  # Linux build fails (probably because CGO_ENABLED=0) Dont know how to set it 
+#    release-linux-amd64:
+#     name: release linux/amd64
+#     runs-on: ubuntu-latest
+#     steps:
+#     - uses: actions/checkout@v4
+#     - name: Set up Go
+#       uses: actions/setup-go@v4
+#       with:
+#         go-version: '1.22'
+#     - name: Bundle assets
+#       run: bash bundle.sh
+#     - uses: wangyoucao577/go-release-action@v1
+#       with:
+#         github_token: ${{ secrets.GITHUB_TOKEN }}
+#         goos: linux
+#         goarch: amd64
 
   release-win-amd64:
     name: release win/amd64
