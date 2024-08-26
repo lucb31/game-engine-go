@@ -59,6 +59,18 @@ func (w *GameWorld) Draw(screen *ebiten.Image) {
 	}
 	w.camera.SetScreen(screen)
 	w.WorldMap.Draw(w.camera)
+
+	// Render entities that are visible in the camera viewport
+	if !w.gameOver {
+		for _, obj := range w.objects {
+			if w.camera.IsVisible(obj) {
+				if err := obj.Draw(w.camera); err != nil {
+					fmt.Printf("Error drawing object %d: %s \n", obj.Id(), err.Error())
+				}
+			}
+		}
+	}
+
 	// Debugging options
 	if DEBUG_CAMERA_POS {
 		w.camera.DrawDebugInfo()
@@ -69,25 +81,13 @@ func (w *GameWorld) Draw(screen *ebiten.Image) {
 	if DEBUG_ENTITY_STATS {
 		w.drawEntityDebugInfo(screen)
 	}
+
 	// Render player
 	if w.player != nil {
 		if err := w.player.Draw(w.camera); err != nil {
 			fmt.Println("Error drawing player: ", err.Error())
 		}
 		ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Player pos: %s", w.player.shape.Body().Position()), 10, 90)
-	}
-
-	// Stop here if game is no longer running
-	if w.gameOver {
-		return
-	}
-	// Render entities that are visible in the camera viewport
-	for _, obj := range w.objects {
-		if w.camera.IsVisible(obj) {
-			if err := obj.Draw(w.camera); err != nil {
-				fmt.Printf("Error drawing object %d: %s \n", obj.Id(), err.Error())
-			}
-		}
 	}
 
 	w.drawCombatLog()
