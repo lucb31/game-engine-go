@@ -172,6 +172,14 @@ func (w *GameWorld) DropLoot(lootTable loot.LootTable, pos cp.Vector) error {
 		if err != nil {
 			return err
 		}
+		// FIX: Hard-coding wood asset here. This needs to be provided thorugh the loot table though
+		asset, err := w.AssetManager.CharacterAsset("wood")
+		if err != nil {
+			return err
+		}
+		if err := itemEntity.SetAsset(asset); err != nil {
+			return err
+		}
 		copyOfLootTable := loot.NewGuaranteedLootTable(lootableItem)
 		itemEntity.SetLootTable(copyOfLootTable)
 		if err := w.AddEntity(itemEntity); err != nil {

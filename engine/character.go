@@ -21,15 +21,11 @@ type CharacterAsset struct {
 	Tileset          Tileset
 	offsetX          float64
 	offsetY          float64
+	atp              AnimationTimeProvider
 }
 
 func NewCharacterAsset(atp AnimationTimeProvider) (*CharacterAsset, error) {
-	a := &CharacterAsset{}
-	animationManager, err := NewAnimationManager(a, atp)
-	if err != nil {
-		return nil, err
-	}
-	a.animationManager = animationManager
+	a := &CharacterAsset{atp: atp}
 	return a, nil
 }
 
@@ -80,6 +76,7 @@ func (a *CharacterAsset) Animation(animationKey string) (*GameAssetAnimation, er
 }
 
 func (a *CharacterAsset) AnimationController() AnimationController { return a.animationManager }
+func (a *CharacterAsset) AnimationTime() float64                   { return a.atp.AnimationTime() }
 
 func (a *CharacterAsset) DrawHealthbar(t RenderingTarget, shape *cp.Shape, health, maxHealth float64) {
 	width := shape.BB().R - shape.BB().L

@@ -21,7 +21,6 @@ type AssetManagerImpl struct {
 	Tilesets         map[string]Tileset
 	characterAssets  map[string]CharacterAsset
 	projectileAssets map[string]ProjectileAsset
-	itp              IngameTimeProvider
 }
 
 // TODO: Deprecate frame count
@@ -56,11 +55,27 @@ func (a *AssetManagerImpl) GetTile(tileSetKey string, tileIdx int) (*ebiten.Imag
 }
 
 func (a *AssetManagerImpl) CharacterAsset(identifier string) (*CharacterAsset, error) {
-	res, ok := a.characterAssets[identifier]
+	asset, ok := a.characterAssets[identifier]
 	if !ok {
 		return nil, fmt.Errorf("Trying to access unknown asset %s", identifier)
 	}
-	return &res, nil
+	// Initialize animation manager here.
+	// NOTE: If we do this within the character asset, all assets will share the same animation controller
+	// And animation would be synced
+	animationManager, err := NewAnimationManager(&asset)
+	if err != nil {
+		return nil, err
+	}
+	asset.animationManager = animationManager
+	var initialAnimation string
+	for key := range asset.Animations {
+		initialAnimation = key
+		break
+	}
+	if err := asset.AnimationController().Loop(initialAnimation); err != nil {
+		return nil, err
+	}
+	return &asset, nil
 }
 
 func (a *AssetManagerImpl) ProjectileAsset(identifier string) (*ProjectileAsset, error) {
@@ -270,14 +285,6 @@ func loadCharacterAssets(atp AnimationTimeProvider) (map[string]CharacterAsset, 
 		asset.Animations = res.Animations
 		asset.offsetX = res.OffsetX
 		asset.offsetY = res.OffsetY
-		var initialAnimation string
-		for key := range res.Animations {
-			initialAnimation = key
-			break
-		}
-		if err := asset.AnimationController().Loop(initialAnimation); err != nil {
-			return nil, err
-		}
 		characters[res.Key] = *asset
 	}
 	return characters, nil

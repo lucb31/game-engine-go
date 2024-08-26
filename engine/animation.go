@@ -1,8 +1,6 @@
 package engine
 
 import (
-	"fmt"
-
 	"github.com/jakecoffman/cp"
 )
 
@@ -16,6 +14,7 @@ type AnimationController interface {
 type AnimationAsset interface {
 	DrawAnimationTile(t RenderingTarget, shape *cp.Shape, animation *GameAssetAnimation, animationTile int, o Orientation) error
 	Animation(animation string) (*GameAssetAnimation, error)
+	AnimationTimeProvider
 }
 
 type BaseAnimationManager struct {
@@ -28,18 +27,15 @@ type BaseAnimationManager struct {
 	loopingAnimationTimer Timer
 }
 
-func NewAnimationManager(asset AnimationAsset, itp AnimationTimeProvider) (*BaseAnimationManager, error) {
-	if itp == nil {
-		return nil, fmt.Errorf("No valid itp provided")
-	}
+func NewAnimationManager(asset AnimationAsset) (*BaseAnimationManager, error) {
 	am := &BaseAnimationManager{}
 	am.asset = asset
 
 	var err error
-	if am.playingAnimationTimer, err = NewAnimationTimer(itp); err != nil {
+	if am.playingAnimationTimer, err = NewAnimationTimer(asset); err != nil {
 		return nil, err
 	}
-	if am.loopingAnimationTimer, err = NewAnimationTimer(itp); err != nil {
+	if am.loopingAnimationTimer, err = NewAnimationTimer(asset); err != nil {
 		return nil, err
 	}
 	am.loopingAnimationTimer.Start()
