@@ -287,10 +287,6 @@ func (w *GameWorld) drawEntityDebugInfo(screen *ebiten.Image) {
 	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("# Fps: %0.1f", ebiten.ActualFPS()), 10, 105)
 }
 
-func BoundingBoxFilter() cp.ShapeFilter {
-	return cp.NewShapeFilter(0, OuterWallsCategory, PlayerCategory|NpcCategory|TowerCategory|ProjectileCategory)
-}
-
 func NewWorld(width int64, height int64) (*GameWorld, error) {
 	// Intialize damage model
 	damageModel, err := damage.NewBasicDamageModel()
@@ -313,12 +309,26 @@ func NewWorld(width int64, height int64) (*GameWorld, error) {
 		objects:     map[GameEntityId]GameEntity{},
 		GameSpeed:   1.0,
 	}
+
 	// Initialize assets
 	am, err := NewAssetManager(&w, &w.FrameCount)
 	if err != nil {
 		return nil, err
 	}
 	w.AssetManager = am
+
+	// Initialize walls on outer edge
+	walls := []WallSegment{
+		// Horizontal walls
+		{cp.Vector{5, 5}, cp.Vector{float64(width) - 5, 5}},
+		{cp.Vector{5, float64(height) - 5}, cp.Vector{float64(width) - 5, float64(height) - 5}},
+		// Vertical walls
+		{cp.Vector{5, 5}, cp.Vector{5, float64(height) - 5}},
+		{cp.Vector{float64(width) - 5, 5}, cp.Vector{float64(width) - 5, float64(height) - 5}},
+	}
+	for _, wall := range walls {
+		RegisterWallSegmentToSpace(space, wall)
+	}
 
 	return &w, nil
 }

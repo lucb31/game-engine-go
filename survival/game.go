@@ -69,6 +69,8 @@ func (game *SurvivalGame) initMap() error {
 	}
 	game.world.WorldMap = worldMap
 
+	// Temporarily disable castle props & collision layers
+	return nil
 	// Inner walls layer
 	if err := game.world.AddCollisionLayer(assets.MapDarkLogicWallsCSV); err != nil {
 		return err
@@ -98,8 +100,8 @@ func (game *SurvivalGame) initMap() error {
 
 // Initialize all parts of the game world that need to be reset on restart
 func (game *SurvivalGame) initialize() error {
-	game.worldHeight = int64(3840)
-	game.worldWidth = int64(3840)
+	game.worldHeight = int64(2912)
+	game.worldWidth = int64(2912)
 
 	log.Println("Initializing game")
 	// Init game world

@@ -6,6 +6,8 @@ import (
 	"github.com/jakecoffman/cp"
 )
 
+var boundingBoxFilter = cp.NewShapeFilter(0, OuterWallsCategory, PlayerCategory|NpcCategory|TowerCategory|ProjectileCategory)
+
 type WallSegment struct {
 	Start, End cp.Vector
 }
@@ -81,7 +83,7 @@ func RegisterWallSegmentToSpace(space *cp.Space, segment WallSegment) {
 	shape := space.AddShape(cp.NewSegment(space.StaticBody, segment.Start, segment.End, 2))
 	shape.SetElasticity(1)
 	shape.SetFriction(1)
-	shape.SetFilter(BoundingBoxFilter())
+	shape.SetFilter(boundingBoxFilter)
 }
 
 // Returns TOP LEFT position of tile in world coordinate system

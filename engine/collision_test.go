@@ -7,7 +7,7 @@ import (
 func TestPlayerCollisionFilters(t *testing.T) {
 	player := PlayerCollisionFilter()
 	tower := TowerCollisionFilter()
-	outerWall := BoundingBoxFilter()
+	outerWall := boundingBoxFilter
 	npc := NpcCollisionFilter()
 	projectile := ProjectileCollisionFilter()
 	if player.Reject(player) {
@@ -31,7 +31,7 @@ func TestPlayerCollisionFilters(t *testing.T) {
 func TestNpcCollisionFilters(t *testing.T) {
 	player := PlayerCollisionFilter()
 	tower := TowerCollisionFilter()
-	outerWall := BoundingBoxFilter()
+	outerWall := boundingBoxFilter
 	npc := NpcCollisionFilter()
 	projectile := ProjectileCollisionFilter()
 	if npc.Reject(outerWall) {
