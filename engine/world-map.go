@@ -29,6 +29,7 @@ func (w *WorldMap) Draw(camera Camera) {
 	}
 }
 
+// TODO: Does not make any sense. first layer can be skybox
 func (w *WorldMap) TileAt(worldPos cp.Vector) (MapTile, error) {
 	return w.layers[0].TileAt(worldPos)
 }

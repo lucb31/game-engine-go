@@ -4,7 +4,21 @@
 # Survival game
 
 ## Parsing map data
+- Automatically draw outer bounds walls
+
 - BUG: Cannot draw fence on exact outer bounds. need to keep 1 tile buffer. Dont know why that is
+
+## Gameplay
+
+### Castle
+- Castle only shoots if player inside (maybe using the player gun?)
+- Remove shooting from player
+- Improve bounding box
+
+### Shop
+- Shop only available if inside castle
+- Add upgrades to buy with wood
+
 
 ## Priority
 - Add tutorial HUD menu
@@ -13,9 +27,6 @@
     - E to interact
     - C to bring up player stats
     - D to bring up debugging menu
-
-- Performance optimization for pathfinding algorithm
-    - Quick win: Static graph
 
 - eye frames during dash
 

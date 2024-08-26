@@ -1,6 +1,7 @@
 package survival
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -92,26 +93,6 @@ func (game *SurvivalGame) initMap() error {
 		return err
 	}
 
-	// Init forest
-	treeAsset, err := game.world.AssetManager.CharacterAsset("tree")
-	if err != nil {
-		return err
-	}
-	forestRadius := 300.0
-	treeCount := 50
-	treeRadius := 32.0
-	// Spawn a bunch of random trees in proximity of the castle at 1450, 1000
-	treePositions := entityCircleDistribution(cp.Vector{750, 1000}, forestRadius, treeCount, treeRadius)
-	treePositions = append(treePositions, entityCircleDistribution(cp.Vector{2150, 1000}, forestRadius, treeCount, treeRadius)...)
-	treePositions = append(treePositions, entityCircleDistribution(cp.Vector{1450, 1650}, forestRadius, treeCount, treeRadius)...)
-	for _, pos := range treePositions {
-		tree, err := engine.NewTree(game.world, pos, treeAsset)
-		if err != nil {
-			return err
-		}
-		game.world.AddEntity(tree)
-	}
-
 	return nil
 }
 
@@ -152,6 +133,46 @@ func (game *SurvivalGame) initialize() error {
 	}
 	game.world.SetCamera(camera)
 
+	// Castle
+	if err := game.initCastle(); err != nil {
+		return err
+	}
+
+	// Setup creep management (AFTER castle, so we can use it as target for npcs)
+	game.creepManager, err = engine.NewBaseCreepManager(w)
+	if err != nil {
+		return err
+	}
+	provider, err := NewSurvCreepProvider(am, game.castle, camera)
+	if err != nil {
+		return err
+	}
+	if err = provider.ParseNoSpawnArea(game.worldWidth, game.worldHeight, assets.MapDarkLogicSpawnAreaCSV); err != nil {
+		return err
+	}
+	if err = provider.ParseCreepWaypoints(assets.MapDarkLogicWaypointsCSV, w.Space()); err != nil {
+		return err
+	}
+	if err = game.creepManager.SetProvider(provider); err != nil {
+		return err
+	}
+
+	// Forest
+	if err := game.initForest(); err != nil {
+		return err
+	}
+
+	// Init hud
+	game.hud, err = game.initHud()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (game *SurvivalGame) initCastle() error {
+	var err error
 	// Init castle
 	game.castle, err = NewCastle(game.world, game.world.EndGame)
 	if err != nil {
@@ -177,32 +198,31 @@ func (game *SurvivalGame) initialize() error {
 	game.castle.SetGun(gun)
 	// Add to entity management
 	game.world.AddEntity(game.castle)
+	return nil
+}
 
-	// Setup creep management (AFTER castle, so we can use it as target for npcs)
-	game.creepManager, err = engine.NewBaseCreepManager(w)
+func (game *SurvivalGame) initForest() error {
+	// Init forest
+	if game.castle == nil {
+		return fmt.Errorf("Cannot init forest without castle")
+	}
+
+	// Load tree asset(s)
+	treeAsset, err := game.world.AssetManager.CharacterAsset("tree")
 	if err != nil {
 		return err
 	}
-	provider, err := NewSurvCreepProvider(am, game.castle, camera)
-	if err != nil {
-		return err
+	// Spawn a bunch of random trees in proximity of the castle at 1450, 1000
+	treeCount := 2000
+	treeRadius := 32.0
+	treePositions := entityDonutDistribution(game.castle.shape.Body().Position(), 500, 1500, treeCount, treeRadius)
+	for _, pos := range treePositions {
+		tree, err := engine.NewTree(game.world, pos, treeAsset)
+		if err != nil {
+			return err
+		}
+		game.world.AddEntity(tree)
 	}
-	if err = provider.ParseNoSpawnArea(game.worldWidth, game.worldHeight, assets.MapDarkLogicSpawnAreaCSV); err != nil {
-		return err
-	}
-	if err = provider.ParseCreepWaypoints(assets.MapDarkLogicWaypointsCSV, w.Space()); err != nil {
-		return err
-	}
-	if err = game.creepManager.SetProvider(provider); err != nil {
-		return err
-	}
-
-	// Init hud
-	game.hud, err = game.initHud()
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 
