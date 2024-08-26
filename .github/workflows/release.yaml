@@ -1,3 +1,5 @@
+name: Attach binaries to release 
+
 on:
   release:
     types: [created]
@@ -12,8 +14,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+    - name: Bundle assets
+      run: bash bundle.sh
     - uses: wangyoucao577/go-release-action@v1
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         goos: linux
+        goarch: amd64
+
+  release-win-amd64:
+    name: release win/amd64
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Bundle assets
+      run: bash bundle.sh
+    - uses: wangyoucao577/go-release-action@v1
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        goos: win 
         goarch: amd64
