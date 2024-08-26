@@ -163,9 +163,11 @@ func disableCollisionHandler(arb *cp.Arbiter, space *cp.Space, userData interfac
 }
 
 // Draws Rect bounding box around shape position
-func DrawRectBoundingBox(t RenderingTarget, shape *cp.Shape) error {
-	width := shape.BB().R - shape.BB().L
-	height := shape.BB().T - shape.BB().B
-	t.StrokeRect(shape.Body().Position().X-width/2, shape.Body().Position().Y-height/2, float32(width), float32(height), 2.5, color.RGBA{255, 0, 0, 255}, false)
+func DrawRectBoundingBox(t RenderingTarget, bb cp.BB) error {
+	width := bb.R - bb.L
+	height := bb.T - bb.B
+	x := bb.Center().X - width/2
+	y := bb.Center().Y - height/2
+	t.StrokeRect(x, y, float32(width), float32(height), 2.5, color.RGBA{255, 0, 0, 255}, false)
 	return nil
 }

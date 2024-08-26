@@ -41,7 +41,7 @@ func (i *ItemEntity) Draw(t RenderingTarget) error {
 			return err
 		}
 	} else {
-		if err := DrawRectBoundingBox(t, i.shape); err != nil {
+		if err := DrawRectBoundingBox(t, i.shape.BB()); err != nil {
 			return err
 		}
 	}

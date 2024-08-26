@@ -54,7 +54,7 @@ func (e *CastleEntity) Draw(screen engine.RenderingTarget) error {
 	if e.asset != nil {
 		return e.asset.Draw(screen, e.shape, 0)
 	} else {
-		return engine.DrawRectBoundingBox(screen, e.shape)
+		return engine.DrawRectBoundingBox(screen, e.shape.BB())
 	}
 }
 

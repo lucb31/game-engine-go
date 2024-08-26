@@ -48,7 +48,7 @@ func (a *CharacterAsset) GetTile(animation *GameAssetAnimation, animationTile in
 
 func (a *CharacterAsset) DrawAnimationTile(t RenderingTarget, shape *cp.Shape, animation *GameAssetAnimation, animationTile int, o Orientation) error {
 	if DEBUG_RENDER_COLLISION_BOXES {
-		DrawRectBoundingBox(t, shape)
+		DrawRectBoundingBox(t, shape.BB())
 	}
 	flip := o&West == 0
 	subIm, err := a.GetTile(animation, animationTile, flip)
