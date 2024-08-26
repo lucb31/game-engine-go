@@ -3,11 +3,6 @@
 
 # Survival game
 
-## Parsing map data
-- Automatically draw outer bounds walls
-
-- BUG: Cannot draw fence on exact outer bounds. need to keep 1 tile buffer. Dont know why that is
-
 ## Gameplay
 
 ### Castle
@@ -19,6 +14,8 @@
 - Shop only available if inside castle
 - Add upgrades to buy with wood
 
+### Harvesting
+- Add animation / effect to identify which object is being harvested
 
 ## Priority
 - Add tutorial HUD menu

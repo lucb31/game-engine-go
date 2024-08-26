@@ -127,6 +127,7 @@ func (game *SurvivalGame) initialize() error {
 		return err
 	}
 	player.SetAxe(axe)
+	player.Shape().Body().SetPosition(cp.Vector{1456, 1656})
 
 	// Init main camera
 	camera, err := engine.NewFollowingCamera(game.screenWidth, game.screenHeight, player)
@@ -180,7 +181,7 @@ func (game *SurvivalGame) initCastle() error {
 	if err != nil {
 		return err
 	}
-	game.castle.SetPosition(cp.Vector{1450, 1000})
+	game.castle.Shape().Body().SetPosition(cp.Vector{1456, 1456})
 	// Init asset
 	castleAsset, err := game.world.AssetManager.CharacterAsset("castle")
 	if err != nil {
