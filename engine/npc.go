@@ -35,6 +35,8 @@ type NpcOpts struct {
 	BaseMovementSpeed float64
 	GoldValue         int64
 	Waypoints         []cp.Vector
+	// TODO: Deprecate Waypoints
+	WaypointInfo
 }
 
 func NpcCollisionFilter() cp.ShapeFilter {
@@ -161,3 +163,27 @@ func (n *NpcEntity) moveTowards(body *cp.Body, dest cp.Vector) float64 {
 	}
 	return diff.Length()
 }
+
+// DEBUG: Draw connecting lines between npcs & waypoints
+// for _, wp := range n.wayPoints {
+// 	body := cp.NewKinematicBody()
+// 	body.SetPosition(wp)
+// 	bb := cp.NewBBForCircle(wp, 4)
+// 	if err := DrawRectBoundingBox(t, bb); err != nil {
+// 		log.Println("err", err.Error())
+// 	}
+// 	// Draw wp index (top left corner, not centered)
+// 	// relWpPos := n.w.camera.AbsToRel(wp)
+// 	// ebitenutil.DebugPrintAt(n.world.camera.Screen(), fmt.Sprintf("%d", idx), int(relWpPos.X), int(relWpPos.Y))
+
+// }
+// 	// Draw connecting lines to npcs
+// 	for _, obj := range w.objects {
+// 		if _, ok := obj.Shape().Body().UserData.(*NpcEntity); ok {
+// 			topLeftNpc := w.camera.AbsToRel(TopLeftBBPosition(obj.Shape()))
+// 			botRightNpc := w.camera.AbsToRel(BottomRightBBPosition(obj.Shape()))
+// 			vector.StrokeLine(screen, float32(relWpPos.X), float32(relWpPos.Y), float32(topLeftNpc.X), float32(topLeftNpc.Y), 1.0, color.Black, false)
+// 			vector.StrokeLine(screen, float32(relWpPos.X), float32(relWpPos.Y), float32(botRightNpc.X), float32(botRightNpc.Y), 1.0, color.Black, false)
+// 		}
+// 	}
+// }

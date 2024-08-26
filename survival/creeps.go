@@ -34,7 +34,7 @@ type SurvCreepProvider struct {
 	// Spawn areas
 	spawnAreaLayer engine.MapLayer
 	// Map waypoints used to unstuck creeps
-	aiWaypoints []cp.Vector
+	aiWaypoints *engine.WaypointInfo
 }
 
 func NewSurvCreepProvider(am engine.AssetManager, t engine.GameEntity, cam engine.Camera) (*SurvCreepProvider, error) {
@@ -50,20 +50,30 @@ func (p *SurvCreepProvider) ParseNoSpawnArea(width, height int64, mapCsvData []b
 	return nil
 }
 
-func (p *SurvCreepProvider) ParseCreepWaypoints(mapCsvData []byte) error {
+// NOTE: Space is required to calculate graph based on WP distances and collision between
+func (p *SurvCreepProvider) ParseCreepWaypoints(mapCsvData []byte, space *cp.Space) error {
 	mapTiles, err := engine.ReadCsvFromBinary(mapCsvData)
 	if err != nil {
 		return err
 	}
+	// Determine wp positions from CSV data
+	wpPositions := []cp.Vector{}
 	for row := range len(mapTiles) {
 		for col := range len(mapTiles[row]) {
 			if mapTiles[row][col] == engine.EmptyTile {
 				continue
 			}
 			x, y := engine.GridPosToCenterWorldPos(col, row)
-			p.aiWaypoints = append(p.aiWaypoints, cp.Vector{x, y})
+			wpPositions = append(wpPositions, cp.Vector{x, y})
 		}
 	}
+
+	// Build dijkstra graph for pathfinding based on wp positions
+	p.aiWaypoints, err = engine.NewWaypointInfo(space, wpPositions)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -76,7 +86,7 @@ func (p *SurvCreepProvider) NextNpc(remover engine.EntityRemover, wave engine.Wa
 	}
 	// Load opts & calculate starting position
 	opts := npcType.opts
-	opts.Waypoints = p.aiWaypoints
+	opts.WaypointInfo = *p.aiWaypoints
 	opts.StartingPos, err = p.calcCreepSpawnPosition(p.camera)
 	if err != nil {
 		return nil, err

@@ -190,7 +190,7 @@ func (game *SurvivalGame) initialize() error {
 	if err = provider.ParseNoSpawnArea(game.worldWidth, game.worldHeight, assets.MapDarkLogicSpawnAreaCSV); err != nil {
 		return err
 	}
-	if err = provider.ParseCreepWaypoints(assets.MapDarkLogicWaypointsCSV); err != nil {
+	if err = provider.ParseCreepWaypoints(assets.MapDarkLogicWaypointsCSV, w.Space()); err != nil {
 		return err
 	}
 	if err = game.creepManager.SetProvider(provider); err != nil {
