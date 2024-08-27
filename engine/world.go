@@ -207,7 +207,7 @@ func (w *GameWorld) drawCombatLog() {
 		timeDiff := w.IngameTime() - entry.GameTime
 		if timeDiff > maxTimeDiff {
 			if err := damageLog.RemoveByIdx(idx); err != nil {
-				log.Fatalf("Could not remove log entry", entry, err.Error())
+				log.Fatalln("Could not remove log entry", entry, err.Error())
 			}
 			return
 		}

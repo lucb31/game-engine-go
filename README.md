@@ -42,3 +42,6 @@
 - Put upper limit to nr of projectiles. Might cause problems otherwise
 
 
+# Useful commands
+Generating release notes 
+`git-cliff --unreleased --tag v0.3-alpha`

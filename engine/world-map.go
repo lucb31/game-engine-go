@@ -55,6 +55,15 @@ func (w *WorldMap) AddLayer(mapCsv []byte, tileset *Tileset) error {
 	return nil
 }
 
+func (w *WorldMap) AddHexLayer(center cp.Vector, mapCsv []byte, tileset *Tileset) error {
+	l, err := NewHexLayer(w.width, w.height, center, mapCsv, tileset)
+	if err != nil {
+		return err
+	}
+	w.layers = append(w.layers, l)
+	return nil
+}
+
 // Returns vector centered on grid
 func SnapToGrid(v cp.Vector, gridX int, gridY int) cp.Vector {
 	return cp.Vector{X: float64(int(v.X/float64(gridX))*gridX) + float64(gridX)/2, Y: float64(int(v.Y/float64(gridY))*gridY) + float64(gridY/2)}

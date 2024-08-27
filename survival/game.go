@@ -69,6 +69,16 @@ func (game *SurvivalGame) initMap() error {
 	}
 	game.world.WorldMap = worldMap
 
+	// Add hexagon sub-layer
+	// TODO: Randomize which hexagon to pick, ideally flip and / or rotate
+	castleProps, err := game.world.AssetManager.Tileset("props")
+	if err != nil {
+		return err
+	}
+	if err := game.world.WorldMap.AddHexLayer(cp.Vector{1456, 1456}, assets.Hex128112CSV, castleProps); err != nil {
+		return err
+	}
+
 	// Temporarily disable castle props & collision layers
 	return nil
 	// Inner walls layer
@@ -81,12 +91,7 @@ func (game *SurvivalGame) initMap() error {
 		return err
 	}
 
-	// Castle prop layer
-	propTiles, err := game.world.AssetManager.Tileset("props")
-	if err != nil {
-		return err
-	}
-	if err := game.world.AddLayer(assets.MapDarkPropsPropsCSV, propTiles); err != nil {
+	if err := game.world.AddLayer(assets.MapDarkPropsPropsCSV, castleProps); err != nil {
 		return err
 	}
 

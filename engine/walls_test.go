@@ -1,7 +1,7 @@
 package engine_test
 
 import (
-	"fmt"
+	"log"
 	"testing"
 
 	"github.com/lucb31/game-engine-go/bin/assets"
