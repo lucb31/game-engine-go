@@ -38,7 +38,7 @@ func NewCastle(world engine.GameEntityManager, cb gameOverCallback) (*CastleEnti
 	body.UserData = c
 
 	// Collision model
-	c.shape = cp.NewBox(body, 192, 128, 1)
+	c.shape = cp.NewCircle(body, 65.0, cp.Vector{})
 	c.shape.SetFilter(engine.TowerCollisionFilter())
 	c.shape.SetCollisionType(engine.CastleCollision)
 

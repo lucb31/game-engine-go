@@ -5,10 +5,6 @@
 
 ## Gameplay
 
-### Castle
-- Castle only shoots if player inside (maybe using the player gun?)
-- Remove shooting from player
-- Improve bounding box
 
 ### Shop
 - Shop only available if inside castle
