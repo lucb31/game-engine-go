@@ -1,6 +1,7 @@
 package survival
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/jakecoffman/cp"
@@ -16,14 +17,11 @@ type CastleEntity struct {
 	world engine.GameEntityManager
 	engine.GameEntityStats
 
-	// Logic
-	health float64
-
 	// Rendering
 	asset *engine.CharacterAsset
 
-	// Gun
-	gun engine.Gun
+	// Player
+	playerInside *engine.Player
 
 	// Physics
 	shape *cp.Shape
@@ -47,6 +45,9 @@ func NewCastle(world engine.GameEntityManager, cb gameOverCallback) (*CastleEnti
 	handler := world.Space().NewCollisionHandler(engine.CastleCollision, engine.NpcCollision)
 	handler.BeginFunc = c.OnCastleHit
 
+	c.SetMaxHealth(5000)
+	c.SetHealth(5000)
+
 	return c, nil
 }
 
@@ -60,8 +61,12 @@ func (e *CastleEntity) Draw(screen engine.RenderingTarget) error {
 
 func (e *CastleEntity) calculateVelocity(body *cp.Body, gravity cp.Vector, damping float64, dt float64) {
 	// Automatically shoot
-	if e.gun != nil && !e.gun.IsReloading() {
-		if err := e.gun.Shoot(); err != nil {
+	if e.playerInside == nil {
+		return
+	}
+	gun := e.playerInside.Gun()
+	if gun != nil && !gun.IsReloading() {
+		if err := gun.Shoot(); err != nil {
 			log.Println("Error when trying to shoot caslte gun", err.Error())
 		}
 	}
@@ -100,12 +105,36 @@ func (e *CastleEntity) Destroy() error {
 	e.gameOverCallback()
 	return nil
 }
+
+func (e *CastleEntity) Enter(p engine.GameEntityEntering) error {
+	if e.playerInside != nil {
+		return fmt.Errorf("Cannot enter: Already a player inside")
+	}
+	// Cast to player
+	player, ok := p.(*engine.Player)
+	if !ok {
+		return fmt.Errorf("Can only be entered by players")
+	}
+	e.playerInside = player
+	return nil
+}
+
+func (e *CastleEntity) Leave(p engine.GameEntityEntering) error {
+	if e.playerInside == nil {
+		return fmt.Errorf("Cannot leave. No player inside")
+	}
+	if e.playerInside != p {
+		return fmt.Errorf("Cannot leave. Different player inside")
+	}
+	e.playerInside = nil
+	return nil
+}
+
 func (e *CastleEntity) Id() engine.GameEntityId               { return e.id }
 func (e *CastleEntity) SetId(id engine.GameEntityId)          { e.id = id }
 func (e *CastleEntity) Shape() *cp.Shape                      { return e.shape }
 func (e *CastleEntity) LootTable() loot.LootTable             { return loot.NewEmptyLootTable() }
 func (e *CastleEntity) SetAsset(asset *engine.CharacterAsset) { e.asset = asset }
-func (e *CastleEntity) SetGun(gun engine.Gun)                 { e.gun = gun }
 func (e *CastleEntity) IsVulnerable() bool                    { return true }
 
 func (e *CastleEntity) HealthBar() hud.ProgressInfo {

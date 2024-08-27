@@ -193,17 +193,6 @@ func (game *SurvivalGame) initCastle() error {
 		return err
 	}
 	game.castle.SetAsset(castleAsset)
-	// Init gun
-	gunOpts := engine.BasicGunOpts{FireRange: 750.0, FireRatePerSecond: 2.0}
-	projAsset, err := game.world.AssetManager.ProjectileAsset("arrow")
-	if err != nil {
-		return err
-	}
-	gun, err := engine.NewAutoAimGun(game.world, game.castle, projAsset, gunOpts)
-	if err != nil {
-		return err
-	}
-	game.castle.SetGun(gun)
 	// Add to entity management
 	game.world.AddEntity(game.castle)
 	return nil
