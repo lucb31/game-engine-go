@@ -16,6 +16,10 @@ import (
 	"golang.org/x/image/font/gofont/goregular"
 )
 
+type ShopEnabler interface {
+	ShopEnabled() bool
+}
+
 type ShopMenu struct {
 	// Dependencies
 	inventory   loot.Inventory
@@ -23,7 +27,10 @@ type ShopMenu struct {
 
 	// UI
 	shopContainer *widget.Container
-	visible       bool
+	// Visibility toggled by B key
+	visible bool
+	// Enabled status toggled by entering & leaving the castle
+	ShopEnabler
 
 	// Logic
 	itemSlots []*ShopItemSlot
@@ -151,22 +158,27 @@ func (s *ShopMenu) Update() {
 	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
 		s.visible = false
 	}
-	if s.visible {
-		s.shopContainer.GetWidget().Visibility = widget.Visibility_Show
-	} else {
+
+	// Early exit: If not visible, we dont need to update anything
+	if !s.visible {
 		s.shopContainer.GetWidget().Visibility = widget.Visibility_Hide
+		return
 	}
 
-	// Enable/disable buttons depending on affordability
+	s.shopContainer.GetWidget().Visibility = widget.Visibility_Show
+
+	// Enable/disable buttons depending on affordability & shop status
 	for _, slot := range s.itemSlots {
 		if slot.buyButton == nil {
 			continue
 		}
-		slot.buyButton.GetWidget().Disabled = !s.inventory.GoldManager().CanAfford(slot.item.Price)
+		buyDisabled := !s.ShopEnabled() || !s.inventory.GoldManager().CanAfford(slot.item.Price)
+		slot.buyButton.GetWidget().Disabled = buyDisabled
 		if slot.rerollButton == nil {
 			continue
 		}
-		slot.rerollButton.GetWidget().Disabled = !s.inventory.GoldManager().CanAfford(rerollPrice)
+		rerollDisabled := !s.ShopEnabled() || !s.inventory.GoldManager().CanAfford(rerollPrice)
+		slot.rerollButton.GetWidget().Disabled = rerollDisabled
 	}
 }
 
@@ -269,7 +281,8 @@ func (s *ShopMenu) init() {
 	s.shopContainer = rootContainer
 }
 
-func (s *ShopMenu) RootContainer() *widget.Container { return s.shopContainer }
+func (s *ShopMenu) RootContainer() *widget.Container   { return s.shopContainer }
+func (s *ShopMenu) SetShopEnabler(enabler ShopEnabler) { s.ShopEnabler = enabler }
 
 func loadButtonImage() (*widget.ButtonImage, error) {
 	idle := image.NewNineSliceColor(color.NRGBA{R: 0, G: 170, B: 0, A: 255})

@@ -236,6 +236,8 @@ func (g *SurvivalGame) initHud() (*hud.GameHUD, error) {
 	if err != nil {
 		return nil, err
 	}
+	// Allow castle to control shop enabled state
+	shop.SetShopEnabler(g.castle)
 	base.AddSubMenu(shop)
 
 	// Init inventory

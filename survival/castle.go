@@ -149,6 +149,7 @@ func (e *CastleEntity) Shape() *cp.Shape                      { return e.shape }
 func (e *CastleEntity) LootTable() loot.LootTable             { return loot.NewEmptyLootTable() }
 func (e *CastleEntity) SetAsset(asset *engine.CharacterAsset) { e.asset = asset }
 func (e *CastleEntity) IsVulnerable() bool                    { return true }
+func (e *CastleEntity) ShopEnabled() bool                     { return e.playerInside != nil }
 
 func (e *CastleEntity) HealthBar() hud.ProgressInfo {
 	return hud.ProgressInfo{0, int(e.MaxHealth()), int(e.Health()), "Castle health"}
