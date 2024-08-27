@@ -56,7 +56,8 @@ func NewBaseCamera(width, height int) (*BaseCamera, error) {
 
 	// Collision model
 	cam.shape = cp.NewBox(camBody, float64(width), float64(height), 1)
-	cam.shape.SetFilter(cp.NewShapeFilter(0, cp.SHAPE_FILTER_NONE.Categories, OuterWallsCategory))
+	cam.shape.SetSensor(true)
+	cam.shape.SetFilter(cp.SHAPE_FILTER_NONE)
 
 	return cam, nil
 }

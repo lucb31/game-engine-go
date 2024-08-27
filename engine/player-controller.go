@@ -170,7 +170,7 @@ func (c *KeyboardPlayerController) calcVelFromDash(vel cp.Vector) cp.Vector {
 		return cp.Vector{}
 	}
 	progressInRampUp := c.dashActiveTimer.Elapsed() / dashDurationInSeconds
-	smoothenedProgress := easeInOutCubic(progressInRampUp)
+	smoothenedProgress := EaseInOutCubic(progressInRampUp)
 	dashVelocity := dashDistance / dashDurationInSeconds
 	smoothenedVelocity := smoothenedProgress * dashVelocity
 
@@ -185,25 +185,7 @@ func smoothenVel(elapsed, maxVel float64) float64 {
 		return 0
 	}
 	progressInRampUp := elapsed / rampUpTimeInSeconds
-	smoothenedProgress := easeOutExpo(progressInRampUp)
+	smoothenedProgress := EaseOutExpo(progressInRampUp)
 	smoothenedVelocity := smoothenedProgress * maxVel
 	return smoothenedVelocity
-}
-
-// Easing out exponentially. Used to smoothen acceleration
-func easeOutExpo(x float64) float64 {
-	if x >= 1 {
-		return 1
-	}
-	return 1 - math.Pow(2, -10*x)
-}
-
-func easeInOutCubic(x float64) float64 {
-	if x >= 1 {
-		return 1
-	}
-	if x < 0.5 {
-		return 4 * x * x * x
-	}
-	return 1 - math.Pow(-2*x+2, 3)/2
 }
