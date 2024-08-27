@@ -4,6 +4,7 @@
 # Survival game
 
 ## Gameplay
+- Attach cam to castle if inside
 
 
 ### Shop

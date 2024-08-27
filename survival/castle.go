@@ -21,8 +21,9 @@ type CastleEntity struct {
 	// Rendering
 	asset *engine.CharacterAsset
 
-	// Player
+	// Logic
 	playerInside *engine.Player
+	gun          engine.Gun
 
 	// Physics
 	shape *cp.Shape
@@ -64,20 +65,17 @@ func (e *CastleEntity) Draw(screen engine.RenderingTarget) error {
 		}
 	}
 
-	// Draw firing range
-	if e.playerInside != nil && e.playerInside.Gun() != nil {
-		firingRange := e.playerInside.Gun().FireRange()
-		screen.StrokeCircle(e.shape.Body().Position().X, e.shape.Body().Position().Y, float32(firingRange), 2.0, color.NRGBA{255, 0, 0, 255}, false)
+	// Draw firing range, if gun available
+	gun := e.Gun()
+	if gun != nil {
+		screen.StrokeCircle(e.shape.Body().Position().X, e.shape.Body().Position().Y, float32(gun.FireRange()), 2.0, color.NRGBA{255, 0, 0, 255}, false)
 	}
 	return nil
 }
 
 func (e *CastleEntity) calculateVelocity(body *cp.Body, gravity cp.Vector, damping float64, dt float64) {
 	// Automatically shoot
-	if e.playerInside == nil {
-		return
-	}
-	gun := e.playerInside.Gun()
+	gun := e.Gun()
 	if gun != nil && !gun.IsReloading() {
 		if err := gun.Shoot(); err != nil {
 			log.Println("Error when trying to shoot caslte gun", err.Error())
@@ -142,6 +140,21 @@ func (e *CastleEntity) Leave(p engine.GameEntityEntering) error {
 	e.playerInside = nil
 	return nil
 }
+
+func (e *CastleEntity) Gun() engine.Gun {
+	// If no player inside, we dont use any guns
+	if e.playerInside == nil {
+		return nil
+	}
+	// Return own gun if available
+	if e.gun != nil {
+		return e.gun
+	}
+	// Fallback to player gun
+	return e.playerInside.Gun()
+}
+
+func (e *CastleEntity) SetGun(gun engine.Gun) { e.gun = gun }
 
 func (e *CastleEntity) Id() engine.GameEntityId               { return e.id }
 func (e *CastleEntity) SetId(id engine.GameEntityId)          { e.id = id }

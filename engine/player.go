@@ -71,17 +71,17 @@ func NewPlayer(world GameEntityManager, asset *CharacterAsset, projectileAsset *
 	p.movementSpeed = 150
 	p.atkSpeed = 1.0
 
-	// Init gun
 	var err error
-	gunOpts := BasicGunOpts{FireRange: 500.0}
-	p.gun, err = NewAutoAimGun(world, p, projectileAsset, gunOpts)
-	if err != nil {
-		return nil, err
-	}
-	// Play shooting animation when gun shoots
-	p.gun.SetShootingAnimationCallback(func(f float64, orientation Orientation) {
-		p.asset.AnimationController().Play("shoot")
-	})
+	// Init gun
+	// gunOpts := BasicGunOpts{FireRange: 500.0}
+	// p.gun, err = NewAutoAimGun(world, p, projectileAsset, gunOpts)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// // Play shooting animation when gun shoots
+	// p.gun.SetShootingAnimationCallback(func(f float64, orientation Orientation) {
+	// 	p.asset.AnimationController().Play("shoot")
+	// })
 
 	// Init input controller
 	p.controller, err = NewKeyboardPlayerController(p.asset.AnimationController(), p.world)
