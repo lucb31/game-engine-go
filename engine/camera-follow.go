@@ -4,21 +4,32 @@ import (
 	"github.com/jakecoffman/cp"
 )
 
-type FollowingCamera struct {
-	BaseCamera
-	target GameEntity
+type PositionProvider interface {
+	Position() cp.Vector
 }
 
-func NewFollowingCamera(width, height int, target GameEntity) (*FollowingCamera, error) {
+type FollowingCamera struct {
+	BaseCamera
+	target PositionProvider
+}
+
+func NewFollowingCamera(width, height int) (*FollowingCamera, error) {
 	base, err := NewBaseCamera(width, height)
 	if err != nil {
 		return nil, err
 	}
-	cam := &FollowingCamera{BaseCamera: *base, target: target}
+	cam := &FollowingCamera{BaseCamera: *base}
 	cam.Body().SetPositionUpdateFunc(cam.calcPosition)
 	return cam, nil
 }
 
 func (c *FollowingCamera) calcPosition(body *cp.Body, dt float64) {
-	body.SetPosition(c.target.Shape().Body().Position())
+	if c.target == nil {
+		return
+	}
+	body.SetPosition(c.target.Position())
+}
+
+func (c *FollowingCamera) SetTarget(target PositionProvider) {
+	c.target = target
 }

@@ -14,8 +14,9 @@ import (
 
 type gameOverCallback = func()
 type CastleEntity struct {
-	id    engine.GameEntityId
-	world engine.GameEntityManager
+	id     engine.GameEntityId
+	world  engine.GameEntityManager
+	camera *engine.FollowingCamera
 	engine.GameEntityStats
 
 	// Rendering
@@ -127,6 +128,12 @@ func (e *CastleEntity) Enter(p engine.GameEntityEntering) error {
 		return fmt.Errorf("Can only be entered by players")
 	}
 	e.playerInside = player
+
+	// Pan camera
+	if e.camera == nil {
+		return fmt.Errorf("Could not refocus camera to castle. No camera provided")
+	}
+	e.camera.SetTarget(e)
 	return nil
 }
 
@@ -137,7 +144,15 @@ func (e *CastleEntity) Leave(p engine.GameEntityEntering) error {
 	if e.playerInside != p {
 		return fmt.Errorf("Cannot leave. Different player inside")
 	}
+
+	// Pan camera
+	if e.camera == nil {
+		return fmt.Errorf("Could not refocus camera to player. No camera provided")
+	}
+	e.camera.SetTarget(e.playerInside)
+
 	e.playerInside = nil
+
 	return nil
 }
 
@@ -163,6 +178,8 @@ func (e *CastleEntity) LootTable() loot.LootTable             { return loot.NewE
 func (e *CastleEntity) SetAsset(asset *engine.CharacterAsset) { e.asset = asset }
 func (e *CastleEntity) IsVulnerable() bool                    { return true }
 func (e *CastleEntity) ShopEnabled() bool                     { return e.playerInside != nil }
+func (e *CastleEntity) SetCamera(cam *engine.FollowingCamera) { e.camera = cam }
+func (e *CastleEntity) Position() cp.Vector                   { return e.shape.Body().Position() }
 
 func (e *CastleEntity) HealthBar() hud.ProgressInfo {
 	return hud.ProgressInfo{0, int(e.MaxHealth()), int(e.Health()), "Castle health"}

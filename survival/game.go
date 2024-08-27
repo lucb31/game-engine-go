@@ -14,7 +14,6 @@ import (
 
 type SurvivalGame struct {
 	world        *engine.GameWorld
-	camera       engine.Camera
 	creepManager engine.CreepManager
 	castle       *CastleEntity
 
@@ -135,14 +134,15 @@ func (game *SurvivalGame) initialize() error {
 	player.Shape().Body().SetPosition(cp.Vector{1456, 1656})
 
 	// Init main camera
-	camera, err := engine.NewFollowingCamera(game.screenWidth, game.screenHeight, player)
+	camera, err := engine.NewFollowingCamera(game.screenWidth, game.screenHeight)
 	if err != nil {
 		return err
 	}
+	camera.SetTarget(player)
 	game.world.SetCamera(camera)
 
 	// Castle
-	if err := game.initCastle(); err != nil {
+	if err := game.initCastle(camera); err != nil {
 		return err
 	}
 
@@ -179,7 +179,7 @@ func (game *SurvivalGame) initialize() error {
 	return nil
 }
 
-func (game *SurvivalGame) initCastle() error {
+func (game *SurvivalGame) initCastle(camera *engine.FollowingCamera) error {
 	var err error
 	// Init castle
 	game.castle, err = NewCastle(game.world, game.world.EndGame)
@@ -195,7 +195,7 @@ func (game *SurvivalGame) initCastle() error {
 	game.castle.SetAsset(castleAsset)
 
 	// Init gun
-	gunOpts := engine.BasicGunOpts{FireRange: 550.0, FireRatePerSecond: 2.0}
+	gunOpts := engine.BasicGunOpts{FireRange: 512.0, FireRatePerSecond: 2.0}
 	projAsset, err := game.world.AssetManager.ProjectileAsset("arrow")
 	if err != nil {
 		return err
@@ -205,6 +205,9 @@ func (game *SurvivalGame) initCastle() error {
 		return err
 	}
 	game.castle.SetGun(gun)
+
+	// NOTE: Required to allow camera to switch to castle when entering
+	game.castle.SetCamera(camera)
 
 	// Add to entity management
 	game.world.AddEntity(game.castle)

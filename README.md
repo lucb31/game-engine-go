@@ -6,13 +6,14 @@
 ## Gameplay
 - Attach cam to castle if inside
 
+- Multiple projectiles to different targets
 
 ### Shop
-- Shop only available if inside castle
 - Add upgrades to buy with wood
 
 ### Harvesting
 - Add animation / effect to identify which object is being harvested
+- Different types of trees
 
 ## Priority
 - Add tutorial HUD menu
@@ -23,9 +24,6 @@
     - D to bring up debugging menu
 
 - eye frames during dash
-
-## Open points
-- Should the player be able to shoot from within the castle? Or pacified?
 
 # Engine
 

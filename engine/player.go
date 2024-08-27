@@ -240,6 +240,7 @@ func (p *Player) Shape() *cp.Shape          { return p.shape }
 func (p *Player) LootTable() loot.LootTable { return loot.NewEmptyLootTable() }
 func (p *Player) Inventory() loot.Inventory { return p.inventory }
 func (p *Player) Gun() Gun                  { return p.gun }
+func (p *Player) Position() cp.Vector       { return p.shape.Body().Position() }
 
 // Returns true if interaction has FINISHED
 func (p *Player) handleInteraction() bool {
