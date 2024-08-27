@@ -73,7 +73,7 @@ func NewPlayer(world GameEntityManager, asset *CharacterAsset, projectileAsset *
 
 	// Init gun
 	var err error
-	gunOpts := BasicGunOpts{FireRange: 250.0}
+	gunOpts := BasicGunOpts{FireRange: 500.0}
 	p.gun, err = NewAutoAimGun(world, p, projectileAsset, gunOpts)
 	if err != nil {
 		return nil, err

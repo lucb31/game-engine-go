@@ -2,6 +2,7 @@ package survival
 
 import (
 	"fmt"
+	"image/color"
 	"log"
 
 	"github.com/jakecoffman/cp"
@@ -52,11 +53,23 @@ func NewCastle(world engine.GameEntityManager, cb gameOverCallback) (*CastleEnti
 }
 
 func (e *CastleEntity) Draw(screen engine.RenderingTarget) error {
+	// Draw castle asset or BB
 	if e.asset != nil {
-		return e.asset.Draw(screen, e.shape, 0)
+		if err := e.asset.Draw(screen, e.shape, 0); err != nil {
+			return err
+		}
 	} else {
-		return engine.DrawRectBoundingBox(screen, e.shape.BB())
+		if err := engine.DrawRectBoundingBox(screen, e.shape.BB()); err != nil {
+			return err
+		}
 	}
+
+	// Draw firing range
+	if e.playerInside != nil && e.playerInside.Gun() != nil {
+		firingRange := e.playerInside.Gun().FireRange()
+		screen.StrokeCircle(e.shape.Body().Position().X, e.shape.Body().Position().Y, float32(firingRange), 2.0, color.NRGBA{255, 0, 0, 255}, false)
+	}
+	return nil
 }
 
 func (e *CastleEntity) calculateVelocity(body *cp.Body, gravity cp.Vector, damping float64, dt float64) {
