@@ -4,8 +4,6 @@
 # Survival game
 
 ## Gameplay
-- Attach cam to castle if inside
-
 - Multiple projectiles to different targets
 
 ### Shop
@@ -23,7 +21,6 @@
     - C to bring up player stats
     - D to bring up debugging menu
 
-- eye frames during dash
 
 # Engine
 

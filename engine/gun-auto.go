@@ -35,7 +35,7 @@ func (g *AutoAimGun) Shoot() error {
 	}
 	proj.target = target
 	g.em.AddEntity(proj)
-	g.lastProjectileFired = g.em.IngameTime()
+	g.reloadTimeout.Set(1 / g.FireRate())
 
 	if g.playShootAnimation != nil {
 		// Calculate projectile orientation relative to owner

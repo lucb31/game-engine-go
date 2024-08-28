@@ -15,8 +15,6 @@ type Gun interface {
 	FireRate() float64
 	Power() float64
 	IsReloading() bool
-	// Returns game tick of next round to be shot. Required to sync shooting animation
-	RemainingReloadTime() float64
 	Owner() GameEntity
 	SetShootingAnimationCallback(ShootingAnimationCallback)
 }
@@ -33,7 +31,7 @@ type BasicGun struct {
 	projectileAsset *ProjectileAsset
 
 	// Runtime
-	lastProjectileFired float64
+	reloadTimeout Timeout
 
 	// Opts
 	fireRatePerSecond float64
@@ -63,14 +61,8 @@ func (g *BasicGun) FireRate() float64 {
 func (g *BasicGun) Owner() GameEntity  { return g.owner }
 func (g *BasicGun) FireRange() float64 { return g.fireRange }
 
-func (g *BasicGun) RemainingReloadTime() float64 {
-	nextBulletAt := g.lastProjectileFired + 1/g.FireRate()
-	now := g.em.IngameTime()
-	return nextBulletAt - now
-}
-
 func (g *BasicGun) IsReloading() bool {
-	return g.RemainingReloadTime() > 0
+	return !g.reloadTimeout.Done()
 }
 
 func (g *BasicGun) SetShootingAnimationCallback(playShootAnimation ShootingAnimationCallback) {
@@ -94,6 +86,11 @@ var gunTargetCollisionFilter = cp.NewShapeFilter(cp.NO_GROUP, cp.ALL_CATEGORIES,
 
 func NewBasicGun(em GameEntityManager, owner GameEntity, proj *ProjectileAsset, opts BasicGunOpts) (*BasicGun, error) {
 	gun := &BasicGun{em: em, owner: owner, projectileAsset: proj}
+	var err error
+	if gun.reloadTimeout, err = NewIngameTimeout(em); err != nil {
+		return nil, err
+	}
+
 	// Init defaults
 	gun.damage = 30
 	gun.fireRatePerSecond = 1.5

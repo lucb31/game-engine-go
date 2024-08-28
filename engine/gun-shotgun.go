@@ -47,6 +47,6 @@ func (g *ShotGun) Shoot() error {
 		proj.direction = direction
 		g.em.AddEntity(proj)
 	}
-	g.lastProjectileFired = g.em.IngameTime()
+	g.reloadTimeout.Set(1 / g.FireRate())
 	return nil
 }

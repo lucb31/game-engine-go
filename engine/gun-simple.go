@@ -32,7 +32,7 @@ func (g *SimpleGun) Shoot() error {
 	}
 	proj.direction = directionFromOrientationAndPos(*g.orientation, g.Owner().Shape().Body().Position())
 	g.em.AddEntity(proj)
-	g.lastProjectileFired = g.em.IngameTime()
+	g.reloadTimeout.Set(1 / g.FireRate())
 	return nil
 }
 
