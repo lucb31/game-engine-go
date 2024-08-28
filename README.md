@@ -27,6 +27,9 @@
     - Debug settings
     - Game speed
 
+### Open points
+- Automatically open / close shop when entering / leaving castle
+
 # Engine
 
 ## Damage model

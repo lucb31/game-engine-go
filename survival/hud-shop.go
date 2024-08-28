@@ -5,6 +5,7 @@ import (
 	"image/color"
 	"log"
 	"math/rand"
+	"strings"
 
 	"github.com/ebitenui/ebitenui/image"
 	"github.com/ebitenui/ebitenui/widget"
@@ -13,6 +14,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/lucb31/game-engine-go/engine"
 	"github.com/lucb31/game-engine-go/engine/loot"
+	"golang.org/x/image/font"
 	"golang.org/x/image/font/gofont/goregular"
 )
 
@@ -38,7 +40,8 @@ type ShopMenu struct {
 	ShopEnabler
 
 	// Logic
-	itemSlots []*ShopItemSlot
+	randomItemSlots []*ShopItemSlot
+	fixedItemSlots  []*ShopItemSlot
 }
 
 type ShopItemSlot struct {
@@ -60,6 +63,17 @@ func (i *ShopItemSlot) ApplyItemEffect(ctx *ItemEffectContext) error {
 		return fmt.Errorf("Unknown item efect id: %d", i.item.ItemEffectId)
 	}
 	return effect(ctx)
+}
+
+func (i *ShopItemSlot) generatePriceLabel() string {
+	prices := []string{}
+	if i.item.GoldPrice > 0 {
+		prices = append(prices, fmt.Sprintf("%d gold", i.item.GoldPrice))
+	}
+	if i.item.WoodPrice > 0 {
+		prices = append(prices, fmt.Sprintf("%d wood", i.item.WoodPrice))
+	}
+	return strings.Join(prices, ",")
 }
 
 type ItemEffect func(*ItemEffectContext) error
@@ -96,14 +110,17 @@ var itemEffects = map[loot.ItemEffectId]ItemEffect{
 	},
 }
 
-// Pool of all available items in the shop
+// Pool of all available items in the shop. X items from this pool will be randomly selected
 var availableItems = []loot.GameItem{
 	{GoldPrice: 50, Description: "+10 Max Health", ItemEffectId: loot.ItemEffectAddMaxHealth},
 	{GoldPrice: 50, Description: "+10 Movement speed", ItemEffectId: loot.ItemEffectAddMovementSpeed},
 	{GoldPrice: 50, Description: "+10 Armor", ItemEffectId: loot.ItemEffectAddArmor},
 	{GoldPrice: 50, Description: "+10 Power", ItemEffectId: loot.ItemEffectAddPower},
 	{GoldPrice: 50, Description: "+0.2 Atk Speed", ItemEffectId: loot.ItemEffectAddAtkSpeed},
-	// TODO: Move to guaranteed upgrades
+}
+
+// Pool of permanent upgrades. All will be available
+var fixedUpgrades = []loot.GameItem{
 	{WoodPrice: 50, Description: "Additional projectile", ItemEffectId: loot.ItemEffectAddCastleProjectile},
 }
 
@@ -124,32 +141,36 @@ func (s *ShopMenu) RerollItemSlot(idx int) {
 	newItem := &availableItems[itemIdx]
 
 	// Update UI
-	s.itemSlots[idx].item = newItem
-	s.itemSlots[idx].priceLabel.Label = fmt.Sprintf("%d gold, %d wood", newItem.GoldPrice, newItem.WoodPrice)
-	s.itemSlots[idx].descriptionLabel.Label = newItem.Description
+	s.randomItemSlots[idx].item = newItem
+	s.randomItemSlots[idx].priceLabel.Label = s.randomItemSlots[idx].generatePriceLabel()
+	s.randomItemSlots[idx].descriptionLabel.Label = newItem.Description
 }
 
-func (s *ShopMenu) BuyHandler(idx int) {
-	shopItem := s.itemSlots[idx]
+func (s *ShopMenu) BuyAndApply(shopItem *ShopItemSlot) error {
 	gameItem := shopItem.item
 
 	// Buy item via inventory (manages resources)
 	err := s.inventory.Buy(gameItem)
 	if err != nil {
-		log.Println("Could not buy game item: ", err.Error())
-		return
+		return fmt.Errorf("Could not buy game item: %s", err.Error())
 	}
 
 	// Apply item effect
-	// TODO: Consider moving this somewhere else as well
+	// TODO: Consider moving this somewhere else
 	ctx := &ItemEffectContext{s.playerStats, s.Gun()}
 	err = shopItem.ApplyItemEffect(ctx)
 	if err != nil {
-		log.Println("Error applying item effect", err.Error())
-		return
+		return fmt.Errorf("Error applying item effect: %s", err.Error())
 	}
 	log.Printf("Successfully bought item %v\n", gameItem)
+	return nil
+}
 
+func (s *ShopMenu) randomizedItemSlotBuyHandler(idx int) {
+	shopItem := s.randomItemSlots[idx]
+	if err := s.BuyAndApply(shopItem); err != nil {
+		log.Println(err.Error())
+	}
 	// Reroll a new item into the slot
 	s.RerollItemSlot(idx)
 }
@@ -189,22 +210,30 @@ func (s *ShopMenu) Update() {
 
 	// Enable/disable buttons depending on affordability & shop status
 	rerollDisabled := !s.ShopEnabled() || !s.inventory.GoldManager().CanAfford(rerollPrice)
-	for _, slot := range s.itemSlots {
+	shopDisabled := !s.ShopEnabled()
+	for _, slot := range s.randomItemSlots {
 		if slot.buyButton == nil {
 			continue
 		}
 		canAffordItem, _ := s.inventory.CanAfford(slot.item)
-		buyDisabled := !s.ShopEnabled() || !canAffordItem
+		buyDisabled := shopDisabled || !canAffordItem
 		slot.buyButton.GetWidget().Disabled = buyDisabled
 		if slot.rerollButton == nil {
 			continue
 		}
 		slot.rerollButton.GetWidget().Disabled = rerollDisabled
 	}
+	for _, slot := range s.fixedItemSlots {
+		if slot.buyButton == nil {
+			continue
+		}
+		canAffordItem, _ := s.inventory.CanAfford(slot.item)
+		buyDisabled := shopDisabled || !canAffordItem
+		slot.buyButton.GetWidget().Disabled = buyDisabled
+	}
 }
 
 func (s *ShopMenu) init() {
-	// Init
 	// construct a new container that serves as the root of the UI hierarchy
 	rootContainer := widget.NewContainer(
 		// the container will use a plain color as its background
@@ -228,7 +257,10 @@ func (s *ShopMenu) init() {
 			}),
 		),
 	)
+	rootContainer.GetWidget().Visibility = widget.Visibility_Hide
+	s.shopContainer = rootContainer
 
+	// Load fonts & button assets
 	ttfFont, err := truetype.Parse(goregular.TTF)
 	if err != nil {
 		log.Println("Error Parsing Font", err)
@@ -241,11 +273,16 @@ func (s *ShopMenu) init() {
 		log.Println("Could not load button image", err.Error())
 	}
 
-	// Initialize item slots
-	s.itemSlots = make([]*ShopItemSlot, randomizedItemSlots)
-	for idx := range s.itemSlots {
+	// Init shop elements
+	s.initRandomizedItemSlots(fontFace, buttonImage)
+	s.initPermanantUpgradeItemSlots(fontFace, buttonImage)
+}
+
+func (s *ShopMenu) initRandomizedItemSlots(fontFace font.Face, buttonImage *widget.ButtonImage) {
+	s.randomItemSlots = make([]*ShopItemSlot, randomizedItemSlots)
+	for idx := range s.randomItemSlots {
 		slot := &ShopItemSlot{}
-		s.itemSlots[idx] = slot
+		s.randomItemSlots[idx] = slot
 
 		itemContainer := widget.NewContainer(
 			widget.ContainerOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{66, 66, 66, 255})),
@@ -285,17 +322,61 @@ func (s *ShopMenu) init() {
 			widget.ButtonOpts.Text("Buy!", fontFace, &widget.ButtonTextColor{
 				Idle: color.RGBA{255, 255, 255, 1},
 			}),
-			widget.ButtonOpts.ClickedHandler(func(args *widget.ButtonClickedEventArgs) { s.BuyHandler(idx) }),
+			widget.ButtonOpts.ClickedHandler(func(args *widget.ButtonClickedEventArgs) { s.randomizedItemSlotBuyHandler(idx) }),
 		)
 		itemContainer.AddChild(slot.buyButton)
 
-		rootContainer.AddChild(itemContainer)
+		s.shopContainer.AddChild(itemContainer)
 
 		// Reroll to initialize
 		s.RerollItemSlot(idx)
 	}
-	rootContainer.GetWidget().Visibility = widget.Visibility_Hide
-	s.shopContainer = rootContainer
+}
+
+func (s *ShopMenu) initPermanantUpgradeItemSlots(fontFace font.Face, buttonImage *widget.ButtonImage) {
+	s.fixedItemSlots = make([]*ShopItemSlot, len(fixedUpgrades))
+	for idx, item := range fixedUpgrades {
+		slot := &ShopItemSlot{item: &item}
+		s.fixedItemSlots[idx] = slot
+
+		itemContainer := widget.NewContainer(
+			widget.ContainerOpts.BackgroundImage(image.NewNineSliceColor(color.NRGBA{66, 66, 66, 255})),
+			widget.ContainerOpts.Layout(widget.NewGridLayout(
+				widget.GridLayoutOpts.Columns(1),
+				widget.GridLayoutOpts.Stretch([]bool{true}, []bool{false, false, true, false}),
+				widget.GridLayoutOpts.Spacing(0, 10),
+			)),
+			widget.ContainerOpts.WidgetOpts(widget.WidgetOpts.MinSize(150, 150)),
+		)
+
+		slot.priceLabel = widget.NewText(
+			widget.TextOpts.Text(slot.generatePriceLabel(), fontFace, color.RGBA{255, 255, 255, 1}),
+			widget.TextOpts.MaxWidth(100),
+			widget.TextOpts.Position(widget.TextPositionCenter, widget.TextPositionStart),
+		)
+		itemContainer.AddChild(slot.priceLabel)
+
+		slot.descriptionLabel = widget.NewText(
+			widget.TextOpts.Text(item.Description, fontFace, color.RGBA{255, 255, 255, 1}),
+			widget.TextOpts.MaxWidth(100),
+			widget.TextOpts.Position(widget.TextPositionCenter, widget.TextPositionStart),
+		)
+		itemContainer.AddChild(slot.descriptionLabel)
+
+		slot.buyButton = widget.NewButton(
+			widget.ButtonOpts.Image(buttonImage),
+			widget.ButtonOpts.Text("Buy!", fontFace, &widget.ButtonTextColor{
+				Idle: color.RGBA{255, 255, 255, 1},
+			}),
+			widget.ButtonOpts.ClickedHandler(func(args *widget.ButtonClickedEventArgs) {
+				if err := s.BuyAndApply(s.fixedItemSlots[idx]); err != nil {
+					log.Println("Could not buy: ", err.Error())
+				}
+			}),
+		)
+		itemContainer.AddChild(slot.buyButton)
+		s.shopContainer.AddChild(itemContainer)
+	}
 }
 
 func (s *ShopMenu) RootContainer() *widget.Container   { return s.shopContainer }
