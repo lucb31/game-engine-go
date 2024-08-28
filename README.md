@@ -4,7 +4,6 @@
 # Survival game
 
 ## Bug
-- Sometimes day cycle is skipped and next wave is spawned immediately. Probably related to high game speeds
 - No gold earned when killing npcs
 - Player power upgrades are not applied to castle gun
 

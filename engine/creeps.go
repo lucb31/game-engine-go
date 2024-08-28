@@ -169,6 +169,7 @@ func (c *BaseCreepManager) NextWave() error {
 	c.activeWave = &wave
 	c.creepsAlive = 0
 	c.creepsSpawned = 0
+	c.waveCleared = false
 	log.Printf("Starting wave %v...\n", c.activeWave)
 	c.creepSpawnTimeout.Set(1 / wave.WaveTicksPerSecond)
 	return nil
