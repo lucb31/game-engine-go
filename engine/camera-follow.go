@@ -33,7 +33,8 @@ func (c *FollowingCamera) calcVelocity(body *cp.Body, gravity cp.Vector, damping
 	}
 	targetPos := c.target.Position()
 	// Snap on target if below threshold
-	if body.Position().Near(targetPos, 10.0) {
+	// NOTE: Make sure distance is scaled with timestep
+	if body.Position().Near(targetPos, 650.0*dt) {
 		body.SetPosition(targetPos)
 		body.SetVelocity(0, 0)
 		return
