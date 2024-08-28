@@ -244,8 +244,8 @@ var characterResources []characterResource = []characterResource{
 		1.0,
 	},
 	{
-		"tree",
-		assets.Tree,
+		"tree_a",
+		assets.TreeA,
 		16,
 		32,
 		map[string]GameAssetAnimation{
@@ -254,6 +254,30 @@ var characterResources []characterResource = []characterResource{
 		-16,
 		-32,
 		2.0,
+	},
+	{
+		"tree_b",
+		assets.TreeB,
+		45,
+		64,
+		map[string]GameAssetAnimation{
+			"idle": {StartTile: 0, FrameCount: 1},
+		},
+		-22.5,
+		-32,
+		1.0,
+	},
+	{
+		"tree_small",
+		assets.TreeSmall,
+		32,
+		32,
+		map[string]GameAssetAnimation{
+			"idle": {StartTile: 0, FrameCount: 1},
+		},
+		-16,
+		-16,
+		1.0,
 	},
 	{
 		"wood",

@@ -16,33 +16,46 @@ type TreeEntity struct {
 	asset *CharacterAsset
 }
 
-const (
-	treeWidth  = 32
-	treeHeight = 64
-)
-
-func NewTree(em EntityRemover, pos cp.Vector, asset *CharacterAsset) (*TreeEntity, error) {
+func newTreeEntity(em EntityRemover, asset *CharacterAsset, width, height float64) (*TreeEntity, error) {
 	base, err := NewBaseEntity(em)
 	if err != nil {
 		return nil, err
 	}
 	t := &TreeEntity{BaseEntityImpl: base, asset: asset}
-	loot := loot.NewResourcesLootTable()
-	loot.AddWood(5)
 
 	// Init body
 	treeBody := cp.NewKinematicBody()
-	treeBody.SetPosition(pos)
 	treeBody.UserData = t
 
 	// Collision model
-	shape := cp.NewBox(treeBody, treeWidth, treeHeight, 0)
+	shape := cp.NewBox(treeBody, width, height, 0)
 	shape.SetElasticity(0)
 	shape.SetFriction(0)
 	shape.SetFilter(HarvestableCollisionFilter)
 	t.shape = shape
-	t.loot = loot
 
+	return t, nil
+}
+
+func NewTree(em EntityRemover, asset *CharacterAsset) (*TreeEntity, error) {
+	t, err := newTreeEntity(em, asset, 32.0, 64.0)
+	if err != nil {
+		return nil, err
+	}
+	loot := loot.NewResourcesLootTable()
+	loot.AddWood(5)
+	t.loot = loot
+	return t, nil
+}
+
+func NewBush(em EntityRemover, asset *CharacterAsset) (*TreeEntity, error) {
+	t, err := newTreeEntity(em, asset, 32.0, 32.0)
+	if err != nil {
+		return nil, err
+	}
+	loot := loot.NewResourcesLootTable()
+	loot.AddWood(2)
+	t.loot = loot
 	return t, nil
 }
 
@@ -56,3 +69,4 @@ func (p *TreeEntity) SetId(id GameEntityId)     { p.id = id }
 func (p *TreeEntity) Shape() *cp.Shape          { return p.shape }
 func (p *TreeEntity) LootTable() loot.LootTable { return p.loot }
 func (p *TreeEntity) Position() cp.Vector       { return p.Shape().Body().Position() }
+func (p *TreeEntity) SetPosition(pos cp.Vector) { p.Shape().Body().SetPosition(pos) }

@@ -3,6 +3,7 @@ package survival
 import (
 	"fmt"
 	"log"
+	"math/rand"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
@@ -218,24 +219,34 @@ func (game *SurvivalGame) initCastle(camera *engine.FollowingCamera) error {
 
 func (game *SurvivalGame) initForest() error {
 	// Init forest
+	// Need forest to know what position to center around
 	if game.castle == nil {
 		return fmt.Errorf("Cannot init forest without castle")
 	}
 
 	// Load tree asset(s)
-	treeAsset, err := game.world.AssetManager.CharacterAsset("tree")
-	if err != nil {
-		return err
-	}
+	availableTrees := []string{"tree_a", "tree_b", "tree_small"}
 	// Spawn a bunch of random trees in proximity of the castle at 1450, 1000
 	treeCount := 2000
 	treeRadius := 32.0
 	treePositions := entityDonutDistribution(game.castle.shape.Body().Position(), 500, 1500, treeCount, treeRadius)
 	for _, pos := range treePositions {
-		tree, err := engine.NewTree(game.world, pos, treeAsset)
+		treeIdx := rand.Intn(len(availableTrees))
+		treeType := availableTrees[treeIdx]
+		asset, err := game.world.AssetManager.CharacterAsset(treeType)
 		if err != nil {
 			return err
 		}
+		var tree *engine.TreeEntity
+		if treeType == "tree_small" {
+			tree, err = engine.NewBush(game.world, asset)
+		} else {
+			tree, err = engine.NewTree(game.world, asset)
+		}
+		if err != nil {
+			return err
+		}
+		tree.SetPosition(pos)
 		game.world.AddEntity(tree)
 	}
 	return nil
