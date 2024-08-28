@@ -6,7 +6,38 @@ import (
 	"math/rand"
 
 	"github.com/jakecoffman/cp"
+	"github.com/lucb31/game-engine-go/engine"
 )
+
+func GenerateForest(center cp.Vector, am engine.AssetManager, em engine.GameEntityManager) error {
+	// Load tree asset(s)
+	availableTrees := []string{"tree_a", "tree_b", "tree_small"}
+
+	// Spawn a bunch of random trees in proximity of the castle at 1450, 1000
+	treeCount := 2000
+	treeRadius := 32.0
+	treePositions := entityDonutDistribution(center, 500, 1500, treeCount, treeRadius)
+	for _, pos := range treePositions {
+		treeIdx := rand.Intn(len(availableTrees))
+		treeType := availableTrees[treeIdx]
+		asset, err := am.CharacterAsset(treeType)
+		if err != nil {
+			return err
+		}
+		var tree *engine.TreeEntity
+		if treeType == "tree_small" {
+			tree, err = engine.NewBush(em, asset)
+		} else {
+			tree, err = engine.NewTree(em, asset)
+		}
+		if err != nil {
+			return err
+		}
+		tree.SetPosition(pos)
+		em.AddEntity(tree)
+	}
+	return nil
+}
 
 func entityDonutDistribution(center cp.Vector, innerRadius, outerRadius float64, count int, spacing float64) []cp.Vector {
 	if innerRadius > outerRadius {
