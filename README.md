@@ -4,7 +4,6 @@
 # Survival game
 
 ## Bug
-- No gold earned when killing npcs
 - Player power upgrades are not applied to castle gun
 
 ### Shop

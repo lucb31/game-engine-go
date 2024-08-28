@@ -180,6 +180,12 @@ func (e *CastleEntity) IsVulnerable() bool                    { return true }
 func (e *CastleEntity) ShopEnabled() bool                     { return e.playerInside != nil }
 func (e *CastleEntity) SetCamera(cam *engine.FollowingCamera) { e.camera = cam }
 func (e *CastleEntity) Position() cp.Vector                   { return e.shape.Body().Position() }
+func (e *CastleEntity) Inventory() loot.Inventory {
+	if e.playerInside == nil {
+		return nil
+	}
+	return e.playerInside.Inventory()
+}
 
 func (e *CastleEntity) HealthBar() hud.ProgressInfo {
 	return hud.ProgressInfo{0, int(e.MaxHealth()), int(e.Health()), "Castle health"}
