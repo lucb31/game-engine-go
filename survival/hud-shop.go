@@ -27,9 +27,12 @@ type GunProvider interface {
 
 type ShopMenu struct {
 	// Dependencies
-	inventory   loot.Inventory
-	playerStats engine.GameEntityStatReadWriter
-	// Gun that stat upgrades will be applied to
+	inventory loot.Inventory
+	// Reference to where to apply player upgrades
+	player engine.GameEntityStatReadWriter
+	// Reference to where to apply castle upgrades
+	castle engine.GameEntityStatReadWriter
+	// Reference to where to apply gun upgrades
 	GunProvider
 
 	// UI
@@ -53,8 +56,9 @@ type ShopItemSlot struct {
 }
 
 type ItemEffectContext struct {
-	engine.GameEntityStatReadWriter
-	gun engine.Gun
+	player engine.GameEntityStatReadWriter
+	castle engine.GameEntityStatReadWriter
+	gun    engine.Gun
 }
 
 func (i *ShopItemSlot) ApplyItemEffect(ctx *ItemEffectContext) error {
@@ -79,26 +83,26 @@ func (i *ShopItemSlot) generatePriceLabel() string {
 type ItemEffect func(*ItemEffectContext) error
 
 var itemEffects = map[loot.ItemEffectId]ItemEffect{
-	loot.ItemEffectAddMaxHealth: func(p *ItemEffectContext) error {
+	loot.ItemEffectAddMaxHealth: func(ctx *ItemEffectContext) error {
 		// Need to increase both max health & current health
-		p.SetMaxHealth(p.MaxHealth() + 10.0)
-		p.SetHealth(p.Health() + 10.0)
+		ctx.castle.SetMaxHealth(ctx.castle.MaxHealth() + 10.0)
+		ctx.castle.SetHealth(ctx.castle.Health() + 10.0)
 		return nil
 	},
-	loot.ItemEffectAddMovementSpeed: func(p *ItemEffectContext) error {
-		p.SetMovementSpeed(p.MovementSpeed() + 10.0)
+	loot.ItemEffectAddMovementSpeed: func(ctx *ItemEffectContext) error {
+		ctx.player.SetMovementSpeed(ctx.player.MovementSpeed() + 10.0)
 		return nil
 	},
-	loot.ItemEffectAddArmor: func(p *ItemEffectContext) error {
-		p.SetArmor(p.Armor() + 10.0)
+	loot.ItemEffectAddArmor: func(ctx *ItemEffectContext) error {
+		ctx.castle.SetArmor(ctx.castle.Armor() + 10.0)
 		return nil
 	},
-	loot.ItemEffectAddPower: func(p *ItemEffectContext) error {
-		p.SetPower(p.Power() + 10.0)
+	loot.ItemEffectAddPower: func(ctx *ItemEffectContext) error {
+		ctx.castle.SetPower(ctx.castle.Power() + 10.0)
 		return nil
 	},
-	loot.ItemEffectAddAtkSpeed: func(p *ItemEffectContext) error {
-		p.SetAtkSpeed(p.AtkSpeed() + 0.2)
+	loot.ItemEffectAddAtkSpeed: func(ctx *ItemEffectContext) error {
+		ctx.castle.SetAtkSpeed(ctx.castle.AtkSpeed() + 0.1)
 		return nil
 	},
 	loot.ItemEffectAddCastleProjectile: func(ctx *ItemEffectContext) error {
@@ -112,11 +116,11 @@ var itemEffects = map[loot.ItemEffectId]ItemEffect{
 
 // Pool of all available items in the shop. X items from this pool will be randomly selected
 var availableItems = []loot.GameItem{
-	{GoldPrice: 50, Description: "+10 Max Health", ItemEffectId: loot.ItemEffectAddMaxHealth},
-	{GoldPrice: 50, Description: "+10 Movement speed", ItemEffectId: loot.ItemEffectAddMovementSpeed},
-	{GoldPrice: 50, Description: "+10 Armor", ItemEffectId: loot.ItemEffectAddArmor},
-	{GoldPrice: 50, Description: "+10 Power", ItemEffectId: loot.ItemEffectAddPower},
-	{GoldPrice: 50, Description: "+0.2 Atk Speed", ItemEffectId: loot.ItemEffectAddAtkSpeed},
+	{GoldPrice: 50, Description: "Castle: +10 Max Health", ItemEffectId: loot.ItemEffectAddMaxHealth},
+	{GoldPrice: 50, Description: "Player: +10 Movement speed", ItemEffectId: loot.ItemEffectAddMovementSpeed},
+	{GoldPrice: 50, Description: "Castle: +10 Armor", ItemEffectId: loot.ItemEffectAddArmor},
+	{GoldPrice: 50, Description: "Castle: +10 Power", ItemEffectId: loot.ItemEffectAddPower},
+	{GoldPrice: 50, Description: "Castle: +0.1 Atk Speed", ItemEffectId: loot.ItemEffectAddAtkSpeed},
 }
 
 // Pool of permanent upgrades. All will be available
@@ -129,8 +133,8 @@ const (
 	rerollPrice         = 10
 )
 
-func NewShopMenu(inventory loot.Inventory, playerStats engine.GameEntityStatReadWriter) (*ShopMenu, error) {
-	shop := &ShopMenu{inventory: inventory, playerStats: playerStats}
+func NewShopMenu(inventory loot.Inventory, player engine.GameEntityStatReadWriter, castle engine.GameEntityStatReadWriter) (*ShopMenu, error) {
+	shop := &ShopMenu{inventory: inventory, player: player, castle: castle}
 	shop.init()
 	return shop, nil
 }
@@ -157,7 +161,7 @@ func (s *ShopMenu) BuyAndApply(shopItem *ShopItemSlot) error {
 
 	// Apply item effect
 	// TODO: Consider moving this somewhere else
-	ctx := &ItemEffectContext{s.playerStats, s.Gun()}
+	ctx := &ItemEffectContext{s.player, s.castle, s.Gun()}
 	err = shopItem.ApplyItemEffect(ctx)
 	if err != nil {
 		return fmt.Errorf("Error applying item effect: %s", err.Error())

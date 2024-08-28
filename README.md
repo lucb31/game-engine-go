@@ -3,9 +3,6 @@
 
 # Survival game
 
-## Bug
-- Player power upgrades are not applied to castle gun
-
 ### Shop
 - Split random (stat) upgrades from deterministic (i.e. projectile count) upgrades
 

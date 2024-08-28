@@ -250,7 +250,7 @@ func (g *SurvivalGame) initHud() (*hud.GameHUD, error) {
 
 	// Init shop
 	inventory := g.world.Player().Inventory()
-	shop, err := NewShopMenu(inventory, g.world.Player())
+	shop, err := NewShopMenu(inventory, g.world.Player(), g.castle)
 	if err != nil {
 		return nil, err
 	}
