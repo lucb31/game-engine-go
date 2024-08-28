@@ -14,6 +14,10 @@ type PositionProvider interface {
 type FollowingCamera struct {
 	BaseCamera
 	target PositionProvider
+
+	// In locked mode the camera will just copy the targets position
+	// In unlocked mode the camera will move towards the target position
+	locked bool
 }
 
 func NewFollowingCamera(width, height int) (*FollowingCamera, error) {
@@ -34,9 +38,10 @@ func (c *FollowingCamera) calcVelocity(body *cp.Body, gravity cp.Vector, damping
 	targetPos := c.target.Position()
 	// Snap on target if below threshold
 	// NOTE: Make sure distance is scaled with timestep
-	if body.Position().Near(targetPos, 650.0*dt) {
+	if c.locked || body.Position().Near(targetPos, 650.0*dt) {
 		body.SetPosition(targetPos)
 		body.SetVelocity(0, 0)
+		c.locked = true
 		return
 	}
 
@@ -49,6 +54,8 @@ func (c *FollowingCamera) calcVelocity(body *cp.Body, gravity cp.Vector, damping
 
 func (c *FollowingCamera) SetTarget(target PositionProvider) {
 	c.target = target
+	// Reset camera lock
+	c.locked = false
 }
 
 // Backup: If we want to smoothen camera movement
