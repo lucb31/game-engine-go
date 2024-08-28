@@ -24,7 +24,10 @@ type CastleEntity struct {
 
 	// Logic
 	playerInside *engine.Player
-	gun          engine.Gun
+	// Keep track of last player inside even after leaving. This is required to
+	// add loot to player inventory even after he leaves
+	recentPlayerInside *engine.Player
+	gun                engine.Gun
 
 	// Physics
 	shape *cp.Shape
@@ -128,6 +131,7 @@ func (e *CastleEntity) Enter(p engine.GameEntityEntering) error {
 		return fmt.Errorf("Can only be entered by players")
 	}
 	e.playerInside = player
+	e.recentPlayerInside = player
 
 	// Pan camera
 	if e.camera == nil {
@@ -181,10 +185,13 @@ func (e *CastleEntity) ShopEnabled() bool                     { return e.playerI
 func (e *CastleEntity) SetCamera(cam *engine.FollowingCamera) { e.camera = cam }
 func (e *CastleEntity) Position() cp.Vector                   { return e.shape.Body().Position() }
 func (e *CastleEntity) Inventory() loot.Inventory {
-	if e.playerInside == nil {
-		return nil
+	if e.playerInside != nil {
+		return e.playerInside.Inventory()
+	} else if e.recentPlayerInside != nil {
+		return e.recentPlayerInside.Inventory()
 	}
-	return e.playerInside.Inventory()
+	log.Println("Error: Cannot access player inventory")
+	return nil
 }
 
 func (e *CastleEntity) HealthBar() hud.ProgressInfo {
