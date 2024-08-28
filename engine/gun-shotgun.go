@@ -9,16 +9,20 @@ import (
 
 type ShotGun struct {
 	BasicGun
+	*GunTargetController
 	projectiles int
 }
 
 func NewShotGun(em GameEntityManager, owner GameEntity, proj *ProjectileAsset, opts BasicGunOpts) (*ShotGun, error) {
-	base, err := NewBasicGun(em, owner, proj, opts)
+	base, err := newBasicGun(em, owner, proj, opts)
 	if err != nil {
 		return nil, err
 	}
 	// TODO: Opt for nr of projectiles
 	gun := &ShotGun{BasicGun: *base, projectiles: 5}
+	if gun.GunTargetController, err = newGunTargetController(gun); err != nil {
+		return nil, err
+	}
 	return gun, nil
 }
 

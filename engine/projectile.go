@@ -7,11 +7,19 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/jakecoffman/cp"
+	"github.com/lucb31/game-engine-go/engine/damage"
 	"github.com/lucb31/game-engine-go/engine/loot"
 )
 
 func ProjectileCollisionFilter() cp.ShapeFilter {
 	return cp.NewShapeFilter(cp.NO_GROUP, ProjectileCategory, NpcCategory|OuterWallsCategory)
+}
+
+type ProjectileTarget interface {
+	// Needs physical body
+	Body() *cp.Body
+	// Needs damage model
+	damage.Defender
 }
 
 type Projectile struct {
@@ -24,7 +32,7 @@ type Projectile struct {
 	// Logic
 	// Gun this projectile was fired from
 	gun       Gun
-	target    GameEntity
+	target    ProjectileTarget
 	direction cp.Vector
 	origin    cp.Vector
 
@@ -88,22 +96,23 @@ func (p *Projectile) Draw(t RenderingTarget) error {
 	return p.asset.Draw(t, p.shape.Body().Position(), angle)
 }
 
-func (p *Projectile) Shape() *cp.Shape          { return p.shape }
-func (p *Projectile) Power() float64            { return p.gun.Power() }
-func (p *Projectile) AtkSpeed() float64         { return 1.0 }
-func (p *Projectile) LootTable() loot.LootTable { return loot.NewEmptyLootTable() }
+func (p *Projectile) Shape() *cp.Shape                  { return p.shape }
+func (p *Projectile) Power() float64                    { return p.gun.Power() }
+func (p *Projectile) AtkSpeed() float64                 { return 1.0 }
+func (p *Projectile) LootTable() loot.LootTable         { return loot.NewEmptyLootTable() }
+func (p *Projectile) SetTarget(target ProjectileTarget) { p.target = target }
 
 func (p *Projectile) calculateVelocity(body *cp.Body, gravity cp.Vector, damping float64, dt float64) {
 	// Remove guided projectile if target no longer exists
 	if p.target != nil {
-		targetStillExists := p.shape.Space().ContainsBody(p.target.Shape().Body())
+		targetStillExists := p.shape.Space().ContainsBody(p.target.Body())
 		if !targetStillExists {
 			log.Println("Removing projectile: Target no longer exists")
 			p.Destroy()
 			return
 		}
 
-		p.direction = p.target.Shape().Body().Position()
+		p.direction = p.target.Body().Position()
 	}
 
 	// Remove projectile if fire range exceeded

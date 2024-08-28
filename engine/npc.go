@@ -108,6 +108,7 @@ func (n *NpcEntity) Draw(t RenderingTarget) error {
 }
 
 func (n *NpcEntity) Shape() *cp.Shape          { return n.shape }
+func (n *NpcEntity) Body() *cp.Body            { return n.shape.Body() }
 func (n *NpcEntity) IsVulnerable() bool        { return true }
 func (n *NpcEntity) LootTable() loot.LootTable { return n.loot }
 

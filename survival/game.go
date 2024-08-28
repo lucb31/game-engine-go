@@ -204,6 +204,8 @@ func (game *SurvivalGame) initCastle(camera *engine.FollowingCamera) error {
 	if err != nil {
 		return err
 	}
+	// Start with 3 projectiles
+	gun.SetNumberOfProjectiles(3)
 	game.castle.SetGun(gun)
 
 	// NOTE: Required to allow camera to switch to castle when entering

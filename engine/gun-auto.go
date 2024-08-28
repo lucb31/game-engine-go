@@ -6,14 +6,22 @@ import (
 
 type AutoAimGun struct {
 	*BasicGun
+	*GunTargetController
 }
 
 func NewAutoAimGun(em GameEntityManager, owner GameEntity, proj *ProjectileAsset, opts BasicGunOpts) (*AutoAimGun, error) {
-	base, err := NewBasicGun(em, owner, proj, opts)
+	// Init base
+	base, err := newBasicGun(em, owner, proj, opts)
 	if err != nil {
 		return nil, err
 	}
 	gun := &AutoAimGun{BasicGun: base}
+
+	// Init target controller
+	if gun.GunTargetController, err = newGunTargetController(gun); err != nil {
+		return nil, err
+	}
+
 	return gun, nil
 }
 
@@ -22,24 +30,28 @@ func (g *AutoAimGun) Shoot() error {
 		return fmt.Errorf("Still Reloading...")
 	}
 
-	// Select target
-	target := g.chooseTarget()
-	if target == nil {
+	// Select targets
+	targets := g.chooseTargets(g.nrOfProjectiles)
+	if len(targets) == 0 {
 		return nil
 	}
-
-	// Spawn projectile
-	proj, err := NewProjectile(g, g.em, g.projectileAsset)
-	if err != nil {
-		return err
+	// Spawn projectile for every target
+	for _, target := range targets {
+		proj, err := NewProjectile(g, g.em, g.projectileAsset)
+		if err != nil {
+			return err
+		}
+		proj.SetTarget(target)
+		g.em.AddEntity(proj)
 	}
-	proj.target = target
-	g.em.AddEntity(proj)
+	// Set one common reload timer
 	g.reloadTimeout.Set(1 / g.FireRate())
 
+	// Play animation once
 	if g.playShootAnimation != nil {
 		// Calculate projectile orientation relative to owner
-		direction := target.Shape().Body().Position().Sub(g.owner.Shape().Body().Position())
+		// FIX: Currently simply using first target
+		direction := targets[0].Body().Position().Sub(g.owner.Shape().Body().Position())
 		orientation := ^West
 		if direction.X > 0 {
 			orientation = West

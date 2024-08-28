@@ -12,7 +12,7 @@ type SimpleGun struct {
 }
 
 func NewSimpleGun(em GameEntityManager, owner GameEntity, proj *ProjectileAsset, orientation *Orientation, opts BasicGunOpts) (*SimpleGun, error) {
-	base, err := NewBasicGun(em, owner, proj, opts)
+	base, err := newBasicGun(em, owner, proj, opts)
 	if err != nil {
 		return nil, err
 	}

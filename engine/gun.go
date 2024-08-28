@@ -1,14 +1,13 @@
 package engine
 
 import (
-	"log"
-
 	"github.com/jakecoffman/cp"
 	"github.com/lucb31/game-engine-go/engine/damage"
 )
 
 type ShootingAnimationCallback func(float64, Orientation)
 type Gun interface {
+	PositionProvider
 	Shoot() error
 	FireRange() float64
 	// Nr of projectiles per second
@@ -37,9 +36,36 @@ type BasicGun struct {
 	fireRatePerSecond float64
 	fireRange         float64
 	damage            float64
+	nrOfProjectiles   int
 
 	// Callback to play shooting animation
 	playShootAnimation ShootingAnimationCallback
+}
+
+func newBasicGun(em GameEntityManager, owner GameEntity, proj *ProjectileAsset, opts BasicGunOpts) (*BasicGun, error) {
+	gun := &BasicGun{em: em, owner: owner, projectileAsset: proj}
+	var err error
+	if gun.reloadTimeout, err = NewIngameTimeout(em); err != nil {
+		return nil, err
+	}
+
+	// Init defaults
+	gun.damage = 30
+	gun.fireRatePerSecond = 1.5
+	gun.fireRange = 100
+	gun.nrOfProjectiles = 1
+
+	// Parse opts
+	if opts.FireRatePerSecond > 0 {
+		gun.fireRatePerSecond = opts.FireRatePerSecond
+	}
+	if opts.FireRange > 0 {
+		gun.fireRange = opts.FireRange
+	}
+	if opts.Damage > 0 {
+		gun.damage = opts.Damage
+	}
+	return gun, nil
 }
 
 // Determine power of owner entity. If not available use gun damage
@@ -57,10 +83,9 @@ func (g *BasicGun) FireRate() float64 {
 	}
 	return g.fireRatePerSecond
 }
-
-func (g *BasicGun) Owner() GameEntity  { return g.owner }
-func (g *BasicGun) FireRange() float64 { return g.fireRange }
-
+func (g *BasicGun) Owner() GameEntity   { return g.owner }
+func (g *BasicGun) Position() cp.Vector { return g.owner.Shape().Body().Position() }
+func (g *BasicGun) FireRange() float64  { return g.fireRange }
 func (g *BasicGun) IsReloading() bool {
 	return !g.reloadTimeout.Done()
 }
@@ -68,43 +93,4 @@ func (g *BasicGun) IsReloading() bool {
 func (g *BasicGun) SetShootingAnimationCallback(playShootAnimation ShootingAnimationCallback) {
 	g.playShootAnimation = playShootAnimation
 }
-
-func (g *BasicGun) chooseTarget() GameEntity {
-	query := g.owner.Shape().Space().PointQueryNearest(g.owner.Shape().Body().Position(), g.fireRange, gunTargetCollisionFilter)
-	if query.Shape == nil {
-		return nil
-	}
-	npc, ok := query.Shape.Body().UserData.(*NpcEntity)
-	if !ok {
-		log.Println("Expected npc target, but found something else", query.Shape.Body().UserData)
-		return nil
-	}
-	return npc
-}
-
-var gunTargetCollisionFilter = cp.NewShapeFilter(cp.NO_GROUP, cp.ALL_CATEGORIES, NpcCategory)
-
-func NewBasicGun(em GameEntityManager, owner GameEntity, proj *ProjectileAsset, opts BasicGunOpts) (*BasicGun, error) {
-	gun := &BasicGun{em: em, owner: owner, projectileAsset: proj}
-	var err error
-	if gun.reloadTimeout, err = NewIngameTimeout(em); err != nil {
-		return nil, err
-	}
-
-	// Init defaults
-	gun.damage = 30
-	gun.fireRatePerSecond = 1.5
-	gun.fireRange = 100
-
-	// Parse opts
-	if opts.FireRatePerSecond > 0 {
-		gun.fireRatePerSecond = opts.FireRatePerSecond
-	}
-	if opts.FireRange > 0 {
-		gun.fireRange = opts.FireRange
-	}
-	if opts.Damage > 0 {
-		gun.damage = opts.Damage
-	}
-	return gun, nil
-}
+func (g *BasicGun) SetNumberOfProjectiles(count int) { g.nrOfProjectiles = count }

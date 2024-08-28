@@ -3,8 +3,8 @@
 
 # Survival game
 
-## Gameplay
-- Multiple projectiles to different targets
+## Bug
+- Sometimes day cycle is skipped and next wave is spawned immediately. Probably related to high game speeds
 
 ### Shop
 - Add upgrades to buy with wood
@@ -21,6 +21,9 @@
     - C to bring up player stats
     - D to bring up debugging menu
 
+- Settings to control
+    - Debug settings
+    - Game speed
 
 # Engine
 
