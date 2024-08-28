@@ -205,7 +205,7 @@ func (game *SurvivalGame) initCastle(camera *engine.FollowingCamera) error {
 		return err
 	}
 	// Start with 3 projectiles
-	gun.SetNumberOfProjectiles(3)
+	gun.SetProjectileCount(3)
 	game.castle.SetGun(gun)
 
 	// NOTE: Required to allow camera to switch to castle when entering
@@ -256,6 +256,7 @@ func (g *SurvivalGame) initHud() (*hud.GameHUD, error) {
 	}
 	// Allow castle to control shop enabled state
 	shop.SetShopEnabler(g.castle)
+	shop.SetGunProvider(g.castle)
 	base.AddSubMenu(shop)
 
 	// Init inventory

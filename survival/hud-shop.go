@@ -19,11 +19,16 @@ import (
 type ShopEnabler interface {
 	ShopEnabled() bool
 }
+type GunProvider interface {
+	Gun() engine.Gun
+}
 
 type ShopMenu struct {
 	// Dependencies
 	inventory   loot.Inventory
 	playerStats engine.GameEntityStatReadWriter
+	// Gun that stat upgrades will be applied to
+	GunProvider
 
 	// UI
 	shopContainer *widget.Container
@@ -44,54 +49,67 @@ type ShopItemSlot struct {
 	descriptionLabel *widget.Text
 }
 
-func (i *ShopItemSlot) ApplyItemEffect(tar engine.GameEntityStatReadWriter) error {
+type ItemEffectContext struct {
+	engine.GameEntityStatReadWriter
+	gun engine.Gun
+}
+
+func (i *ShopItemSlot) ApplyItemEffect(ctx *ItemEffectContext) error {
 	effect, ok := itemEffects[i.item.ItemEffectId]
 	if !ok {
 		return fmt.Errorf("Unknown item efect id: %d", i.item.ItemEffectId)
 	}
-	return effect(tar)
+	return effect(ctx)
 }
 
-type ItemEffect func(p engine.GameEntityStatReadWriter) error
+type ItemEffect func(*ItemEffectContext) error
 
 var itemEffects = map[loot.ItemEffectId]ItemEffect{
-	loot.ItemEffectAddMaxHealth: func(p engine.GameEntityStatReadWriter) error {
+	loot.ItemEffectAddMaxHealth: func(p *ItemEffectContext) error {
 		// Need to increase both max health & current health
 		p.SetMaxHealth(p.MaxHealth() + 10.0)
 		p.SetHealth(p.Health() + 10.0)
 		return nil
 	},
-	loot.ItemEffectAddMovementSpeed: func(p engine.GameEntityStatReadWriter) error {
+	loot.ItemEffectAddMovementSpeed: func(p *ItemEffectContext) error {
 		p.SetMovementSpeed(p.MovementSpeed() + 10.0)
 		return nil
 	},
-	loot.ItemEffectAddArmor: func(p engine.GameEntityStatReadWriter) error {
+	loot.ItemEffectAddArmor: func(p *ItemEffectContext) error {
 		p.SetArmor(p.Armor() + 10.0)
 		return nil
 	},
-	loot.ItemEffectAddPower: func(p engine.GameEntityStatReadWriter) error {
+	loot.ItemEffectAddPower: func(p *ItemEffectContext) error {
 		p.SetPower(p.Power() + 10.0)
 		return nil
 	},
-	loot.ItemEffectAddAtkSpeed: func(p engine.GameEntityStatReadWriter) error {
+	loot.ItemEffectAddAtkSpeed: func(p *ItemEffectContext) error {
 		p.SetAtkSpeed(p.AtkSpeed() + 0.2)
+		return nil
+	},
+	loot.ItemEffectAddCastleProjectile: func(ctx *ItemEffectContext) error {
+		if ctx.gun == nil {
+			return fmt.Errorf("Could not add projectile: No gun provided")
+		}
+		ctx.gun.SetProjectileCount(ctx.gun.ProjectileCount() + 1)
 		return nil
 	},
 }
 
 // Pool of all available items in the shop
-// TODO: Move static list to survival package
 var availableItems = []loot.GameItem{
-	{Price: 50, Description: "+10 Max Health", ItemEffectId: loot.ItemEffectAddMaxHealth},
-	{Price: 50, Description: "+10 Movement speed", ItemEffectId: loot.ItemEffectAddMovementSpeed},
-	{Price: 50, Description: "+10 Armor", ItemEffectId: loot.ItemEffectAddArmor},
-	{Price: 50, Description: "+10 Power", ItemEffectId: loot.ItemEffectAddPower},
-	{Price: 50, Description: "+0.2 Atk Speed", ItemEffectId: loot.ItemEffectAddAtkSpeed},
+	{GoldPrice: 50, Description: "+10 Max Health", ItemEffectId: loot.ItemEffectAddMaxHealth},
+	{GoldPrice: 50, Description: "+10 Movement speed", ItemEffectId: loot.ItemEffectAddMovementSpeed},
+	{GoldPrice: 50, Description: "+10 Armor", ItemEffectId: loot.ItemEffectAddArmor},
+	{GoldPrice: 50, Description: "+10 Power", ItemEffectId: loot.ItemEffectAddPower},
+	{GoldPrice: 50, Description: "+0.2 Atk Speed", ItemEffectId: loot.ItemEffectAddAtkSpeed},
+	// TODO: Move to guaranteed upgrades
+	{WoodPrice: 50, Description: "Additional projectile", ItemEffectId: loot.ItemEffectAddCastleProjectile},
 }
 
 const (
-	itemSlots   = 3
-	rerollPrice = 10
+	randomizedItemSlots = 3
+	rerollPrice         = 10
 )
 
 func NewShopMenu(inventory loot.Inventory, playerStats engine.GameEntityStatReadWriter) (*ShopMenu, error) {
@@ -107,30 +125,32 @@ func (s *ShopMenu) RerollItemSlot(idx int) {
 
 	// Update UI
 	s.itemSlots[idx].item = newItem
-	s.itemSlots[idx].priceLabel.Label = fmt.Sprintf("%d gold", newItem.Price)
+	s.itemSlots[idx].priceLabel.Label = fmt.Sprintf("%d gold, %d wood", newItem.GoldPrice, newItem.WoodPrice)
 	s.itemSlots[idx].descriptionLabel.Label = newItem.Description
 }
 
 func (s *ShopMenu) BuyHandler(idx int) {
 	shopItem := s.itemSlots[idx]
 	gameItem := shopItem.item
-	if !s.inventory.GoldManager().CanAfford(gameItem.Price) {
-		log.Println("Cannot afford item", gameItem)
-		return
-	}
-	newBalance, err := s.inventory.GoldManager().Remove(gameItem.Price)
+
+	// Buy item via inventory (manages resources)
+	err := s.inventory.Buy(gameItem)
 	if err != nil {
-		log.Println("Error removing item cost", err.Error())
+		log.Println("Could not buy game item: ", err.Error())
 		return
 	}
 
-	err = shopItem.ApplyItemEffect(s.playerStats)
+	// Apply item effect
+	// TODO: Consider moving this somewhere else as well
+	ctx := &ItemEffectContext{s.playerStats, s.Gun()}
+	err = shopItem.ApplyItemEffect(ctx)
 	if err != nil {
 		log.Println("Error applying item effect", err.Error())
 		return
 	}
-	log.Printf("Bought item %v, new balance %d\n", gameItem, newBalance)
+	log.Printf("Successfully bought item %v\n", gameItem)
 
+	// Reroll a new item into the slot
 	s.RerollItemSlot(idx)
 }
 
@@ -168,22 +188,19 @@ func (s *ShopMenu) Update() {
 	s.shopContainer.GetWidget().Visibility = widget.Visibility_Show
 
 	// Enable/disable buttons depending on affordability & shop status
+	rerollDisabled := !s.ShopEnabled() || !s.inventory.GoldManager().CanAfford(rerollPrice)
 	for _, slot := range s.itemSlots {
 		if slot.buyButton == nil {
 			continue
 		}
-		buyDisabled := !s.ShopEnabled() || !s.inventory.GoldManager().CanAfford(slot.item.Price)
+		canAffordItem, _ := s.inventory.CanAfford(slot.item)
+		buyDisabled := !s.ShopEnabled() || !canAffordItem
 		slot.buyButton.GetWidget().Disabled = buyDisabled
 		if slot.rerollButton == nil {
 			continue
 		}
-		rerollDisabled := !s.ShopEnabled() || !s.inventory.GoldManager().CanAfford(rerollPrice)
 		slot.rerollButton.GetWidget().Disabled = rerollDisabled
 	}
-}
-
-func defaultApplyItemEffect(p engine.GameEntityStatReadWriter) error {
-	return fmt.Errorf("Missing implementation")
 }
 
 func (s *ShopMenu) init() {
@@ -225,7 +242,7 @@ func (s *ShopMenu) init() {
 	}
 
 	// Initialize item slots
-	s.itemSlots = make([]*ShopItemSlot, itemSlots)
+	s.itemSlots = make([]*ShopItemSlot, randomizedItemSlots)
 	for idx := range s.itemSlots {
 		slot := &ShopItemSlot{}
 		s.itemSlots[idx] = slot
@@ -283,6 +300,9 @@ func (s *ShopMenu) init() {
 
 func (s *ShopMenu) RootContainer() *widget.Container   { return s.shopContainer }
 func (s *ShopMenu) SetShopEnabler(enabler ShopEnabler) { s.ShopEnabler = enabler }
+func (s *ShopMenu) SetGunProvider(gun GunProvider) {
+	s.GunProvider = gun
+}
 
 func loadButtonImage() (*widget.ButtonImage, error) {
 	idle := image.NewNineSliceColor(color.NRGBA{R: 0, G: 170, B: 0, A: 255})

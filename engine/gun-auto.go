@@ -31,7 +31,7 @@ func (g *AutoAimGun) Shoot() error {
 	}
 
 	// Select targets
-	targets := g.chooseTargets(g.nrOfProjectiles)
+	targets := g.chooseTargets(g.projectileCount)
 	if len(targets) == 0 {
 		return nil
 	}

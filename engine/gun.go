@@ -12,10 +12,13 @@ type Gun interface {
 	FireRange() float64
 	// Nr of projectiles per second
 	FireRate() float64
+	ProjectileCount() int
 	Power() float64
 	IsReloading() bool
 	Owner() GameEntity
+
 	SetShootingAnimationCallback(ShootingAnimationCallback)
+	SetProjectileCount(int)
 }
 
 type BasicGunOpts struct {
@@ -36,7 +39,7 @@ type BasicGun struct {
 	fireRatePerSecond float64
 	fireRange         float64
 	damage            float64
-	nrOfProjectiles   int
+	projectileCount   int
 
 	// Callback to play shooting animation
 	playShootAnimation ShootingAnimationCallback
@@ -53,7 +56,7 @@ func newBasicGun(em GameEntityManager, owner GameEntity, proj *ProjectileAsset, 
 	gun.damage = 30
 	gun.fireRatePerSecond = 1.5
 	gun.fireRange = 100
-	gun.nrOfProjectiles = 1
+	gun.projectileCount = 1
 
 	// Parse opts
 	if opts.FireRatePerSecond > 0 {
@@ -83,9 +86,10 @@ func (g *BasicGun) FireRate() float64 {
 	}
 	return g.fireRatePerSecond
 }
-func (g *BasicGun) Owner() GameEntity   { return g.owner }
-func (g *BasicGun) Position() cp.Vector { return g.owner.Shape().Body().Position() }
-func (g *BasicGun) FireRange() float64  { return g.fireRange }
+func (g *BasicGun) Owner() GameEntity    { return g.owner }
+func (g *BasicGun) Position() cp.Vector  { return g.owner.Shape().Body().Position() }
+func (g *BasicGun) FireRange() float64   { return g.fireRange }
+func (g *BasicGun) ProjectileCount() int { return g.projectileCount }
 func (g *BasicGun) IsReloading() bool {
 	return !g.reloadTimeout.Done()
 }
@@ -93,4 +97,4 @@ func (g *BasicGun) IsReloading() bool {
 func (g *BasicGun) SetShootingAnimationCallback(playShootAnimation ShootingAnimationCallback) {
 	g.playShootAnimation = playShootAnimation
 }
-func (g *BasicGun) SetNumberOfProjectiles(count int) { g.nrOfProjectiles = count }
+func (g *BasicGun) SetProjectileCount(count int) { g.projectileCount = count }

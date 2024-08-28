@@ -8,12 +8,14 @@ const (
 	ItemEffectAddArmor
 	ItemEffectAddPower
 	ItemEffectAddAtkSpeed
+	ItemEffectAddCastleProjectile
 )
 
-// Item definition, not instance stored in ItemDB
+// Item definition stored in ItemDB, not copy / instance of one particular item
 type GameItem struct {
 	// Store
-	Price       int64
+	GoldPrice   int64
+	WoodPrice   int64
 	Description string
 
 	// Effect

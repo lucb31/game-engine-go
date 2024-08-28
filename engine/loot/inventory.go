@@ -9,6 +9,8 @@ type Inventory interface {
 	GoldManager() ResourceManager
 	WoodManager() ResourceManager
 	AddLoot(LootTable) error
+	Buy(*GameItem) error
+	CanAfford(*GameItem) (bool, error)
 }
 
 type InMemoryInventory struct {
@@ -56,6 +58,34 @@ func (i *InMemoryInventory) AddLoot(loot LootTable) error {
 		}
 	}
 	return nil
+}
+
+func (i *InMemoryInventory) Buy(item *GameItem) error {
+	// Check funds
+	canAfford, err := i.CanAfford(item)
+	if !canAfford {
+		return fmt.Errorf("Cannot afford item %v: %s", item, err.Error())
+	}
+	// Update resources
+	_, err = i.GoldManager().Remove(item.GoldPrice)
+	if err != nil {
+		return fmt.Errorf("Error removing item gold cost: %s", err.Error())
+	}
+	_, err = i.WoodManager().Remove(item.WoodPrice)
+	if err != nil {
+		return fmt.Errorf("Error removing item wood cost: %s", err.Error())
+	}
+	return nil
+}
+
+func (i *InMemoryInventory) CanAfford(item *GameItem) (bool, error) {
+	if !i.goldManager.CanAfford(item.GoldPrice) {
+		return false, fmt.Errorf("Insufficient gold funds")
+	}
+	if !i.woodManager.CanAfford(item.WoodPrice) {
+		return false, fmt.Errorf("Insufficient wood funds")
+	}
+	return true, nil
 }
 
 func (i *InMemoryInventory) GoldManager() ResourceManager { return i.goldManager }
