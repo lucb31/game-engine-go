@@ -333,6 +333,27 @@ func NewWorld(width int64, height int64) (*GameWorld, error) {
 	return &w, nil
 }
 
+func NewGeneratedWorld(generator WorldGenerator) (*GameWorld, error) {
+	// Init empty world
+	width, height := generator.WorldDimensions()
+	gameWorld, err := NewWorld(width, height)
+	if err != nil {
+		return nil, err
+	}
+
+	// Execute level generator
+	res, err := generator.Generate(gameWorld.AssetManager)
+	if err != nil {
+		return nil, fmt.Errorf("Error during level generation: %s", err.Error())
+	}
+
+	// Append map & objects
+	gameWorld.WorldMap = res.WorldMap
+	// TODO: Add objects
+
+	return gameWorld, nil
+}
+
 func (w *GameWorld) InitPlayer(am AssetManager) (*Player, error) {
 	// Initialize player (after world has been initialized to reference it)
 	playerAsset, err := am.CharacterAsset("ranger")

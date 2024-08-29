@@ -1,13 +1,14 @@
 package engine
 
 import (
+	"fmt"
 	"math"
 	"math/rand"
 
 	"github.com/jakecoffman/cp"
 )
 
-type HexSegment [][]MapTile
+type HexSegmentPattern [][]MapTile
 
 // Procedurally generated map based on hexagonal tiles
 type HexWorldMap struct {
@@ -16,8 +17,15 @@ type HexWorldMap struct {
 	groundLayer *BaseMapLayer
 	propLayer   *BaseMapLayer
 	// TODO: Datatype
-	csvHexSegments []HexSegment
-	center         cp.Vector
+	// Pool of segments to randomly choose from
+	segmentPool []HexSegmentPattern
+
+	// Center pos of initial hex
+	center cp.Vector
+	// Outer radius of all hexes
+	radius float64
+	// Inner radius of all hexes
+	inradius float64
 }
 
 func NewProcHexWorldMap(width, height int64, center cp.Vector) (*HexWorldMap, error) {
@@ -63,13 +71,33 @@ func (m *HexWorldMap) AddHexSegment(mapCsv []byte) error {
 	if err != nil {
 		return err
 	}
-	m.csvHexSegments = append(m.csvHexSegments, csvMapData)
+
+	// Determine hex radius from map data
+	mapSizeX := len(csvMapData[0]) * mapTileSize
+	// NOTE: This assumes that the map size along the X axis is twice the radius of the hexagon
+	radius := float64(mapSizeX / 2)
+	// Ensure radius of all hex segments is equal
+	if m.radius == 0 {
+		m.SetRadius(radius)
+	} else if m.radius != radius {
+		return fmt.Errorf("Hex segment radius does not match.")
+	}
+
+	// Add to pool
+	m.segmentPool = append(m.segmentPool, csvMapData)
 	return nil
 }
 
+func (m *HexWorldMap) SetRadius(radius float64) {
+	m.radius = radius
+	// r = cos(30°)*R https://en.wikipedia.org/wiki/Hexagon#Parameters
+	m.inradius = math.Cos(30.0/180.0*math.Pi) * radius
+}
+func (m *HexWorldMap) Radius() float64 { return m.radius }
+
 func (m *HexWorldMap) Generate() error {
 	// FIX: Currently first hex segment is always used as start
-	startingHex := m.csvHexSegments[0]
+	startingHex := m.segmentPool[0]
 	// Temporary: Only work on ground layer
 	// TODO: Add prop layer
 	layer := m.groundLayer
@@ -79,29 +107,22 @@ func (m *HexWorldMap) Generate() error {
 	}
 
 	// Draw first ring of hexes
-	return m.NewHexRing(m.center, m.csvHexSegments[0], layer)
+	return m.NewHexRing(m.center, m.segmentPool[0], layer)
 }
 
-func (m *HexWorldMap) getRandomSegment() HexSegment {
-	idx := rand.Intn(len(m.csvHexSegments))
-	return m.csvHexSegments[idx]
+func (m *HexWorldMap) getRandomSegment() HexSegmentPattern {
+	idx := rand.Intn(len(m.segmentPool))
+	return m.segmentPool[idx]
 }
 
 func (m *HexWorldMap) NewHexRing(center cp.Vector, csvMapData [][]MapTile, l *BaseMapLayer) error {
-	// Determine hex radius from map data
-	mapSizeX := len(csvMapData[0]) * mapTileSize
-	// NOTE: This assumes that the map size along the X axis is twice the radius of the hexagon
-	// and map size of all hex segments is equal
-	radius := float64(mapSizeX / 2)
 	// Ring of hexes by iterating over all 6 edges of the center hexagon
-	// r = cos(30°)*R https://en.wikipedia.org/wiki/Hexagon#Parameters
-	inradius := math.Cos(30.0/180.0*math.Pi) * radius
 	steps := 6
 	for i := 0; i < steps; i++ {
 		// Calculate ring segment center position
 		// Offset by 30°
 		angle := (2.0*float64(i)/float64(steps) + 30.0/180.0) * math.Pi
-		hexCenter := center.Add(cp.Vector{math.Cos(angle) * inradius * 2, math.Sin(angle) * inradius * 2})
+		hexCenter := center.Add(cp.Vector{math.Cos(angle) * m.inradius * 2, math.Sin(angle) * m.inradius * 2})
 
 		// Randomize which hexagon to pick, ideally flip and / or rotate
 		mapData := m.getRandomSegment()

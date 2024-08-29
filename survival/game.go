@@ -18,7 +18,6 @@ type SurvivalGame struct {
 	castle       *CastleEntity
 
 	hud                       *hud.GameHUD
-	worldWidth, worldHeight   int64
 	screenWidth, screenHeight int
 }
 
@@ -51,90 +50,25 @@ func (g *SurvivalGame) Layout(outsideWidth, outsideHeight int) (int, int) {
 	return g.screenWidth, g.screenHeight
 }
 
-// Initialize map layers from CSV data
-func (game *SurvivalGame) initMap() error {
-	// Base layer
-	baseTiles, err := game.world.AssetManager.Tileset("darkdimension")
-	if err != nil {
-		return err
-	}
-	// FIX: Move to constant
-	centerMapPosition := cp.Vector{1456, 1456}
-	worldMap, err := engine.NewProcHexWorldMap(game.worldWidth, game.worldHeight, centerMapPosition)
-	if err != nil {
-		return err
-	}
-	if err := worldMap.AddSkyboxLayer(int64(game.screenWidth), int64(game.screenHeight), baseTiles); err != nil {
-		return err
-	}
-	if err := worldMap.AddCsvLayer(assets.MapDarkDarkGroundCSV, baseTiles); err != nil {
-		return err
-	}
-
-	// Setup empty layers
-	castleProps, err := game.world.AssetManager.Tileset("props")
-	if err != nil {
-		return err
-	}
-	if err := worldMap.InitHexBaseLayers(castleProps); err != nil {
-		return err
-	}
-	// Add to segment pool
-	if err := worldMap.AddHexSegment(assets.Hex128112CSV); err != nil {
-		return err
-	}
-	if err := worldMap.AddHexSegment(assets.Hex128112PoolBaseCSV); err != nil {
-		return err
-	}
-
-	// Generate map
-	if err := worldMap.Generate(); err != nil {
-		return err
-	}
-	game.world.WorldMap = worldMap
-
-	// Temporarily disable castle props & collision layers
-	return nil
-	// Inner walls layer
-	if err := game.world.AddCollisionLayer(assets.MapDarkLogicWallsCSV); err != nil {
-		return err
-	}
-
-	// Castle front layer
-	if err := game.world.AddLayer(assets.MapDarkDarkCastleWallsCSV, baseTiles); err != nil {
-		return err
-	}
-
-	if err := game.world.AddLayer(assets.MapDarkPropsPropsCSV, castleProps); err != nil {
-		return err
-	}
-
-	// Outside layer
-	if err := game.world.AddLayer(assets.MapDarkDarkOutsidePropsCSV, baseTiles); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // Initialize all parts of the game world that need to be reset on restart
 func (game *SurvivalGame) initialize() error {
-	game.worldHeight = int64(2912)
-	game.worldWidth = int64(2912)
-
 	log.Println("Initializing game")
-	// Init game world
-	w, err := engine.NewWorld(game.worldWidth, game.worldHeight)
+	// Setup level generator
+	generator, err := NewSurvLevelGenerator()
 	if err != nil {
 		return err
 	}
-	game.world = w
-	am := w.AssetManager
+	// FIX: Hard-coded level dimension
+	generator.SetWorldDimensions(2912, 2912)
+	generator.SetScreenDimension(game.screenWidth, game.screenHeight)
 
-	// Initialize game map
-	if err = game.initMap(); err != nil {
-		return err
+	// Generate random level
+	gameWorld, err := engine.NewGeneratedWorld(generator)
+	if err != nil {
+		return fmt.Errorf("Error during level generation: %s", err.Error())
 	}
+	game.world = gameWorld
+	am := gameWorld.AssetManager
 
 	// Init player
 	player, err := game.world.InitPlayer(am)
@@ -162,7 +96,7 @@ func (game *SurvivalGame) initialize() error {
 	}
 
 	// Setup creep management (AFTER castle, so we can use it as target for npcs)
-	game.creepManager, err = engine.NewBaseCreepManager(w)
+	game.creepManager, err = engine.NewBaseCreepManager(gameWorld)
 	if err != nil {
 		return err
 	}
@@ -170,10 +104,10 @@ func (game *SurvivalGame) initialize() error {
 	if err != nil {
 		return err
 	}
-	if err = provider.ParseNoSpawnArea(game.worldWidth, game.worldHeight, assets.MapDarkLogicSpawnAreaCSV); err != nil {
+	if err = provider.ParseNoSpawnArea(game.world.Width, game.world.Height, assets.MapDarkLogicSpawnAreaCSV); err != nil {
 		return err
 	}
-	if err = provider.ParseCreepWaypoints(assets.MapDarkLogicWaypointsCSV, w.Space()); err != nil {
+	if err = provider.ParseCreepWaypoints(assets.MapDarkLogicWaypointsCSV, gameWorld.Space()); err != nil {
 		return err
 	}
 	if err = game.creepManager.SetProvider(provider); err != nil {
@@ -181,6 +115,7 @@ func (game *SurvivalGame) initialize() error {
 	}
 
 	// Forest
+	// TODO: Move to level generator
 	if err := game.initForest(); err != nil {
 		return err
 	}
