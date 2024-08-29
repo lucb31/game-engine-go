@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"image/color"
 	"log"
+	"slices"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -63,11 +64,21 @@ func (w *GameWorld) Draw(screen *ebiten.Image) {
 
 	// Render entities that are visible in the camera viewport
 	if !w.gameOver {
-		for _, obj := range w.objects {
+		// Determine visible objects
+		visibleObjectIds := []GameEntityId{}
+		for id, obj := range w.objects {
 			if w.camera.IsVisible(obj) {
-				if err := obj.Draw(w.camera); err != nil {
-					log.Printf("Error drawing object %d: %s \n", obj.Id(), err.Error())
-				}
+				visibleObjectIds = append(visibleObjectIds, id)
+			}
+		}
+		// Sort objects by id before drawing to ensure deterministic render order
+		slices.SortFunc(visibleObjectIds, func(a, b GameEntityId) int {
+			return int(a) - int(b)
+		})
+		for _, id := range visibleObjectIds {
+			obj := w.objects[id]
+			if err := obj.Draw(w.camera); err != nil {
+				log.Printf("Error drawing object %d: %s \n", obj.Id(), err.Error())
 			}
 		}
 	}
