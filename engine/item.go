@@ -15,8 +15,8 @@ type ItemEntity struct {
 
 var itemCollisionFilter = cp.NewShapeFilter(cp.NO_GROUP, ItemCategory, PlayerCategory)
 
-func NewItemEntity(em EntityRemover, pos cp.Vector) (*ItemEntity, error) {
-	base, err := NewBaseEntity(em)
+func NewItemEntity(pos cp.Vector) (*ItemEntity, error) {
+	base, err := NewBaseEntity()
 	if err != nil {
 		return nil, err
 	}

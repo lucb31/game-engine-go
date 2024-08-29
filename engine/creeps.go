@@ -136,11 +136,13 @@ func (c *BaseCreepManager) spawnCreep() error {
 
 	// Initialize an npc
 	for i := 0; i < c.activeWave.CreepsPerTick && c.creepsSpawned < c.activeWave.TotalCreepsToSpawn; i++ {
-		npc, err := c.creepProvider.NextNpc(c, *c.activeWave)
+		npc, err := c.creepProvider.NextNpc(*c.activeWave)
 		if err != nil {
 			return err
 		}
 		c.entityManager.AddEntity(npc)
+		// Overwrite remove callback
+		npc.SetEntityRemover(c)
 		c.creepsAlive++
 		c.creepsSpawned++
 	}

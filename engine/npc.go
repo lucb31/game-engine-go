@@ -43,8 +43,8 @@ func NpcCollisionFilter() cp.ShapeFilter {
 	return cp.NewShapeFilter(0, NpcCategory, PlayerCategory|OuterWallsCategory|HarvestableCategory|TowerCategory|ProjectileCategory)
 }
 
-func NewNpc(remover EntityRemover, asset *CharacterAsset, opts NpcOpts) (*NpcEntity, error) {
-	base, err := NewBaseEntity(remover)
+func NewNpc(asset *CharacterAsset, opts NpcOpts) (*NpcEntity, error) {
+	base, err := NewBaseEntity()
 	if err != nil {
 		return nil, err
 	}

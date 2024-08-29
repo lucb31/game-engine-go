@@ -77,7 +77,7 @@ func (p *SurvCreepProvider) ParseCreepWaypoints(mapCsvData []byte, space *cp.Spa
 	return nil
 }
 
-func (p *SurvCreepProvider) NextNpc(remover engine.EntityRemover, wave engine.Wave) (engine.GameEntity, error) {
+func (p *SurvCreepProvider) NextNpc(wave engine.Wave) (engine.GameEntity, error) {
 	npcType := p.nextNpcType()
 	// Load asset
 	npcAsset, err := p.assetManager.CharacterAsset(npcType.assetName)
@@ -95,7 +95,7 @@ func (p *SurvCreepProvider) NextNpc(remover engine.EntityRemover, wave engine.Wa
 	opts.BaseHealth = wave.HealthScalingFunc(opts.BaseHealth)
 
 	// Init npc
-	npc, err := engine.NewNpcAggro(remover, p.target, npcAsset, opts)
+	npc, err := engine.NewNpcAggro(p.target, npcAsset, opts)
 	if err != nil {
 		return nil, err
 	}

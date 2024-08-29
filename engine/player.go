@@ -242,6 +242,9 @@ func (p *Player) Inventory() loot.Inventory { return p.inventory }
 func (p *Player) Gun() Gun                  { return p.gun }
 func (p *Player) Position() cp.Vector       { return p.shape.Body().Position() }
 
+// Do nothing. Already have world reference
+func (p *Player) SetEntityRemover(EntityRemover) {}
+
 // Returns true if interaction has FINISHED
 func (p *Player) handleInteraction() bool {
 	// Exit building

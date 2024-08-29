@@ -175,8 +175,11 @@ func (e *CastleEntity) Gun() engine.Gun {
 
 func (e *CastleEntity) SetGun(gun engine.Gun) { e.gun = gun }
 
-func (e *CastleEntity) Id() engine.GameEntityId               { return e.id }
-func (e *CastleEntity) SetId(id engine.GameEntityId)          { e.id = id }
+func (e *CastleEntity) Id() engine.GameEntityId      { return e.id }
+func (e *CastleEntity) SetId(id engine.GameEntityId) { e.id = id }
+
+// Do nothing. We already have a reference to the world
+func (e *CastleEntity) SetEntityRemover(engine.EntityRemover) {}
 func (e *CastleEntity) Shape() *cp.Shape                      { return e.shape }
 func (e *CastleEntity) LootTable() loot.LootTable             { return loot.NewEmptyLootTable() }
 func (e *CastleEntity) SetAsset(asset *engine.CharacterAsset) { e.asset = asset }

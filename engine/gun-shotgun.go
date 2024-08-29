@@ -44,7 +44,7 @@ func (g *ShotGun) Shoot() error {
 			X: g.owner.Shape().Body().Position().X + math.Sin(angleInRad)*g.fireRange,
 			Y: g.owner.Shape().Body().Position().Y + math.Cos(angleInRad)*g.fireRange,
 		}
-		proj, err := NewProjectile(g, g.em, g.projectileAsset)
+		proj, err := NewProjectile(g, g.projectileAsset)
 		if err != nil {
 			return err
 		}

@@ -37,7 +37,7 @@ func (g *AutoAimGun) Shoot() error {
 	}
 	// Spawn projectile for every target
 	for _, target := range targets {
-		proj, err := NewProjectile(g, g.em, g.projectileAsset)
+		proj, err := NewProjectile(g, g.projectileAsset)
 		if err != nil {
 			return err
 		}

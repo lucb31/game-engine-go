@@ -100,7 +100,7 @@ func (game *TDGame) initialize() error {
 	if err != nil {
 		return fmt.Errorf("Could not find castle asset")
 	}
-	game.castle, err = NewCastle(w, castleAsset, game.EndGame)
+	game.castle, err = NewCastle(castleAsset, game.EndGame)
 	if err != nil {
 		return err
 	}

@@ -1,6 +1,8 @@
 package survival
 
 import (
+	"math/rand"
+
 	"github.com/jakecoffman/cp"
 	"github.com/lucb31/game-engine-go/bin/assets"
 	"github.com/lucb31/game-engine-go/engine"
@@ -9,6 +11,8 @@ import (
 type SurvivalLevelGenerator struct {
 	*engine.BaseLevelGenerator
 }
+
+var centerMapPosition = cp.Vector{1456, 1456}
 
 func NewSurvLevelGenerator() (*SurvivalLevelGenerator, error) {
 	base, err := engine.NewLevelGenerator()
@@ -21,11 +25,50 @@ func NewSurvLevelGenerator() (*SurvivalLevelGenerator, error) {
 
 func (g *SurvivalLevelGenerator) Generate(am engine.AssetManager) (*engine.GeneratorResult, error) {
 	res := &engine.GeneratorResult{}
+	// Generate map
 	worldMap, err := g.GenerateWorldMap(am)
 	if err != nil {
 		return nil, err
 	}
 	res.WorldMap = worldMap
+
+	// Generate forest
+	treeObjects, err := g.GenerateForest(am)
+	if err != nil {
+		return nil, err
+	}
+	res.Objects = treeObjects
+
+	return res, nil
+}
+
+var availableTrees = []string{"tree_a", "tree_b", "tree_small"}
+
+// Spawn a bunch of random trees around center position
+func (g *SurvivalLevelGenerator) GenerateForest(am engine.AssetManager) ([]engine.GameEntity, error) {
+	treeCount := 2000
+	treeRadius := 32.0
+	treePositions := entityDonutDistribution(centerMapPosition, 500, 1500, treeCount, treeRadius)
+	res := []engine.GameEntity{}
+	for _, pos := range treePositions {
+		treeIdx := rand.Intn(len(availableTrees))
+		treeType := availableTrees[treeIdx]
+		asset, err := am.CharacterAsset(treeType)
+		if err != nil {
+			return []engine.GameEntity{}, err
+		}
+		var tree *engine.TreeEntity
+		if treeType == "tree_small" {
+			tree, err = engine.NewBush(asset)
+		} else {
+			tree, err = engine.NewTree(asset)
+		}
+		if err != nil {
+			return []engine.GameEntity{}, err
+		}
+		tree.SetPosition(pos)
+		res = append(res, tree)
+	}
 	return res, nil
 }
 
@@ -37,8 +80,6 @@ func (g *SurvivalLevelGenerator) GenerateWorldMap(am engine.AssetManager) (engin
 	if err != nil {
 		return nil, err
 	}
-	// FIX: Move to constant
-	centerMapPosition := cp.Vector{1456, 1456}
 	worldMap, err := engine.NewProcHexWorldMap(worldWidth, worldHeight, centerMapPosition)
 	if err != nil {
 		return nil, err

@@ -23,8 +23,8 @@ type TowerEntity struct {
 	gun engine.Gun
 }
 
-func NewTowerEntity(world engine.EntityRemover, asset *engine.CharacterAsset) (*TowerEntity, error) {
-	base, err := engine.NewBaseEntity(world)
+func NewTowerEntity(asset *engine.CharacterAsset) (*TowerEntity, error) {
+	base, err := engine.NewBaseEntity()
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +45,7 @@ func NewSingleTargetTower(world engine.GameEntityManager, assetManager engine.As
 	if err != nil {
 		return nil, fmt.Errorf("Could not find tower asset")
 	}
-	tower, err := NewTowerEntity(world, towerAsset)
+	tower, err := NewTowerEntity(towerAsset)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +73,7 @@ func NewMultiTargetTower(world engine.GameEntityManager, assetManager engine.Ass
 	if err != nil {
 		return nil, fmt.Errorf("Could not find tower asset")
 	}
-	tower, err := NewTowerEntity(world, towerAsset)
+	tower, err := NewTowerEntity(towerAsset)
 	if err != nil {
 		return nil, err
 	}

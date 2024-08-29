@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"fmt"
 	"math"
 
 	"github.com/jakecoffman/cp"
@@ -29,22 +30,27 @@ type Lootable interface {
 type BaseEntity interface {
 	Id() GameEntityId
 	SetId(GameEntityId)
+	SetEntityRemover(EntityRemover)
 	Destroy() error
 }
 
 type BaseEntityImpl struct {
-	remover EntityRemover
+	Remover EntityRemover
 	id      GameEntityId
 }
 
-func NewBaseEntity(remover EntityRemover) (*BaseEntityImpl, error) {
-	return &BaseEntityImpl{remover: remover}, nil
+func NewBaseEntity() (*BaseEntityImpl, error) {
+	return &BaseEntityImpl{}, nil
 }
 
-func (b *BaseEntityImpl) Id() GameEntityId      { return b.id }
-func (b *BaseEntityImpl) SetId(id GameEntityId) { b.id = id }
+func (b *BaseEntityImpl) Id() GameEntityId                       { return b.id }
+func (b *BaseEntityImpl) SetId(id GameEntityId)                  { b.id = id }
+func (b *BaseEntityImpl) SetEntityRemover(remover EntityRemover) { b.Remover = remover }
 func (b *BaseEntityImpl) Destroy() error {
-	return b.remover.RemoveEntity(b)
+	if b.Remover == nil {
+		return fmt.Errorf("Cannot destroy entity: No remover set")
+	}
+	return b.Remover.RemoveEntity(b)
 }
 
 type EntityRemover interface {

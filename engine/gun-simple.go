@@ -26,7 +26,7 @@ func (g *SimpleGun) Shoot() error {
 	}
 
 	// Spawn projectile at owner position & orientation
-	proj, err := NewProjectile(g, g.em, g.projectileAsset)
+	proj, err := NewProjectile(g, g.projectileAsset)
 	if err != nil {
 		return err
 	}

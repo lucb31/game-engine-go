@@ -3,7 +3,7 @@ package engine
 import "github.com/jakecoffman/cp"
 
 type CreepProvider interface {
-	NextNpc(remover EntityRemover, wave Wave) (GameEntity, error)
+	NextNpc(wave Wave) (GameEntity, error)
 }
 
 type DefaultCreepProvider struct {
@@ -30,8 +30,8 @@ func NewDefaultCreepProvider(asset *CharacterAsset) (*DefaultCreepProvider, erro
 	return &DefaultCreepProvider{asset: asset, opts: &opts}, nil
 }
 
-func (p *DefaultCreepProvider) NextNpc(remover EntityRemover, wave Wave) (GameEntity, error) {
-	npc, err := NewNpc(remover, p.asset, *p.opts)
+func (p *DefaultCreepProvider) NextNpc(wave Wave) (GameEntity, error) {
+	npc, err := NewNpc(p.asset, *p.opts)
 	if err != nil {
 		return nil, err
 	}

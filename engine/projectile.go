@@ -67,11 +67,11 @@ func (a *ProjectileAsset) Draw(t RenderingTarget, position cp.Vector, angleInRad
 	return nil
 }
 
-func NewProjectile(gun Gun, remover EntityRemover, asset *ProjectileAsset) (*Projectile, error) {
+func NewProjectile(gun Gun, asset *ProjectileAsset) (*Projectile, error) {
 	if asset.Image == nil {
 		return nil, fmt.Errorf("Failed to instantiate projectile. No asset provided")
 	}
-	base, err := NewBaseEntity(remover)
+	base, err := NewBaseEntity()
 	if err != nil {
 		return nil, err
 	}

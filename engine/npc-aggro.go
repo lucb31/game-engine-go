@@ -18,11 +18,11 @@ type NpcAggro struct {
 	waypointInfo WaypointInfo
 }
 
-func NewNpcAggro(remover EntityRemover, target GameEntity, asset *CharacterAsset, opts NpcOpts) (*NpcAggro, error) {
+func NewNpcAggro(target GameEntity, asset *CharacterAsset, opts NpcOpts) (*NpcAggro, error) {
 	if target == nil {
 		return nil, fmt.Errorf("Did not receive target")
 	}
-	base, err := NewNpc(remover, asset, opts)
+	base, err := NewNpc(asset, opts)
 	if err != nil {
 		return nil, err
 	}

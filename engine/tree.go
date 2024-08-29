@@ -16,8 +16,8 @@ type TreeEntity struct {
 	asset *CharacterAsset
 }
 
-func newTreeEntity(em EntityRemover, asset *CharacterAsset, width, height float64) (*TreeEntity, error) {
-	base, err := NewBaseEntity(em)
+func newTreeEntity(asset *CharacterAsset, width, height float64) (*TreeEntity, error) {
+	base, err := NewBaseEntity()
 	if err != nil {
 		return nil, err
 	}
@@ -37,8 +37,8 @@ func newTreeEntity(em EntityRemover, asset *CharacterAsset, width, height float6
 	return t, nil
 }
 
-func NewTree(em EntityRemover, asset *CharacterAsset) (*TreeEntity, error) {
-	t, err := newTreeEntity(em, asset, 32.0, 64.0)
+func NewTree(asset *CharacterAsset) (*TreeEntity, error) {
+	t, err := newTreeEntity(asset, 32.0, 64.0)
 	if err != nil {
 		return nil, err
 	}
@@ -48,8 +48,8 @@ func NewTree(em EntityRemover, asset *CharacterAsset) (*TreeEntity, error) {
 	return t, nil
 }
 
-func NewBush(em EntityRemover, asset *CharacterAsset) (*TreeEntity, error) {
-	t, err := newTreeEntity(em, asset, 32.0, 32.0)
+func NewBush(asset *CharacterAsset) (*TreeEntity, error) {
+	t, err := newTreeEntity(asset, 32.0, 32.0)
 	if err != nil {
 		return nil, err
 	}

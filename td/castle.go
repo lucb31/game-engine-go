@@ -14,8 +14,7 @@ const CastleCollision = cp.CollisionType(200)
 
 type gameOverCallback = func()
 type CastleEntity struct {
-	id    engine.GameEntityId
-	world engine.EntityRemover
+	*engine.BaseEntityImpl
 
 	// Logic
 	health float64
@@ -30,8 +29,12 @@ type CastleEntity struct {
 	gameOverCallback gameOverCallback
 }
 
-func NewCastle(world engine.EntityRemover, asset *engine.CharacterAsset, cb gameOverCallback) (*CastleEntity, error) {
-	c := &CastleEntity{world: world, asset: asset, health: startingHealth, gameOverCallback: cb}
+func NewCastle(asset *engine.CharacterAsset, cb gameOverCallback) (*CastleEntity, error) {
+	base, err := engine.NewBaseEntity()
+	if err != nil {
+		return nil, err
+	}
+	c := &CastleEntity{BaseEntityImpl: base, asset: asset, health: startingHealth, gameOverCallback: cb}
 	c.animation = "idle"
 	body := cp.NewBody(1, cp.INFINITY)
 	body.SetPosition(cp.Vector{X: 640, Y: 395})
@@ -60,17 +63,15 @@ func (e *CastleEntity) OnNpcHit(npc *engine.NpcEntity) {
 }
 
 func (e *CastleEntity) Destroy() error {
-	err := e.world.RemoveEntity(e)
+	err := e.Remover.RemoveEntity(e)
 	if err != nil {
 		return err
 	}
 	e.gameOverCallback()
 	return nil
 }
-func (e *CastleEntity) Id() engine.GameEntityId      { return e.id }
-func (e *CastleEntity) SetId(id engine.GameEntityId) { e.id = id }
-func (e *CastleEntity) Shape() *cp.Shape             { return e.shape }
-func (e *CastleEntity) LootTable() loot.LootTable    { return loot.NewEmptyLootTable() }
+func (e *CastleEntity) Shape() *cp.Shape          { return e.shape }
+func (e *CastleEntity) LootTable() loot.LootTable { return loot.NewEmptyLootTable() }
 
 func (e *CastleEntity) GetHealthBar() hud.ProgressInfo {
 	return hud.ProgressInfo{0, int(startingHealth), int(e.health), "Castle health"}

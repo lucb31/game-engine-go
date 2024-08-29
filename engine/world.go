@@ -121,6 +121,7 @@ func (w *GameWorld) AddEntity(object GameEntity) error {
 	w.space.AddShape(object.Shape())
 	w.objects[w.nextObjectId] = object
 	object.SetId(w.nextObjectId)
+	object.SetEntityRemover(w)
 	w.nextObjectId++
 	return nil
 }
@@ -169,7 +170,7 @@ func (w *GameWorld) AddLayer(mapData []byte, tileset *Tileset) error {
 // spawning item sprites with guaranteed drops for every result of the original loot table
 func (w *GameWorld) DropLoot(lootTable loot.LootTable, pos cp.Vector) error {
 	for _, lootableItem := range lootTable.Result() {
-		itemEntity, err := NewItemEntity(w, pos)
+		itemEntity, err := NewItemEntity(pos)
 		if err != nil {
 			return err
 		}
@@ -347,9 +348,15 @@ func NewGeneratedWorld(generator WorldGenerator) (*GameWorld, error) {
 		return nil, fmt.Errorf("Error during level generation: %s", err.Error())
 	}
 
-	// Append map & objects
+	// Apply map
 	gameWorld.WorldMap = res.WorldMap
-	// TODO: Add objects
+
+	// Generate objects
+	for _, obj := range res.Objects {
+		if err := gameWorld.AddEntity(obj); err != nil {
+			return nil, fmt.Errorf("Error during object generation: %s", err.Error())
+		}
+	}
 
 	return gameWorld, nil
 }

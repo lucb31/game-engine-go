@@ -114,12 +114,6 @@ func (game *SurvivalGame) initialize() error {
 		return err
 	}
 
-	// Forest
-	// TODO: Move to level generator
-	if err := game.initForest(); err != nil {
-		return err
-	}
-
 	// Init hud
 	game.hud, err = game.initHud()
 	if err != nil {
@@ -163,18 +157,6 @@ func (game *SurvivalGame) initCastle(camera *engine.FollowingCamera) error {
 
 	// Add to entity management
 	game.world.AddEntity(game.castle)
-	return nil
-}
-
-func (game *SurvivalGame) initForest() error {
-	// Init forest
-	// Need forest to know what position to center around
-	if game.castle == nil {
-		return fmt.Errorf("Cannot init forest without castle")
-	}
-	if err := GenerateForest(game.castle.Position(), game.world.AssetManager, game.world); err != nil {
-		return err
-	}
 	return nil
 }
 
