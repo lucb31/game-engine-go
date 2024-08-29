@@ -2,9 +2,7 @@
 [Try it out](https://lucb31.github.io/game-engine-go/)
 
 # Survival game
-
-### Shop
-- Split random (stat) upgrades from deterministic (i.e. projectile count) upgrades
+- Add support for multi-layer hex segments 
 
 ### Harvesting
 - Add animation / effect to identify which object is being harvested

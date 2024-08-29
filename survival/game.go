@@ -70,17 +70,25 @@ func (game *SurvivalGame) initMap() error {
 	if err := worldMap.AddCsvLayer(assets.MapDarkDarkGroundCSV, baseTiles); err != nil {
 		return err
 	}
-	if err := worldMap.InitHexBaseLayers(); err != nil {
-		return err
-	}
 
-	// Add hexagon sub-layer
-	// TODO: Randomize which hexagon to pick, ideally flip and / or rotate
+	// Setup empty layers
 	castleProps, err := game.world.AssetManager.Tileset("props")
 	if err != nil {
 		return err
 	}
-	if _, err := worldMap.NewHexLayer(cp.Vector{1456, 1456}, assets.Hex128112CSV, castleProps); err != nil {
+	if err := worldMap.InitHexBaseLayers(castleProps); err != nil {
+		return err
+	}
+	// Add to segment pool
+	if err := worldMap.AddHexSegment(assets.Hex128112CSV); err != nil {
+		return err
+	}
+	if err := worldMap.AddHexSegment(assets.Hex128112PoolBaseCSV); err != nil {
+		return err
+	}
+
+	// Generate map
+	if err := worldMap.Generate(); err != nil {
 		return err
 	}
 	game.world.WorldMap = worldMap

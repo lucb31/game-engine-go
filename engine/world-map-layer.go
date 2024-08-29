@@ -161,6 +161,8 @@ func (l *BaseMapLayer) Dimensions() (int, int) {
 	return len(l.tileData), len(l.tileData[0])
 }
 
+func (l *BaseMapLayer) SetTileset(tileset Tileset) { l.tileset = tileset }
+
 func ReadCsvFromBinary(data []byte) ([][]MapTile, error) {
 	reader := bytes.NewReader(data)
 	return readCsv(reader)
