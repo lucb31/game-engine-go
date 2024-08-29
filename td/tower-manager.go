@@ -17,7 +17,7 @@ type TowerManager struct {
 	world          engine.GameEntityManager
 	goldManager    loot.ResourceManager
 	assetManager   engine.AssetManager
-	worldMapReader engine.WorldMapReader
+	worldMapReader engine.WorldMap
 
 	touches map[ebiten.TouchID]time.Time
 }
@@ -46,7 +46,8 @@ func NewTowerManager(
 	world engine.GameEntityManager,
 	am engine.AssetManager,
 	goldManager loot.ResourceManager,
-	worldMapReader engine.WorldMapReader) (*TowerManager, error) {
+	worldMapReader engine.WorldMap,
+) (*TowerManager, error) {
 	return &TowerManager{world: world, assetManager: am, goldManager: goldManager, worldMapReader: worldMapReader}, nil
 }
 
@@ -105,14 +106,16 @@ func (t *TowerManager) Draw(screen *ebiten.Image) error {
 func (t *TowerManager) AddTower(cursorPos cp.Vector) error {
 	// Snap pos to 32x48 grid
 	pos := engine.SnapToGrid(cursorPos, towerSizeX, towerSizeY)
+	var err error
 	// Check if we're allowed to build on this map tile
-	tile, err := t.worldMapReader.TileAt(pos)
-	if err != nil {
-		return fmt.Errorf("Unable to read tile data: %s", err.Error())
-	}
-	if !tileIsBuildable(tile) {
-		return fmt.Errorf("Cannot build on tile %d", tile)
-	}
+	// FIX: Broken now. Does not work with multiple layered maps
+	// tile, err := t.worldMapReader.TileAt(pos)
+	// if err != nil {
+	// 	return fmt.Errorf("Unable to read tile data: %s", err.Error())
+	// }
+	// if !tileIsBuildable(tile) {
+	// 	return fmt.Errorf("Cannot build on tile %d", tile)
+	// }
 	// Check if already occupied by other tower
 	queryInfo := t.world.Space().PointQueryNearest(pos, minDistanceBetweenTowers, engine.TowerCollisionFilter())
 	if queryInfo.Shape != nil {

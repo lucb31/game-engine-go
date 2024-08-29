@@ -58,15 +58,21 @@ func (game *SurvivalGame) initMap() error {
 	if err != nil {
 		return err
 	}
-	worldMap, err := engine.NewWorldMap(game.worldWidth, game.worldHeight)
+	// FIX: Move to constant
+	centerMapPosition := cp.Vector{1456, 1456}
+	worldMap, err := engine.NewProcHexWorldMap(game.worldWidth, game.worldHeight, centerMapPosition)
 	if err != nil {
 		return err
 	}
-	worldMap.AddSkyboxLayer(int64(game.screenWidth), int64(game.screenHeight), baseTiles)
-	if err := worldMap.AddLayer(assets.MapDarkDarkGroundCSV, baseTiles); err != nil {
+	if err := worldMap.AddSkyboxLayer(int64(game.screenWidth), int64(game.screenHeight), baseTiles); err != nil {
 		return err
 	}
-	game.world.WorldMap = worldMap
+	if err := worldMap.AddCsvLayer(assets.MapDarkDarkGroundCSV, baseTiles); err != nil {
+		return err
+	}
+	if err := worldMap.InitHexBaseLayers(); err != nil {
+		return err
+	}
 
 	// Add hexagon sub-layer
 	// TODO: Randomize which hexagon to pick, ideally flip and / or rotate
@@ -74,9 +80,10 @@ func (game *SurvivalGame) initMap() error {
 	if err != nil {
 		return err
 	}
-	if err := game.world.WorldMap.AddHexLayer(cp.Vector{1456, 1456}, assets.Hex128112CSV, castleProps); err != nil {
+	if _, err := worldMap.NewHexLayer(cp.Vector{1456, 1456}, assets.Hex128112CSV, castleProps); err != nil {
 		return err
 	}
+	game.world.WorldMap = worldMap
 
 	// Temporarily disable castle props & collision layers
 	return nil

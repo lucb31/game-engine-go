@@ -9,44 +9,6 @@ import (
 	"github.com/jakecoffman/cp"
 )
 
-func NewHexLayer(width, height int64, center cp.Vector, mapCsv []byte, tileset *Tileset) (*BaseMapLayer, error) {
-	// Initialize empty base layer. We will then copy hexagon tiles onto it
-	l, err := NewEmptyMapLayer(width, height)
-	if err != nil {
-		return nil, err
-	}
-
-	// Read map data from provided path
-	csvMapData, err := ReadCsvFromBinary(mapCsv)
-	if err != nil {
-		return nil, err
-	}
-	// Determine hex radius from map data
-	mapSizeX := len(csvMapData[0]) * mapTileSize
-	// NOTE: This assumes that the map size along the X axis is twice the radius of the hexagon
-	radius := float64(mapSizeX / 2)
-
-	// Draw first hexagon at center position
-	if err := l.CopyMapDataToCenterPosition(csvMapData, center); err != nil {
-		return nil, err
-	}
-
-	// Second ring of hexes with new center. By iterating over all 6 edges of the center hexagon
-	// r = cos(30°)*R https://en.wikipedia.org/wiki/Hexagon#Parameters
-	inradius := math.Cos(30.0/180.0*math.Pi) * radius
-	steps := 6
-	for i := 0; i < steps; i++ {
-		// Offset by 30°
-		angle := (2.0*float64(i)/float64(steps) + 30.0/180.0) * math.Pi
-		hexCenter := center.Add(cp.Vector{math.Cos(angle) * inradius * 2, math.Sin(angle) * inradius * 2})
-		if err := l.CopyMapDataToCenterPosition(csvMapData, hexCenter); err != nil {
-			return nil, err
-		}
-	}
-	l.tileset = *tileset
-	return l, nil
-}
-
 func strokeHex(screen *ebiten.Image, center cp.Vector, radius float64, stroke float32, color color.Color) {
 	verts := []cp.Vector{}
 	for i := 0; i < 6; i++ {

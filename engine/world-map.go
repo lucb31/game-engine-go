@@ -7,19 +7,24 @@ import (
 	"github.com/jakecoffman/cp"
 )
 
-type WorldMap struct {
+type WorldMap interface {
+	Draw(camera Camera)
+	AddCsvLayer(mapCsv []byte, tileset *Tileset) error
+}
+
+type MultiLayerWorldMap struct {
 	layers        []MapLayer
 	width, height int64
 }
 
 // Creates a new multi layer world map
-func NewWorldMap(width, height int64) (*WorldMap, error) {
-	m := &WorldMap{width: width, height: height}
+func NewMultiLayerWorldMap(width, height int64) (*MultiLayerWorldMap, error) {
+	m := &MultiLayerWorldMap{width: width, height: height}
 	return m, nil
 }
 
 // Draw all map layers
-func (w *WorldMap) Draw(camera Camera) {
+func (w *MultiLayerWorldMap) Draw(camera Camera) {
 	if len(w.layers) == 0 {
 		log.Println("Empty world map. No layers defined")
 		return
@@ -29,12 +34,7 @@ func (w *WorldMap) Draw(camera Camera) {
 	}
 }
 
-// TODO: Does not make any sense. first layer can be skybox
-func (w *WorldMap) TileAt(worldPos cp.Vector) (MapTile, error) {
-	return w.layers[0].TileAt(worldPos)
-}
-
-func (w *WorldMap) AddSkyboxLayer(width, height int64, tileset *Tileset) error {
+func (w *MultiLayerWorldMap) AddSkyboxLayer(width, height int64, tileset *Tileset) error {
 	if len(w.layers) > 0 {
 		return fmt.Errorf("Map already has existing layers. Skybox needs to be added as first layer")
 	}
@@ -46,17 +46,9 @@ func (w *WorldMap) AddSkyboxLayer(width, height int64, tileset *Tileset) error {
 	return nil
 }
 
-func (w *WorldMap) AddLayer(mapCsv []byte, tileset *Tileset) error {
+// Init & append layer from provided csv tile data and tileset
+func (w *MultiLayerWorldMap) AddCsvLayer(mapCsv []byte, tileset *Tileset) error {
 	l, err := NewBaseMapLayer(w.width, w.height, mapCsv, tileset)
-	if err != nil {
-		return err
-	}
-	w.layers = append(w.layers, l)
-	return nil
-}
-
-func (w *WorldMap) AddHexLayer(center cp.Vector, mapCsv []byte, tileset *Tileset) error {
-	l, err := NewHexLayer(w.width, w.height, center, mapCsv, tileset)
 	if err != nil {
 		return err
 	}

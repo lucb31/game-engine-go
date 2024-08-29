@@ -14,7 +14,7 @@ import (
 )
 
 type MapTile int
-type WorldMapReader interface {
+type TileAtReader interface {
 	TileAt(cp.Vector) (MapTile, error)
 }
 
@@ -27,7 +27,7 @@ type MapLayer interface {
 	Draw(Camera) error
 	// Return width & height of map layer
 	Dimensions() (int, int)
-	WorldMapReader
+	TileAtReader
 }
 
 type BaseMapLayer struct {

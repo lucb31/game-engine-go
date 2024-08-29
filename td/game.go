@@ -69,11 +69,11 @@ func (game *TDGame) initialize() error {
 	if err != nil {
 		return err
 	}
-	w.WorldMap, err = engine.NewWorldMap(width, height)
+	w.WorldMap, err = engine.NewMultiLayerWorldMap(width, height)
 	if err != nil {
 		return err
 	}
-	if err = w.WorldMap.AddLayer(assets.LabyrinthMapCSV, tileset); err != nil {
+	if err = w.WorldMap.AddCsvLayer(assets.LabyrinthMapCSV, tileset); err != nil {
 		return err
 	}
 	game.world = w

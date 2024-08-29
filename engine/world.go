@@ -34,7 +34,7 @@ type GameWorld struct {
 	// Rendering
 	camera Camera
 
-	WorldMap *WorldMap
+	WorldMap WorldMap
 	Width    int64
 	Height   int64
 	// Number of frames drawn. Used for animation
@@ -162,7 +162,7 @@ func (w *GameWorld) AddCombinedLayer(mapData []byte, tileset *Tileset) error {
 }
 
 func (w *GameWorld) AddLayer(mapData []byte, tileset *Tileset) error {
-	return w.WorldMap.AddLayer(mapData, tileset)
+	return w.WorldMap.AddCsvLayer(mapData, tileset)
 }
 
 // Dropping items is done by evaluating the input loot table &
