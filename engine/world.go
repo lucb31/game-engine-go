@@ -225,7 +225,7 @@ func (w *GameWorld) drawCombatLog() {
 		}
 		// Animate to scroll upwards
 		absPos := entry.Pos.Add(cp.Vector{X: 0, Y: -timeDiff / maxTimeDiff * 20})
-		relPos := w.camera.AbsToRel(absPos)
+		relPos := w.camera.WorldToScreenPos(absPos)
 
 		ebitenutil.DebugPrintAt(w.camera.Screen(), fmt.Sprintf("%.0f", entry.Damage), int(relPos.X), int(relPos.Y))
 	}
@@ -265,9 +265,9 @@ func (w *GameWorld) drawDebugBoundingBoxes(screen *ebiten.Image) {
 	w.Space().EachShape(func(shape *cp.Shape) {
 		if shape.Body().GetType() == cp.BODY_STATIC {
 			absStartPos := cp.Vector{shape.BB().L, shape.BB().B}
-			relStartPos := w.camera.AbsToRel(absStartPos)
+			relStartPos := w.camera.WorldToScreenPos(absStartPos)
 			absEndPos := cp.Vector{shape.BB().R, shape.BB().T}
-			relEndPos := w.camera.AbsToRel(absEndPos)
+			relEndPos := w.camera.WorldToScreenPos(absEndPos)
 			vector.StrokeLine(screen, float32(relStartPos.X), float32(relStartPos.Y), float32(relEndPos.X), float32(relEndPos.Y), 2.0, color.White, false)
 		}
 	})

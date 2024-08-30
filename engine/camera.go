@@ -29,7 +29,7 @@ type Camera interface {
 	// Drawing entities
 	IsVisible(GameEntity) bool
 	// Transforms world coordinates to camera coordinates
-	AbsToRel(cp.Vector) cp.Vector
+	WorldToScreenPos(cp.Vector) cp.Vector
 
 	// General rendering
 	DrawDebugInfo()
@@ -72,10 +72,19 @@ func (c *BaseCamera) DrawImage(im *ebiten.Image, op *ebiten.DrawImageOptions) {
 	// NOTE: Creating COPY here. If we pass by reference here we'd change
 	// the original opts which breaks cases where the same opts are re-used
 	opts := *op
+	opts.GeoM.Concat(c.worldMatrix())
+	c.screen.DrawImage(im, &opts)
+}
+
+// Returns geometrix matrix that includes all camera translation, rotation, etc
+func (c *BaseCamera) worldMatrix() ebiten.GeoM {
+	res := ebiten.GeoM{}
+
 	// Offset by camera viewport
 	tL, _ := c.Viewport()
-	opts.GeoM.Translate(-tL.X, -tL.Y)
-	c.screen.DrawImage(im, &opts)
+	res.Translate(-tL.X, -tL.Y)
+
+	return res
 }
 
 // Draw stroked rectangle on provided absolute world position
@@ -127,14 +136,14 @@ func (c *BaseCamera) DrawDebugInfo() {
 	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Cursor Screen(%d, %d), World(%.1f, %.1f)", relX, relY, worldPos.X, worldPos.Y), 10, 20)
 }
 
-func (c *BaseCamera) AbsToRel(absolutePos cp.Vector) cp.Vector {
+func (c *BaseCamera) WorldToScreenPos(worldPos cp.Vector) cp.Vector {
 	topLeft, _ := c.Viewport()
-	return absolutePos.Sub(topLeft)
+	return worldPos.Sub(topLeft)
 }
 
-func (c *BaseCamera) ScreenToWorldPos(relPos cp.Vector) cp.Vector {
+func (c *BaseCamera) ScreenToWorldPos(screenPos cp.Vector) cp.Vector {
 	topLeft, _ := c.Viewport()
-	return relPos.Add(topLeft)
+	return screenPos.Add(topLeft)
 }
 
 // ////////
