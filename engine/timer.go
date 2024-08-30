@@ -13,7 +13,7 @@ type Timer interface {
 }
 
 type Timeout interface {
-	Set(float64)
+	Set(seconds float64)
 	Done() bool
 	Timer
 }

@@ -1,10 +1,13 @@
 package engine
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"math/rand"
 
+	"github.com/hajimehoshi/ebiten/v2/audio"
+	"github.com/hajimehoshi/ebiten/v2/audio/vorbis"
 	"github.com/jakecoffman/cp"
 )
 
@@ -40,6 +43,10 @@ type WoodHarvestingTool struct {
 	owner GameEntity
 	em    GameEntityManager
 
+	// Sound effects
+	sePlayer  *audio.Player
+	seTimeout Timeout
+
 	// Stats
 	harvestingRange float64
 	harvestingSpeed float64
@@ -54,11 +61,16 @@ func NewWoodHarvestingTool(em GameEntityManager, owner GameEntity) (*WoodHarvest
 		return nil, fmt.Errorf("Cannot init wood harvesting tool without owner")
 	}
 	ht := &WoodHarvestingTool{owner: owner, em: em}
-	// Setup timer
+
+	// Setup timers
 	var err error
 	if ht.harvestingTimer, err = NewIngameTimer(em); err != nil {
 		return nil, err
 	}
+	if ht.seTimeout, err = NewIngameTimeout(em); err != nil {
+		return nil, err
+	}
+
 	// Set defaults
 	ht.harvestingRange = defaultHarvestingRange
 	ht.harvestingSpeed = defaultHarvestingSpeed
@@ -80,6 +92,34 @@ func (ht *WoodHarvestingTool) Nearest() Harvestable {
 
 func (ht *WoodHarvestingTool) InRange() bool    { return ht.Nearest() != nil }
 func (ht *WoodHarvestingTool) Harvesting() bool { return ht.harvestingTimer.Active() }
+func (ht *WoodHarvestingTool) SetupSfx(ctx *audio.Context, sfx []byte) error {
+	reader := bytes.NewReader(sfx)
+	stream, err := vorbis.DecodeWithoutResampling(reader)
+	if err != nil {
+		return err
+	}
+	ht.sePlayer, err = ctx.NewPlayer(stream)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (ht *WoodHarvestingTool) PlayHarvestingSE() error {
+	if ht.sePlayer == nil {
+		return fmt.Errorf("Missing sfx player. Did you call SetupSfx?")
+	}
+	if ht.sePlayer.IsPlaying() || !ht.seTimeout.Done() {
+		return nil
+	}
+	err := ht.sePlayer.Rewind()
+	if err != nil {
+		return err
+	}
+	ht.sePlayer.Play()
+	ht.seTimeout.Set(defaultHarvestingSpeed / 2)
+	return nil
+}
 
 func (ht *WoodHarvestingTool) HarvestNearest() error {
 	// Initiate if not already harvesting
@@ -91,6 +131,9 @@ func (ht *WoodHarvestingTool) HarvestNearest() error {
 		log.Println("Starting harvest", target)
 		ht.target = target
 		ht.harvestingTimer.Start()
+		if err := ht.PlayHarvestingSE(); err != nil {
+			return fmt.Errorf("Could not play harvesting sound effect: %s", err.Error())
+		}
 		return nil
 	}
 
@@ -115,6 +158,10 @@ func (ht *WoodHarvestingTool) HarvestNearest() error {
 		// Reset harvesting tool
 		ht.harvestingTimer.Stop()
 		ht.target = nil
+		return nil
+	}
+	if err := ht.PlayHarvestingSE(); err != nil {
+		return fmt.Errorf("Could not play harvesting sound effect: %s", err.Error())
 	}
 	return nil
 }

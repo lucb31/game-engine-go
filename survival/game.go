@@ -3,8 +3,10 @@ package survival
 import (
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/audio"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/jakecoffman/cp"
 	"github.com/lucb31/game-engine-go/bin/assets"
@@ -19,6 +21,7 @@ type SurvivalGame struct {
 
 	hud                       *hud.GameHUD
 	screenWidth, screenHeight int
+	audioContext              *audio.Context
 }
 
 func (g *SurvivalGame) Update() error {
@@ -75,10 +78,16 @@ func (game *SurvivalGame) initialize() error {
 	if err != nil {
 		return err
 	}
+	// Init wood harvesting
 	axe, err := engine.NewWoodHarvestingTool(game.world, player)
 	if err != nil {
 		return err
 	}
+	f, err := os.ReadFile("assets/audio/punch.ogg")
+	if err != nil {
+		return err
+	}
+	axe.SetupSfx(game.audioContext, f)
 	player.SetAxe(axe)
 	player.Shape().Body().SetPosition(cp.Vector{1456, 1656})
 
@@ -192,10 +201,14 @@ func (g *SurvivalGame) initHud() (*hud.GameHUD, error) {
 func NewSurvivalGame(screenWidth, screenHeight int) (*SurvivalGame, error) {
 	game := &SurvivalGame{screenWidth: screenWidth, screenHeight: screenHeight}
 
+	// Setup audio context
+	game.audioContext = audio.NewContext(48000)
+
 	// Initialize
 	if err := game.initialize(); err != nil {
 		return nil, err
 	}
+
 	return game, nil
 }
 
