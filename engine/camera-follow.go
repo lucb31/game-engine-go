@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"log"
 	"math"
 
 	"github.com/jakecoffman/cp"
@@ -20,6 +19,8 @@ type FollowingCamera struct {
 	locked bool
 }
 
+const followCamMaxSpeed = 500.0
+
 func NewFollowingCamera(width, height int) (*FollowingCamera, error) {
 	base, err := NewBaseCamera(width, height)
 	if err != nil {
@@ -35,20 +36,20 @@ func (c *FollowingCamera) calcVelocity(body *cp.Body, gravity cp.Vector, damping
 		body.SetVelocity(0, 0)
 		return
 	}
+	// NOTE: Make sure near distance is scaled with timestep
+	nearDistanceSq := (followCamMaxSpeed * dt) * (followCamMaxSpeed * dt)
 	targetPos := c.target.Position()
 	// Snap on target if below threshold
-	// NOTE: Make sure distance is scaled with timestep
-	if c.locked || body.Position().Near(targetPos, 650.0*dt) {
+	if c.locked || body.Position().Near(targetPos, nearDistanceSq) {
 		body.SetPosition(targetPos)
 		body.SetVelocity(0, 0)
 		c.locked = true
 		return
 	}
 
-	maxSpeed := 500.0
 	distance := targetPos.Sub(body.Position())
 	direction := distance.Normalize()
-	vel := direction.Mult(maxSpeed)
+	vel := direction.Mult(followCamMaxSpeed)
 	body.SetVelocityVector(vel)
 }
 
@@ -59,10 +60,11 @@ func (c *FollowingCamera) SetTarget(target PositionProvider) {
 }
 
 // Backup: If we want to smoothen camera movement
-func easedSpeed(distance cp.Vector, maxSpeed float64) {
+func easedSpeed(distance cp.Vector, maxSpeed float64) float64 {
 	// Calculate eased speed
 	maxDistanceSq := 10000.0
 	fractionOfMaxDistance := math.Min(1, distance.LengthSq()/maxDistanceSq)
 	speed := EaseInOutCubic(fractionOfMaxDistance) * maxSpeed
-	log.Println(distance.LengthSq(), fractionOfMaxDistance, speed)
+	// log.Println(distance.LengthSq(), fractionOfMaxDistance, speed)
+	return speed
 }

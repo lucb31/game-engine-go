@@ -243,6 +243,7 @@ func (w *GameWorld) removeObject(id GameEntityId) {
 	delete(w.objects, id)
 }
 
+// Deprecated: Use skybox instead
 func (w *GameWorld) initializeCameraViewportBoundingBox(camera Camera) {
 	minX := float64(camera.ViewportWidth() / 2)
 	minY := float64(camera.ViewportHeight() / 2)
@@ -398,7 +399,4 @@ func (w *GameWorld) SetCamera(camera Camera) {
 	w.camera = camera
 	w.space.AddBody(w.camera.Body())
 	w.space.AddShape(w.camera.Shape())
-
-	// TODO: Need to replace with smarter map data
-	// w.initializeCameraViewportBoundingBox(camera)
 }
