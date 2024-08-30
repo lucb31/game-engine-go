@@ -10,6 +10,7 @@ import (
 
 type SurvivalLevelGenerator struct {
 	*engine.BaseLevelGenerator
+	am engine.AssetManager
 }
 
 var centerMapPosition = cp.Vector{1456, 1456}
@@ -24,16 +25,17 @@ func NewSurvLevelGenerator() (*SurvivalLevelGenerator, error) {
 }
 
 func (g *SurvivalLevelGenerator) Generate(am engine.AssetManager) (*engine.GeneratorResult, error) {
+	g.am = am
 	res := &engine.GeneratorResult{}
 	// Generate map
-	worldMap, err := g.GenerateWorldMap(am)
+	worldMap, err := g.GenerateWorldMap()
 	if err != nil {
 		return nil, err
 	}
 	res.WorldMap = worldMap
 
 	// Generate forest
-	treeObjects, err := g.GenerateForest(am)
+	treeObjects, err := g.GenerateForest()
 	if err != nil {
 		return nil, err
 	}
@@ -45,15 +47,15 @@ func (g *SurvivalLevelGenerator) Generate(am engine.AssetManager) (*engine.Gener
 var availableTrees = []string{"tree_a", "tree_b", "tree_small"}
 
 // Spawn a bunch of random trees around center position
-func (g *SurvivalLevelGenerator) GenerateForest(am engine.AssetManager) ([]engine.GameEntity, error) {
+func (g *SurvivalLevelGenerator) GenerateTreesAroundCenter(center cp.Vector) ([]engine.GameEntity, error) {
 	treeCount := 2000
 	treeRadius := 32.0
-	treePositions := entityDonutDistribution(centerMapPosition, 500, 1500, treeCount, treeRadius)
+	treePositions := entityDonutDistribution(center, 500, 1200, treeCount, treeRadius)
 	res := []engine.GameEntity{}
 	for _, pos := range treePositions {
 		treeIdx := rand.Intn(len(availableTrees))
 		treeType := availableTrees[treeIdx]
-		asset, err := am.CharacterAsset(treeType)
+		asset, err := g.am.CharacterAsset(treeType)
 		if err != nil {
 			return []engine.GameEntity{}, err
 		}
@@ -72,11 +74,22 @@ func (g *SurvivalLevelGenerator) GenerateForest(am engine.AssetManager) ([]engin
 	return res, nil
 }
 
-func (g *SurvivalLevelGenerator) GenerateWorldMap(am engine.AssetManager) (engine.WorldMap, error) {
+func (g *SurvivalLevelGenerator) GenerateForest() ([]engine.GameEntity, error) {
+	res := []engine.GameEntity{}
+	// Generate trees around starting segment
+	aroundStartingHex, err := g.GenerateTreesAroundCenter(centerMapPosition)
+	if err != nil {
+		return nil, err
+	}
+	res = append(res, aroundStartingHex...)
+	return res, nil
+}
+
+func (g *SurvivalLevelGenerator) GenerateWorldMap() (engine.WorldMap, error) {
 	worldWidth, worldHeight := g.WorldDimensions()
 	screenWidth, screenHeight := g.ScreenDimensions()
 	// Base layer
-	baseTiles, err := am.Tileset("darkdimension")
+	baseTiles, err := g.am.Tileset("darkdimension")
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +105,7 @@ func (g *SurvivalLevelGenerator) GenerateWorldMap(am engine.AssetManager) (engin
 	}
 
 	// Setup empty layers
-	castleProps, err := am.Tileset("props")
+	castleProps, err := g.am.Tileset("props")
 	if err != nil {
 		return nil, err
 	}
