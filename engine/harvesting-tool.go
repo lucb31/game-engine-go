@@ -9,6 +9,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/audio"
 	"github.com/hajimehoshi/ebiten/v2/audio/vorbis"
 	"github.com/jakecoffman/cp"
+	"github.com/lucb31/game-engine-go/bin/assets"
 )
 
 type HarvestingTool interface {
@@ -43,8 +44,6 @@ type WoodHarvestingTool struct {
 	owner GameEntity
 	em    GameEntityManager
 
-	// Sound effects
-	sePlayer  *audio.Player
 	seTimeout Timeout
 
 	// Stats
@@ -92,31 +91,21 @@ func (ht *WoodHarvestingTool) Nearest() Harvestable {
 
 func (ht *WoodHarvestingTool) InRange() bool    { return ht.Nearest() != nil }
 func (ht *WoodHarvestingTool) Harvesting() bool { return ht.harvestingTimer.Active() }
-func (ht *WoodHarvestingTool) SetupSfx(ctx *audio.Context, sfx []byte) error {
-	reader := bytes.NewReader(sfx)
+
+func (ht *WoodHarvestingTool) PlayHarvestingSE() error {
+	if !ht.seTimeout.Done() {
+		return nil
+	}
+	reader := bytes.NewReader(assets.PunchTreeOGG)
 	stream, err := vorbis.DecodeWithoutResampling(reader)
 	if err != nil {
 		return err
 	}
-	ht.sePlayer, err = ctx.NewPlayer(stream)
+	player, err := audio.CurrentContext().NewPlayer(stream)
 	if err != nil {
 		return err
 	}
-	return nil
-}
-
-func (ht *WoodHarvestingTool) PlayHarvestingSE() error {
-	if ht.sePlayer == nil {
-		return fmt.Errorf("Missing sfx player. Did you call SetupSfx?")
-	}
-	if ht.sePlayer.IsPlaying() || !ht.seTimeout.Done() {
-		return nil
-	}
-	err := ht.sePlayer.Rewind()
-	if err != nil {
-		return err
-	}
-	ht.sePlayer.Play()
+	player.Play()
 	ht.seTimeout.Set(defaultHarvestingSpeed / 2)
 	return nil
 }

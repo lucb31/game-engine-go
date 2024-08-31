@@ -3,7 +3,6 @@ package survival
 import (
 	"fmt"
 	"log"
-	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/audio"
@@ -83,11 +82,6 @@ func (game *SurvivalGame) initialize() error {
 	if err != nil {
 		return err
 	}
-	f, err := os.ReadFile("assets/audio/punch_tree.ogg")
-	if err != nil {
-		return err
-	}
-	axe.SetupSfx(game.audioContext, f)
 	player.SetAxe(axe)
 	player.Shape().Body().SetPosition(cp.Vector{1456, 1656})
 

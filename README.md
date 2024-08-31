@@ -5,6 +5,12 @@
 - Add support for multi-layer hex segments 
 - Feedback for day is missing completely. Really hard to tell
 
+# Fog of war
+- Movign the player closer than X px "discovers" an area 
+
+## Bugs
+- Death animation not playing correctly when castle dies
+
 ## Upgrade system
 - Piercing projectiles upgrade
 - Splitting projectiles upgrade
