@@ -2,6 +2,7 @@ package survival
 
 import (
 	"math/rand"
+	"slices"
 
 	"github.com/jakecoffman/cp"
 	"github.com/lucb31/game-engine-go/bin/assets"
@@ -48,7 +49,7 @@ var availableTrees = []string{"tree_a", "tree_b", "tree_small"}
 
 // Spawn a bunch of random trees around center position
 func (g *SurvivalLevelGenerator) GenerateTreesAroundCenter(center cp.Vector) ([]engine.GameEntity, error) {
-	treeCount := 2000
+	treeCount := 800
 	treeRadius := 32.0
 	treePositions := entityDonutDistribution(center, 500, 1200, treeCount, treeRadius)
 	res := []engine.GameEntity{}
@@ -81,6 +82,11 @@ func (g *SurvivalLevelGenerator) GenerateForest() ([]engine.GameEntity, error) {
 	if err != nil {
 		return nil, err
 	}
+	// Sort objects by vertical position to create 2.5d effect
+	// Could possibly move this to render function instead
+	slices.SortFunc(aroundStartingHex, func(a, b engine.GameEntity) int {
+		return int(a.Shape().Body().Position().Y) - int(b.Shape().Body().Position().Y)
+	})
 	res = append(res, aroundStartingHex...)
 	return res, nil
 }

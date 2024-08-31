@@ -7,6 +7,9 @@
 
 # Fog of war
 - Movign the player closer than X px "discovers" an area 
+- Maximum density forest: Not random but fixed distance between trees
+    - Hitbox of tree only on stump to create 2.5D effect
+    - Render player behind trees
 
 ## Bugs
 - Death animation not playing correctly when castle dies
