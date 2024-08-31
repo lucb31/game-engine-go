@@ -2,7 +2,6 @@ package survival
 
 import (
 	"fmt"
-	"image"
 	"log"
 	"math/rand/v2"
 
@@ -125,11 +124,8 @@ func (p *SurvCreepProvider) calcCreepSpawnPosition(cam engine.Camera) (cp.Vector
 		}
 
 		// Check if within camera viewport
-		topLeft, bottomRight := cam.Viewport()
-		cameraArea := image.Rect(int(topLeft.X), int(topLeft.Y), int(bottomRight.X), int(bottomRight.Y))
-		spawnPoint := image.Point{int(randX), int(randY)}
-		if spawnPoint.In(cameraArea) {
-			log.Println("Position within viewport. Retrying...", randX, randY, topLeft, bottomRight)
+		if cam.VectorVisible(cp.Vector{randX, randY}) {
+			log.Println("Position within viewport. Retrying...", randX, randY)
 			continue
 		}
 		return cp.Vector{X: randX, Y: randY}, nil

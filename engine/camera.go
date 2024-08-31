@@ -29,6 +29,7 @@ type Camera interface {
 
 	// Drawing entities
 	IsVisible(GameEntity) bool
+	VectorVisible(cp.Vector) bool
 	// Transforms world coordinates to camera coordinates
 	WorldToScreenPos(cp.Vector) cp.Vector
 
@@ -73,15 +74,11 @@ func NewBaseCamera(width, height int) (*BaseCamera, error) {
 }
 
 func (c *BaseCamera) IsVisible(entity GameEntity) bool {
-	altTopLeft, altBR := c.Viewport()
-	// Construct scaled camera BB
-	cameraBB := cp.BB{
-		L: altTopLeft.X,
-		B: altTopLeft.Y,
-		R: altBR.X,
-		T: altBR.Y,
-	}
-	return cameraBB.Intersects(entity.Shape().BB())
+	return c.bb().Intersects(entity.Shape().BB())
+}
+
+func (c *BaseCamera) VectorVisible(vec cp.Vector) bool {
+	return c.bb().ContainsVect(vec)
 }
 
 // Returns center position of camera in world coordinates
@@ -145,7 +142,17 @@ func (c *BaseCamera) StrokeCircle(worldPos cp.Vector, r, strokeWidth float32, cl
 	vector.StrokeCircle(c.screen, float32(screenPos.X), float32(screenPos.Y), scaledRadius, strokeWidth, clr, antialias)
 }
 
-// TODO: Use cp.BB here. All reference either benefti or do not care
+func (c *BaseCamera) bb() cp.BB {
+	// NOTE: Could deprecate. Top left pos = camera pos, but rather keep this in since its more robust to future changes
+	topLeftWorldPosition, bottomRightWorldPosition := c.Viewport()
+	return cp.BB{
+		L: topLeftWorldPosition.X,
+		B: topLeftWorldPosition.Y,
+		R: bottomRightWorldPosition.X,
+		T: bottomRightWorldPosition.Y,
+	}
+}
+
 func (c *BaseCamera) Viewport() (cp.Vector, cp.Vector) {
 	// NOTE: Could deprecate. Top left pos = camera pos, but rather keep this in since its more robust to future changes
 	altTopLeft := c.ScreenToWorldPos(cp.Vector{0, 0})
