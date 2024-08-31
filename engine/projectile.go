@@ -26,15 +26,17 @@ type Projectile struct {
 	*BaseEntityImpl
 
 	// Physics
-	shape    *cp.Shape
-	velocity float64
+	shape          *cp.Shape
+	velocity       float64
+	direction      cp.Vector
+	origin         cp.Vector
+	staticVelocity cp.Vector
 
 	// Logic
 	// Gun this projectile was fired from
-	gun       Gun
-	target    ProjectileTarget
-	direction cp.Vector
-	origin    cp.Vector
+	gun      Gun
+	target   ProjectileTarget
+	piercing bool
 
 	// Rendering
 	asset *ProjectileAsset
@@ -101,10 +103,28 @@ func (p *Projectile) Power() float64                    { return p.gun.Power() }
 func (p *Projectile) AtkSpeed() float64                 { return 1.0 }
 func (p *Projectile) LootTable() loot.LootTable         { return loot.NewEmptyLootTable() }
 func (p *Projectile) SetTarget(target ProjectileTarget) { p.target = target }
+func (p *Projectile) SetPiercing(piercing bool)         { p.piercing = piercing }
+
+// Callback after projectile has hit an object. Used to implement projectile behaviour after hit
+// Default: Remove projectile
+// Piercing: Continue with current momentum
+// Forking: TODO
+func (p *Projectile) OnHit() error {
+	if p.piercing {
+		if p.target == nil {
+			return fmt.Errorf("Whoops. No target. This should not happen")
+		}
+		p.staticVelocity = p.Shape().Body().Velocity()
+		p.target = nil
+		return nil
+	}
+
+	return p.Destroy()
+}
 
 func (p *Projectile) calculateVelocity(body *cp.Body, gravity cp.Vector, damping float64, dt float64) {
-	// Remove guided projectile if target no longer exists
 	if p.target != nil {
+		// Remove guided projectile if target no longer exists
 		targetStillExists := p.shape.Space().ContainsBody(p.target.Body())
 		if !targetStillExists {
 			log.Println("Removing projectile: Target no longer exists")
@@ -116,20 +136,21 @@ func (p *Projectile) calculateVelocity(body *cp.Body, gravity cp.Vector, damping
 	}
 
 	// Remove projectile if fire range exceeded
-	distanceTravelled := p.shape.Body().Position().Distance(p.origin)
-	if math.IsNaN(distanceTravelled) || distanceTravelled >= p.gun.FireRange() {
+	distanceFromOrigin := p.shape.Body().Position().Distance(p.origin)
+	if math.IsNaN(distanceFromOrigin) || distanceFromOrigin >= p.gun.FireRange() {
 		p.Destroy()
 		return
 	}
 
-	// Remove projectile if destination reached
+	// Move projectile by static velocity
+	if p.staticVelocity.LengthSq() > 0.0 {
+		body.SetVelocityVector(p.staticVelocity)
+		return
+	}
+
+	// Move projectile towards destination position
 	position := body.Position()
 	diff := p.direction.Sub(position)
-	if diff.Length() < 0.1 {
-		p.Destroy()
-		return
-	}
-
 	diffNormalized := diff.Normalize()
 	vel := diffNormalized.Mult(p.velocity)
 	body.SetVelocityVector(vel)

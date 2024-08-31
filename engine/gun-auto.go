@@ -2,6 +2,7 @@ package engine
 
 import (
 	"fmt"
+	"math/rand/v2"
 )
 
 type AutoAimGun struct {
@@ -42,6 +43,8 @@ func (g *AutoAimGun) Shoot() error {
 			return err
 		}
 		proj.SetTarget(target)
+		// Random 1 in 5 chance for the projectile to pierce
+		proj.SetPiercing(rand.IntN(5) == 0)
 		g.em.AddEntity(proj)
 	}
 	// Set one common reload timer

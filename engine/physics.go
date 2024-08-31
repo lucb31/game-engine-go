@@ -127,7 +127,10 @@ func projectileCollisionHandler(arb *cp.Arbiter, space *cp.Space, userData inter
 	}
 
 	// Remove projectile
-	projectile.Destroy()
+	if err := projectile.OnHit(); err != nil {
+		log.Println("Error during projectile on hit handler: %e", err.Error())
+		return false
+	}
 	return false
 }
 
