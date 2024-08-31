@@ -59,6 +59,9 @@ func (a *CharacterAsset) DrawAnimationTile(t RenderingTarget, shape *cp.Shape, a
 	// Offset to make sure asset is drawn centered on current position
 	op.GeoM.Translate(a.offsetX, a.offsetY)
 	op.GeoM.Translate(shape.Body().Position().X, shape.Body().Position().Y)
+	// Opposed to map data we apply a linear filter to character assets
+	// Without it there are flickering effects
+	op.Filter = ebiten.FilterLinear
 	t.DrawImage(subIm, &op)
 	return nil
 }
@@ -79,30 +82,32 @@ func (a *CharacterAsset) AnimationController() AnimationController { return a.an
 func (a *CharacterAsset) AnimationTime() float64                   { return a.atp.AnimationTime() }
 
 func (a *CharacterAsset) DrawHealthbar(t RenderingTarget, shape *cp.Shape, health, maxHealth float64) {
+	// How many px the healthbar should take in height
+	healthBarHeight := 6.0
+	// How many px margin between character BB and bottom of healthbar
+	healthBarMargin := 10.0
+
+	// Calculate outline pos
+	outlineTopLeft := cp.Vector{shape.BB().L, shape.BB().B - healthBarMargin - healthBarHeight}
+	outlineBotRight := cp.Vector{shape.BB().R, shape.BB().B - healthBarMargin}
+
+	// Draw fill
 	width := shape.BB().R - shape.BB().L
-	height := shape.BB().T - shape.BB().B
-	// Outline
-	t.StrokeRect(
-		shape.Body().Position().X-width/2,
-		shape.Body().Position().Y-height/2-12,
-		float32(width),
-		6,
-		1,
-		color.RGBA{255, 255, 255, 255},
-		false,
-	)
-	// FILL
 	maxWidth := width - 4
-	filledWidth := float32(math.Max(0, health/maxHealth*maxWidth))
+	filledWidth := math.Max(0, health/maxHealth*maxWidth)
+	fillBotRight := cp.Vector{outlineTopLeft.X + filledWidth, outlineBotRight.Y}
 	t.StrokeRect(
-		shape.Body().Position().X-width/2+1,
-		shape.Body().Position().Y-height/2-10,
-		filledWidth,
-		2,
-		2,
+		outlineTopLeft,
+		fillBotRight,
+		float32(healthBarHeight),
 		color.RGBA{255, 0, 0, 255},
 		false,
 	)
+
+	// strokeWidth := 2.0
+	// TODO: Draw outline
+	// Could not get this to work correctly with zoom. Rather move this to HUD instead of trying to fix now
+	// t.StrokeRect(outlineTopLeft, outlineBotRight, float32(strokeWidth), color.RGBA{255, 255, 255, 255}, false)
 }
 
 func updateOrientation(prev Orientation, vel cp.Vector) Orientation {

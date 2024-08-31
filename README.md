@@ -4,9 +4,11 @@
 # Survival game
 - Add support for multi-layer hex segments 
 
+### Camera
+- Fix healthbars
+
 ### Harvesting
 - Add animation / effect to identify which object is being harvested
-- Different types of trees
 
 ## Priority
 - Add tutorial HUD menu

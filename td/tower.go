@@ -108,7 +108,7 @@ func (t *TowerEntity) Draw(screen engine.RenderingTarget) error {
 }
 
 func (t *TowerEntity) DrawRange(screen engine.RenderingTarget) {
-	screen.StrokeCircle(t.shape.Body().Position().X, t.shape.Body().Position().Y, float32(t.gun.FireRange()), 2.0, color.RGBA{255, 0, 0, 0}, false)
+	screen.StrokeCircle(t.shape.Body().Position(), float32(t.gun.FireRange()), 2.0, color.RGBA{255, 0, 0, 0}, false)
 }
 
 func (n *TowerEntity) Shape() *cp.Shape          { return n.shape }

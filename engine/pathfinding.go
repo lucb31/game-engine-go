@@ -72,3 +72,19 @@ func calcVisibleDistanceUsingBB(space *cp.Space, src *cp.Shape, dst cp.Vector) (
 	// Return calc distance for center of BB
 	return calcVisibleDistance(space, src.Body().Position(), dst)
 }
+
+func TopLeftBBPosition(shape *cp.Shape) cp.Vector {
+	return cp.Vector{shape.BB().L, shape.BB().B}
+}
+
+func TopRightBBPosition(shape *cp.Shape) cp.Vector {
+	return cp.Vector{shape.BB().R, shape.BB().B}
+}
+
+func BottomLeftBBPosition(shape *cp.Shape) cp.Vector {
+	return cp.Vector{shape.BB().L, shape.BB().T}
+}
+
+func BottomRightBBPosition(shape *cp.Shape) cp.Vector {
+	return cp.Vector{shape.BB().R, shape.BB().T}
+}

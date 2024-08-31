@@ -38,16 +38,18 @@ func (c *FollowingCamera) calcVelocity(body *cp.Body, gravity cp.Vector, damping
 	}
 	// NOTE: Make sure near distance is scaled with timestep
 	nearDistanceSq := (followCamMaxSpeed * dt) * (followCamMaxSpeed * dt)
-	targetPos := c.target.Position()
+	// Vector from camera center to targetPos
+	distance := c.target.Position().Sub(c.CenterWorldPos())
+
 	// Snap on target if below threshold
-	if c.locked || body.Position().Near(targetPos, nearDistanceSq) {
-		body.SetPosition(targetPos)
+	if c.locked || distance.LengthSq() < nearDistanceSq {
+		// Apply distance vector to current pos
+		body.SetPosition(body.Position().Add(distance))
 		body.SetVelocity(0, 0)
 		c.locked = true
 		return
 	}
 
-	distance := targetPos.Sub(body.Position())
 	direction := distance.Normalize()
 	vel := direction.Mult(followCamMaxSpeed)
 	body.SetVelocityVector(vel)

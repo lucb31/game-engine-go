@@ -18,10 +18,10 @@ import (
 // DEBUG SETTINGS
 // ///////////////
 const (
-	DEBUG_CAMERA_POS             = false
+	DEBUG_CAMERA_POS             = true
 	DEBUG_DRAW_STATIC_BODY       = false
 	DEBUG_ENTITY_STATS           = true
-	DEBUG_RENDER_COLLISION_BOXES = false
+	DEBUG_RENDER_COLLISION_BOXES = true
 )
 
 type GameWorld struct {
@@ -243,24 +243,6 @@ func (w *GameWorld) removeObject(id GameEntityId) {
 	delete(w.objects, id)
 }
 
-// Deprecated: Use skybox instead
-func (w *GameWorld) initializeCameraViewportBoundingBox(camera Camera) {
-	minX := float64(camera.ViewportWidth() / 2)
-	minY := float64(camera.ViewportHeight() / 2)
-	maxX := float64(w.Width) - minX
-	maxY := float64(w.Height) - minY
-
-	walls := []WallSegment{
-		{cp.Vector{minX, minY}, cp.Vector{minX, maxY}},
-		{cp.Vector{maxX, minY}, cp.Vector{maxX, maxY}},
-		{cp.Vector{minX, minY}, cp.Vector{maxX, minY}},
-		{cp.Vector{minX, maxY}, cp.Vector{maxX, maxY}},
-	}
-	for _, wall := range walls {
-		RegisterWallSegmentToSpace(w.space, wall)
-	}
-}
-
 // Draw static bounding boxes for debugging purposes
 func (w *GameWorld) drawDebugBoundingBoxes(screen *ebiten.Image) {
 	w.Space().EachShape(func(shape *cp.Shape) {
@@ -276,13 +258,14 @@ func (w *GameWorld) drawDebugBoundingBoxes(screen *ebiten.Image) {
 
 // Debugging info for entities
 func (w *GameWorld) drawEntityDebugInfo(screen *ebiten.Image) {
+	yPos := 400
 	visibleObjects := 0
 	for _, obj := range w.objects {
 		if w.camera.IsVisible(obj) {
 			visibleObjects++
 		}
 	}
-	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("# Visible Objects: (%d / %d)", visibleObjects, len(w.objects)), 10, 30)
+	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("# Visible Objects: (%d / %d)", visibleObjects, len(w.objects)), 10, yPos)
 	shapes := 0
 	projectiles := 0
 	npcs := 0
@@ -294,10 +277,14 @@ func (w *GameWorld) drawEntityDebugInfo(screen *ebiten.Image) {
 		}
 		shapes++
 	})
-	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("# Shapes: %d", shapes), 10, 45)
-	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("# Projectiles: %d", projectiles), 10, 60)
-	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("# Npcs: %d", npcs), 10, 75)
-	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("# Fps: %0.1f", ebiten.ActualFPS()), 10, 105)
+	yPos += 15
+	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("# Shapes: %d", shapes), 10, yPos)
+	yPos += 15
+	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("# Projectiles: %d", projectiles), 10, yPos)
+	yPos += 15
+	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("# Npcs: %d", npcs), 10, yPos)
+	yPos += 15
+	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("# Fps: %0.1f", ebiten.ActualFPS()), 10, yPos)
 }
 
 func NewWorld(width int64, height int64) (*GameWorld, error) {

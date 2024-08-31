@@ -72,7 +72,7 @@ func (e *CastleEntity) Draw(screen engine.RenderingTarget) error {
 	// Draw firing range, if gun available
 	gun := e.Gun()
 	if gun != nil {
-		screen.StrokeCircle(e.shape.Body().Position().X, e.shape.Body().Position().Y, float32(gun.FireRange()), 2.0, color.NRGBA{255, 0, 0, 255}, false)
+		screen.StrokeCircle(e.shape.Body().Position(), float32(gun.FireRange()), 2.0, color.NRGBA{255, 0, 0, 255}, false)
 	}
 	return nil
 }

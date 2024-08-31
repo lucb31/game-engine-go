@@ -13,8 +13,8 @@ import (
 
 type RenderingTarget interface {
 	DrawImage(*ebiten.Image, *ebiten.DrawImageOptions)
-	StrokeRect(x, y float64, width, height float32, strokeWidth float32, clr color.Color, antialias bool)
-	StrokeCircle(cx, cy float64, r, strokeWidth float32, clr color.Color, antialias bool)
+	StrokeRect(topLeftWorldPos, botRightWorldPos cp.Vector, strokeWidth float32, clr color.Color, antialias bool)
+	StrokeCircle(center cp.Vector, r, strokeWidth float32, clr color.Color, antialias bool)
 	Screen() *ebiten.Image
 }
 
@@ -37,21 +37,28 @@ type Camera interface {
 	SetScreen(*ebiten.Image)
 	// Returns coordinates of viewport top-left & bottom-right vectors in world coordinates
 	Viewport() (cp.Vector, cp.Vector)
-	ViewportWidth() int
-	ViewportHeight() int
+	ScreenWidth() int
+	ScreenHeight() int
 }
 
+const (
+	camZoomFactorMax     = 3.0
+	camZoomFactorMin     = 0.5
+	camZoomFactorDefault = 1.0
+)
+
 type BaseCamera struct {
-	viewportWidth, viewportHeight int
-	shape                         *cp.Shape
-	screen                        *ebiten.Image
+	screenWidth, screenHeight int
+	shape                     *cp.Shape
+	screen                    *ebiten.Image
+
+	ZoomFactor float64
 }
 
 func NewBaseCamera(width, height int) (*BaseCamera, error) {
-	cam := &BaseCamera{viewportWidth: width, viewportHeight: height}
+	cam := &BaseCamera{screenWidth: width, screenHeight: height}
 	// Init camera physics (required for cam movement)
 	camBody := cp.NewKinematicBody()
-	camBody.SetPosition(cp.Vector{X: float64(width) / 2, Y: float64(height) / 2})
 	camBody.UserData = cam
 
 	// Collision model
@@ -59,11 +66,26 @@ func NewBaseCamera(width, height int) (*BaseCamera, error) {
 	cam.shape.SetSensor(true)
 	cam.shape.SetFilter(cp.SHAPE_FILTER_NONE)
 
+	cam.ZoomFactor = camZoomFactorDefault
+
 	return cam, nil
 }
 
 func (c *BaseCamera) IsVisible(entity GameEntity) bool {
-	return c.shape.BB().Intersects(entity.Shape().BB())
+	altTopLeft, altBR := c.Viewport()
+	// Construct scaled camera BB
+	cameraBB := cp.BB{
+		L: altTopLeft.X,
+		B: altTopLeft.Y,
+		R: altBR.X,
+		T: altBR.Y,
+	}
+	return cameraBB.Intersects(entity.Shape().BB())
+}
+
+// Returns center position of camera in world coordinates
+func (c *BaseCamera) CenterWorldPos() cp.Vector {
+	return c.ScreenToWorldPos(cp.Vector{float64(c.screenWidth) / 2, float64(c.screenHeight) / 2})
 }
 
 // Replacement for screen.DrawImage
@@ -80,78 +102,99 @@ func (c *BaseCamera) DrawImage(im *ebiten.Image, op *ebiten.DrawImageOptions) {
 func (c *BaseCamera) worldMatrix() ebiten.GeoM {
 	res := ebiten.GeoM{}
 
-	// Offset by camera viewport
-	tL, _ := c.Viewport()
-	res.Translate(-tL.X, -tL.Y)
+	// Offset by camera top left position
+	res.Translate(-c.Position().X, -c.Position().Y)
+
+	// We want to scale around center of image / screen
+	// NOTE: Using UNSCALED viewport dimensions here on purpose
+	res.Translate(-float64(c.screenWidth)*0.5, -float64(c.screenHeight)*0.5)
+	res.Scale(
+		c.ZoomFactor,
+		c.ZoomFactor,
+	)
+	res.Translate(float64(c.screenWidth)*0.5, float64(c.screenHeight)*0.5)
 
 	return res
 }
 
-// Draw stroked rectangle on provided absolute world position
-func (c *BaseCamera) StrokeRect(absX, absY float64, width, height float32, strokeWidth float32, clr color.Color, antialias bool) {
-	screen := c.screen
-	tL, _ := c.Viewport()
-	relX := float32(absX - tL.X)
-	relY := float32(absY - tL.Y)
-	vector.StrokeRect(screen, relX, relY, width, height, strokeWidth, clr, antialias)
+// Draw stroked rectangle on provided world position
+func (c *BaseCamera) StrokeRect(topLeft, botRight cp.Vector, strokeWidth float32, clr color.Color, antialias bool) {
+	tLScreen := c.WorldToScreenPos(topLeft)
+	bRScreen := c.WorldToScreenPos(botRight)
+	diff := bRScreen.Sub(tLScreen)
+	width := float32(diff.X)
+	height := float32(diff.Y)
+
+	vector.StrokeRect(c.screen, float32(tLScreen.X), float32(tLScreen.Y), width, height, strokeWidth, clr, antialias)
 }
 
-func (c *BaseCamera) StrokeCircle(cx, cy float64, r, strokeWidth float32, clr color.Color, antialias bool) {
-	screen := c.screen
-	tL, _ := c.Viewport()
-	relX := float32(cx - tL.X)
-	relY := float32(cy - tL.Y)
-	vector.StrokeCircle(screen, relX, relY, r, strokeWidth, clr, antialias)
+// NOTE: Radius will get scaled by camera zoom factor
+func (c *BaseCamera) StrokeCircle(worldPos cp.Vector, r, strokeWidth float32, clr color.Color, antialias bool) {
+	screenPos := c.WorldToScreenPos(worldPos)
+	scaledRadius := r * float32(c.ZoomFactor)
+	vector.StrokeCircle(c.screen, float32(screenPos.X), float32(screenPos.Y), scaledRadius, strokeWidth, clr, antialias)
 }
 
+// TODO: Use cp.BB here. All reference either benefti or do not care
 func (c *BaseCamera) Viewport() (cp.Vector, cp.Vector) {
-	topLeft := cp.Vector{
-		X: c.Position().X - float64(c.viewportWidth/2),
-		Y: c.Position().Y - float64(c.viewportHeight/2),
-	}
-	bottomRight := cp.Vector{
-		X: c.Position().X + float64(c.viewportWidth/2),
-		Y: c.Position().Y + float64(c.viewportHeight/2),
-	}
-	// NOTE: We're not blocking the camera from moving out of bounds right now
-	// Easy fix could be to make the map a little bigger than the outer bounds
-	return topLeft, bottomRight
+	// NOTE: Could deprecate. Top left pos = camera pos, but rather keep this in since its more robust to future changes
+	altTopLeft := c.ScreenToWorldPos(cp.Vector{0, 0})
+	altBR := c.ScreenToWorldPos(cp.Vector{float64(c.screenWidth), float64(c.screenHeight)})
+	return altTopLeft, altBR
 }
 
 func (c *BaseCamera) SetScreen(screen *ebiten.Image) { c.screen = screen }
 
 func (c *BaseCamera) DrawDebugInfo() {
+	// Allow changing zoom with P-Up & P-Down
+	if ebiten.IsKeyPressed(ebiten.KeyPageUp) && c.ZoomFactor < camZoomFactorMax {
+		c.ZoomFactor += 0.005
+	} else if ebiten.IsKeyPressed(ebiten.KeyPageDown) && c.ZoomFactor > camZoomFactorMin {
+		c.ZoomFactor -= 0.005
+	}
+
 	screen := c.screen
 	if screen == nil {
 		log.Fatalln("Cannot draw debug info without screen")
 		return
 	}
-	// Draw camera position
+
+	// Draw camera position & zoom
+	ypos := 10
 	tl, br := c.Viewport()
-	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Camera Viewport: (%.1f, %.1f) - (%.1f, %.1f)", tl.X, tl.Y, br.X, br.Y), 10, 10)
+	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Camera Viewport (world): (%.1f, %.1f) - (%.1f, %.1f)", tl.X, tl.Y, br.X, br.Y), 10, ypos)
+	ypos += 15
+	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Camera Zoom %.3fx. Use P-UP & P-DOWN to adjust", c.ZoomFactor), 10, ypos)
+	ypos += 15
 
 	// Draw cursor position
 	relX, relY := ebiten.CursorPosition()
 	worldPos := c.ScreenToWorldPos(cp.Vector{float64(relX), float64(relY)})
-	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Cursor Screen(%d, %d), World(%.1f, %.1f)", relX, relY, worldPos.X, worldPos.Y), 10, 20)
+	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Cursor Screen(%d, %d), World(%.1f, %.1f)", relX, relY, worldPos.X, worldPos.Y), 10, ypos)
 }
 
 func (c *BaseCamera) WorldToScreenPos(worldPos cp.Vector) cp.Vector {
-	topLeft, _ := c.Viewport()
-	return worldPos.Sub(topLeft)
+	worldMatrix := c.worldMatrix()
+	x, y := worldMatrix.Apply(worldPos.X, worldPos.Y)
+	return cp.Vector{x, y}
 }
 
 func (c *BaseCamera) ScreenToWorldPos(screenPos cp.Vector) cp.Vector {
-	topLeft, _ := c.Viewport()
-	return screenPos.Add(topLeft)
+	worldMatrix := c.worldMatrix()
+	if worldMatrix.IsInvertible() {
+		worldMatrix.Invert()
+		x, y := worldMatrix.Apply(screenPos.X, screenPos.Y)
+		return cp.Vector{x, y}
+	} else {
+		// When scaling it can happened that matrix is not invertable
+		log.Println("Error: could not calc world pos. World matrix not invertible")
+		return screenPos
+	}
 }
 
-// ////////
-// Getters
-// ////////
 func (c *BaseCamera) Position() cp.Vector   { return c.shape.Body().Position() }
 func (c *BaseCamera) Body() *cp.Body        { return c.shape.Body() }
 func (c *BaseCamera) Shape() *cp.Shape      { return c.shape }
 func (c *BaseCamera) Screen() *ebiten.Image { return c.screen }
-func (c *BaseCamera) ViewportWidth() int    { return c.viewportWidth }
-func (c *BaseCamera) ViewportHeight() int   { return c.viewportHeight }
+func (c *BaseCamera) ScreenWidth() int      { return c.screenWidth }
+func (c *BaseCamera) ScreenHeight() int     { return c.screenHeight }
