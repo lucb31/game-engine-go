@@ -22,6 +22,7 @@ const (
 	DEBUG_DRAW_STATIC_BODY       = false
 	DEBUG_ENTITY_STATS           = true
 	DEBUG_RENDER_COLLISION_BOXES = true
+	SFX_VOLUME                   = 0.4
 )
 
 type GameWorld struct {

@@ -105,6 +105,7 @@ func (ht *WoodHarvestingTool) PlayHarvestingSE() error {
 	if err != nil {
 		return err
 	}
+	player.SetVolume(SFX_VOLUME)
 	player.Play()
 	ht.seTimeout.Set(defaultHarvestingSpeed / 2)
 	return nil

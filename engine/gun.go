@@ -114,6 +114,7 @@ func (g *BasicGun) PlayShootSE() error {
 	if err != nil {
 		return err
 	}
+	player.SetVolume(SFX_VOLUME)
 	player.Play()
 	return nil
 }

@@ -131,6 +131,7 @@ func (n *NpcAggro) playAtkSE() error {
 	if err != nil {
 		return err
 	}
+	player.SetVolume(SFX_VOLUME)
 	player.Play()
 	return nil
 }
