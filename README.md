@@ -4,8 +4,10 @@
 # Survival game
 - Add support for multi-layer hex segments 
 
-### Camera
-- Fix healthbars
+## Upgrade system
+- Piercing projectiles upgrade
+- Splitting projectiles upgrade
+- Upgrade tree hierarchy / path
 
 ### Harvesting
 - Add animation / effect to identify which object is being harvested

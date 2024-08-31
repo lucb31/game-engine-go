@@ -7,7 +7,6 @@ import (
 
 	"github.com/jakecoffman/cp"
 	"github.com/lucb31/game-engine-go/engine"
-	"github.com/lucb31/game-engine-go/engine/damage"
 	"github.com/lucb31/game-engine-go/engine/hud"
 	"github.com/lucb31/game-engine-go/engine/loot"
 )
@@ -88,28 +87,29 @@ func (e *CastleEntity) calculateVelocity(body *cp.Body, gravity cp.Vector, dampi
 }
 
 func (e *CastleEntity) OnCastleHit(arb *cp.Arbiter, space *cp.Space, userData interface{}) bool {
-	_, b := arb.Bodies()
-	npc, ok := b.UserData.(damage.Attacker)
-	if !ok {
-		log.Println("Error in castle on hit: Expected attacker but did not receive one")
-		return false
-	}
-	record, err := e.world.DamageModel().ApplyDamage(npc, e, e.world.IngameTime())
-	if err != nil {
-		log.Println("Error during castle npc collision damage calc", err.Error())
-		return false
-	}
-
-	entity, ok := b.UserData.(engine.GameEntity)
-	if !ok {
-		log.Println("Error during castle npc collision entity removal. Invalid entity provided")
-		return false
-	}
-
-	log.Println("Castle hit!", record)
-	// Remove npc (without loot)
-	entity.Destroy()
 	return false
+	// _, b := arb.Bodies()
+	// npc, ok := b.UserData.(damage.Attacker)
+	// if !ok {
+	// 	log.Println("Error in castle on hit: Expected attacker but did not receive one")
+	// 	return false
+	// }
+	// record, err := e.world.DamageModel().ApplyDamage(npc, e, e.world.IngameTime())
+	// if err != nil {
+	// 	log.Println("Error during castle npc collision damage calc", err.Error())
+	// 	return false
+	// }
+
+	// entity, ok := b.UserData.(engine.GameEntity)
+	// if !ok {
+	// 	log.Println("Error during castle npc collision entity removal. Invalid entity provided")
+	// 	return false
+	// }
+
+	// log.Println("Castle hit!", record)
+	// // Remove npc (without loot)
+	// entity.Destroy()
+	// return false
 }
 
 func (e *CastleEntity) Destroy() error {

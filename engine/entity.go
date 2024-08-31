@@ -17,6 +17,11 @@ type GameEntity interface {
 	Draw(RenderingTarget) error
 }
 
+type DefenderEntity interface {
+	GameEntity
+	damage.Defender
+}
+
 type GameEntityWithInventory interface {
 	GameEntity
 	Inventory() loot.Inventory

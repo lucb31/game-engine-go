@@ -1,6 +1,8 @@
 package engine
 
 import (
+	"fmt"
+
 	"github.com/jakecoffman/cp"
 )
 
@@ -38,6 +40,9 @@ func NewAnimationManager(asset AnimationAsset) (*BaseAnimationManager, error) {
 	if am.loopingAnimationTimer, err = NewAnimationTimer(asset); err != nil {
 		return nil, err
 	}
+	if am.loopAnimation, err = asset.Animation("idle"); err != nil {
+		return nil, fmt.Errorf("Cannot init animation manager without idle animation: %e", err.Error())
+	}
 	am.loopingAnimationTimer.Start()
 
 	return am, nil
@@ -67,6 +72,9 @@ func (a *BaseAnimationManager) Draw(t RenderingTarget, shape *cp.Shape, o Orient
 	// Check if there is an animation currently playing, if not, play loop
 	if !a.playingAnimationTimer.Active() || a.playingAnimation == nil {
 		currentAnimationTile := 0
+		if a.loopAnimation == nil {
+			return fmt.Errorf("Cannot draw: Neither play, nor loop animation defined")
+		}
 		if a.loopAnimation.FrameCount > 1 && a.loopAnimation.Speed > 0 {
 			currentAnimationTile = int(a.loopingAnimationTimer.Elapsed()/a.loopAnimation.Speed) % a.loopAnimation.FrameCount
 		}

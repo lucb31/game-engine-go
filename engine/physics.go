@@ -26,21 +26,30 @@ const (
 	ItemCategory        uint = 1 << iota
 )
 
-// Used to pass damage model and in game timer to collision callback
-type HandlerUserData struct {
+// Pass damage model and in game timer to shapes
+type SpaceUserData struct {
 	damageModel damage.DamageModel
 	gameTime    *float64
+}
+
+func (s *SpaceUserData) IngameTime() float64 {
+	return *s.gameTime
 }
 
 func NewPhysicsSpace(damageModel damage.DamageModel, gameTime *float64) (*cp.Space, error) {
 	// Initialize physics
 	space := cp.NewSpace()
+	// Assign references to IGT & damage model to physical space to make
+	// them available within every entity
+	userData := SpaceUserData{damageModel, gameTime}
+	space.StaticBody.UserData = userData
 	// NOTE: As long as we're not utilizing collision solvers, we dont need any iterations
 	// Therefore setting to min value: 1
 	space.Iterations = 1
 	// Register Projectile - NPC collision handler
 	handler := space.NewCollisionHandler(cp.CollisionType(ProjectileCollision), cp.CollisionType(NpcCollision))
-	handler.UserData = HandlerUserData{damageModel, gameTime}
+	// TODO: Check if we can replace by static body user data
+	handler.UserData = userData
 	handler.BeginFunc = projectileCollisionHandler
 
 	// Disable all collision with items
@@ -92,7 +101,7 @@ func projectileCollisionHandler(arb *cp.Arbiter, space *cp.Space, userData inter
 	}
 
 	// Read damage model from userData
-	handlerData, ok := userData.(HandlerUserData)
+	handlerData, ok := userData.(SpaceUserData)
 	if !ok {
 		log.Println("Could not read damage model")
 		return false

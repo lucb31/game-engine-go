@@ -27,7 +27,7 @@ var availableNpcs = []NpcType{
 
 type SurvCreepProvider struct {
 	assetManager engine.AssetManager
-	target       engine.GameEntity
+	target       engine.DefenderEntity
 	// Required to not spawn within current viewport
 	camera engine.Camera
 	// Spawn areas
@@ -36,7 +36,7 @@ type SurvCreepProvider struct {
 	aiWaypoints *engine.WaypointInfo
 }
 
-func NewSurvCreepProvider(am engine.AssetManager, t engine.GameEntity, cam engine.Camera) (*SurvCreepProvider, error) {
+func NewSurvCreepProvider(am engine.AssetManager, t engine.DefenderEntity, cam engine.Camera) (*SurvCreepProvider, error) {
 	return &SurvCreepProvider{assetManager: am, target: t, camera: cam}, nil
 }
 

@@ -66,8 +66,7 @@ func NewNpc(asset *CharacterAsset, opts NpcOpts) (*NpcEntity, error) {
 	npc.asset = asset
 
 	// Logic
-	npc.armor = 0.0
-	npc.maxHealth = 100.0
+	npc.GameEntityStats = DefaultGameEntityStats()
 	npc.movementSpeed = 75.0
 	npc.power = 20.0
 	npc.loot = loot.NewEmptyLootTable()

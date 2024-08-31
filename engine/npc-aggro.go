@@ -11,14 +11,15 @@ import (
 type NpcAggro struct {
 	*NpcEntity
 
-	target GameEntity
-	// True, once target has entered aggro range
-	engaged bool
+	target DefenderEntity
+	// True, once target has entered attach range
+	attacking bool
 
+	swingTimer   Timeout
 	waypointInfo WaypointInfo
 }
 
-func NewNpcAggro(target GameEntity, asset *CharacterAsset, opts NpcOpts) (*NpcAggro, error) {
+func NewNpcAggro(target DefenderEntity, asset *CharacterAsset, opts NpcOpts) (*NpcAggro, error) {
 	if target == nil {
 		return nil, fmt.Errorf("Did not receive target")
 	}
@@ -30,13 +31,66 @@ func NewNpcAggro(target GameEntity, asset *CharacterAsset, opts NpcOpts) (*NpcAg
 	npc.Shape().Body().SetVelocityUpdateFunc(npc.aggroMovementAI)
 	npc.waypointInfo = opts.WaypointInfo
 	npc.wayPoints = opts.WaypointInfo.waypoints
+
+	if npc.swingTimer, err = NewIngameTimeout(npc); err != nil {
+		return nil, err
+	}
 	return npc, nil
 }
 
+func (n *NpcAggro) IngameTime() float64 {
+	u, ok := n.shape.Space().StaticBody.UserData.(SpaceUserData)
+	if !ok {
+		log.Println("Could not read ingame time")
+		return 0.0
+	}
+	return u.IngameTime()
+}
+
+// Main decision tree for npc AI
 func (n *NpcAggro) aggroMovementAI(body *cp.Body, gravity cp.Vector, damping float64, dt float64) {
-	// TODO: Engage algorithm
-	if !n.engaged {
-		n.engaged = true
+	if n.attacking {
+		// Stop all movement
+		body.SetVelocity(0, 0)
+		// Wait for next swing timer
+		if !n.swingTimer.Done() {
+			return
+		}
+
+		// Apply damage
+		u, ok := n.shape.Space().StaticBody.UserData.(SpaceUserData)
+		if !ok {
+			log.Println("ERROR: Could not apply damage: No acces to damage model via space user data possible")
+			return
+		}
+		_, err := u.damageModel.ApplyDamage(n, n.target, n.IngameTime())
+		if err != nil {
+			log.Println("Error during npc swing damage calc", err.Error())
+			return
+		}
+
+		// Queue up next swing
+		if err := n.asset.AnimationController().Play("attack"); err != nil {
+			log.Println("Could not play attack animation: %e", err.Error())
+		}
+		n.swingTimer.Set(1 / n.AtkSpeed())
+		return
+	}
+
+	// Once within range of target, we start attacking
+	if n.target.Shape().BB().Intersects(n.shape.BB()) {
+		body.SetVelocity(0, 0)
+		n.attacking = true
+		// Loop idle animation (in between swings, if animation allows)
+		if err := n.asset.AnimationController().Loop("idle"); err != nil {
+			log.Println("Could not play idle animation: %e", err.Error())
+		}
+		// Play first attack animation
+		if err := n.asset.AnimationController().Play("attack"); err != nil {
+			log.Println("Could not play attack animation: %e", err.Error())
+		}
+		// Set timer to apply swing damage
+		n.swingTimer.Set(1 / n.AtkSpeed())
 		return
 	}
 
