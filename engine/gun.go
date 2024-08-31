@@ -1,7 +1,12 @@
 package engine
 
 import (
+	"bytes"
+
+	"github.com/hajimehoshi/ebiten/v2/audio"
+	"github.com/hajimehoshi/ebiten/v2/audio/vorbis"
 	"github.com/jakecoffman/cp"
+	"github.com/lucb31/game-engine-go/bin/assets"
 	"github.com/lucb31/game-engine-go/engine/damage"
 )
 
@@ -98,3 +103,17 @@ func (g *BasicGun) SetShootingAnimationCallback(playShootAnimation ShootingAnima
 	g.playShootAnimation = playShootAnimation
 }
 func (g *BasicGun) SetProjectileCount(count int) { g.projectileCount = count }
+
+func (g *BasicGun) PlayShootSE() error {
+	reader := bytes.NewReader(assets.ShootOGG)
+	stream, err := vorbis.DecodeWithoutResampling(reader)
+	if err != nil {
+		return err
+	}
+	player, err := audio.CurrentContext().NewPlayer(stream)
+	if err != nil {
+		return err
+	}
+	player.Play()
+	return nil
+}

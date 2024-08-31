@@ -47,6 +47,9 @@ func (g *AutoAimGun) Shoot() error {
 	// Set one common reload timer
 	g.reloadTimeout.Set(1 / g.FireRate())
 
+	if err := g.PlayShootSE(); err != nil {
+		return err
+	}
 	// Play animation once
 	if g.playShootAnimation != nil {
 		// Calculate projectile orientation relative to owner
