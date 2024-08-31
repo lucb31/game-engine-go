@@ -1,11 +1,15 @@
 package engine
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"math/rand"
 
+	"github.com/hajimehoshi/ebiten/v2/audio"
+	"github.com/hajimehoshi/ebiten/v2/audio/vorbis"
 	"github.com/jakecoffman/cp"
+	"github.com/lucb31/game-engine-go/bin/assets"
 )
 
 type NpcAggro struct {
@@ -73,6 +77,10 @@ func (n *NpcAggro) aggroMovementAI(body *cp.Body, gravity cp.Vector, damping flo
 		if err := n.asset.AnimationController().Play("attack"); err != nil {
 			log.Println("Could not play attack animation: %e", err.Error())
 		}
+		// Play SE
+		if err := n.playAtkSE(); err != nil {
+			log.Println("Error playing attack SE: %e", err.Error())
+		}
 		n.swingTimer.Set(1 / n.AtkSpeed())
 		return
 	}
@@ -88,6 +96,10 @@ func (n *NpcAggro) aggroMovementAI(body *cp.Body, gravity cp.Vector, damping flo
 		// Play first attack animation
 		if err := n.asset.AnimationController().Play("attack"); err != nil {
 			log.Println("Could not play attack animation: %e", err.Error())
+		}
+		// Play SE
+		if err := n.playAtkSE(); err != nil {
+			log.Println("Error playing attack SE: %e", err.Error())
 		}
 		// Set timer to apply swing damage
 		n.swingTimer.Set(1 / n.AtkSpeed())
@@ -107,6 +119,20 @@ func (n *NpcAggro) aggroMovementAI(body *cp.Body, gravity cp.Vector, damping flo
 		return
 	}
 	n.moveTowards(body, nextReachableWaypoint)
+}
+
+func (n *NpcAggro) playAtkSE() error {
+	reader := bytes.NewReader(assets.PunchNpcOGG)
+	stream, err := vorbis.DecodeWithoutResampling(reader)
+	if err != nil {
+		return err
+	}
+	player, err := audio.CurrentContext().NewPlayer(stream)
+	if err != nil {
+		return err
+	}
+	player.Play()
+	return nil
 }
 
 // Utilize Dijkstra pathfinding algorithm to determine where to go

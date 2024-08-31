@@ -83,7 +83,7 @@ func (game *SurvivalGame) initialize() error {
 	if err != nil {
 		return err
 	}
-	f, err := os.ReadFile("assets/audio/punch.ogg")
+	f, err := os.ReadFile("assets/audio/punch_tree.ogg")
 	if err != nil {
 		return err
 	}

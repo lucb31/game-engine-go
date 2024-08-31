@@ -3,6 +3,7 @@
 
 # Survival game
 - Add support for multi-layer hex segments 
+- Feedback for day is missing completely. Really hard to tell
 
 ## Upgrade system
 - Piercing projectiles upgrade
