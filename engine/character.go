@@ -93,21 +93,17 @@ func (a *CharacterAsset) DrawHealthbar(t RenderingTarget, shape *cp.Shape, healt
 
 	// Draw fill
 	width := shape.BB().R - shape.BB().L
-	maxWidth := width - 4
-	filledWidth := math.Max(0, health/maxHealth*maxWidth)
+	filledWidth := math.Max(0, health/maxHealth*width)
 	fillBotRight := cp.Vector{outlineTopLeft.X + filledWidth, outlineBotRight.Y}
-	t.StrokeRect(
+	t.FillRect(
 		outlineTopLeft,
 		fillBotRight,
-		float32(healthBarHeight),
 		color.RGBA{255, 0, 0, 255},
 		false,
 	)
 
-	// strokeWidth := 2.0
-	// TODO: Draw outline
-	// Could not get this to work correctly with zoom. Rather move this to HUD instead of trying to fix now
-	// t.StrokeRect(outlineTopLeft, outlineBotRight, float32(strokeWidth), color.RGBA{255, 255, 255, 255}, false)
+	// Draw outline
+	t.StrokeRect(outlineTopLeft, outlineBotRight, 2.0, color.RGBA{255, 255, 255, 255}, false)
 }
 
 func updateOrientation(prev Orientation, vel cp.Vector) Orientation {

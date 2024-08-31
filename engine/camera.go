@@ -14,6 +14,7 @@ import (
 type RenderingTarget interface {
 	DrawImage(*ebiten.Image, *ebiten.DrawImageOptions)
 	StrokeRect(topLeftWorldPos, botRightWorldPos cp.Vector, strokeWidth float32, clr color.Color, antialias bool)
+	FillRect(topLeftWorldPos, botRightWorldPos cp.Vector, clr color.Color, antialias bool)
 	StrokeCircle(center cp.Vector, r, strokeWidth float32, clr color.Color, antialias bool)
 	Screen() *ebiten.Image
 }
@@ -117,6 +118,16 @@ func (c *BaseCamera) worldMatrix() ebiten.GeoM {
 	return res
 }
 
+// Draw filled rectangle on provided world position
+func (c *BaseCamera) FillRect(topLeft, botRight cp.Vector, clr color.Color, antialias bool) {
+	tLScreen := c.WorldToScreenPos(topLeft)
+	bRScreen := c.WorldToScreenPos(botRight)
+	diff := bRScreen.Sub(tLScreen)
+	width := float32(diff.X)
+	height := float32(diff.Y)
+	vector.DrawFilledRect(c.screen, float32(tLScreen.X), float32(tLScreen.Y), width, height, clr, antialias)
+}
+
 // Draw stroked rectangle on provided world position
 func (c *BaseCamera) StrokeRect(topLeft, botRight cp.Vector, strokeWidth float32, clr color.Color, antialias bool) {
 	tLScreen := c.WorldToScreenPos(topLeft)
@@ -124,7 +135,6 @@ func (c *BaseCamera) StrokeRect(topLeft, botRight cp.Vector, strokeWidth float32
 	diff := bRScreen.Sub(tLScreen)
 	width := float32(diff.X)
 	height := float32(diff.Y)
-
 	vector.StrokeRect(c.screen, float32(tLScreen.X), float32(tLScreen.Y), width, height, strokeWidth, clr, antialias)
 }
 
