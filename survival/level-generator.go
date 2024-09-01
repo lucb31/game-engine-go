@@ -94,6 +94,7 @@ func (g *SurvivalLevelGenerator) GenerateForest() ([]engine.GameEntity, error) {
 func (g *SurvivalLevelGenerator) GenerateWorldMap() (engine.WorldMap, error) {
 	worldWidth, worldHeight := g.WorldDimensions()
 	screenWidth, screenHeight := g.ScreenDimensions()
+
 	// Base layer
 	baseTiles, err := g.am.Tileset("darkdimension")
 	if err != nil {
@@ -106,9 +107,9 @@ func (g *SurvivalLevelGenerator) GenerateWorldMap() (engine.WorldMap, error) {
 	if err := worldMap.AddSkyboxLayer(int64(screenWidth), int64(screenHeight), baseTiles); err != nil {
 		return nil, err
 	}
-	if err := worldMap.AddCsvLayer(assets.MapDarkDarkGroundCSV, baseTiles); err != nil {
-		return nil, err
-	}
+	// if err := worldMap.AddCsvLayer(assets.MapDarkDarkGroundCSV, baseTiles); err != nil {
+	// 	return nil, err
+	// }
 
 	// Setup empty layers
 	castleProps, err := g.am.Tileset("props")
@@ -118,6 +119,7 @@ func (g *SurvivalLevelGenerator) GenerateWorldMap() (engine.WorldMap, error) {
 	if err := worldMap.InitHexBaseLayers(castleProps); err != nil {
 		return nil, err
 	}
+
 	// Add to segment pool
 	if err := worldMap.AddHexSegment(assets.Hex128112CSV); err != nil {
 		return nil, err

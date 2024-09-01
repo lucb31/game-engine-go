@@ -42,6 +42,7 @@ func NewProcHexWorldMap(width, height int64, center cp.Vector) (*HexWorldMap, er
 // Set up 2 empty layers with the provided tileset
 // During level generation random hexagon map segments will be copied into these layers
 // Hexagon map segments need to provide the same amount of layers
+// FIX: Temporarily disabled prop layer to improve performance
 func (m *HexWorldMap) InitHexBaseLayers(tileset *Tileset) error {
 	var err error
 	// Init ground & prop layers
@@ -52,14 +53,18 @@ func (m *HexWorldMap) InitHexBaseLayers(tileset *Tileset) error {
 	groundLayer.SetTileset(*tileset)
 	m.groundLayer = groundLayer
 
+	m.layers = append(m.layers, m.groundLayer)
+	return nil
+}
+
+func (m *HexWorldMap) initPropLayer(tileset *Tileset) error {
 	propLayer, err := NewEmptyMapLayer(m.width, m.height)
 	if err != nil {
 		return err
 	}
 	propLayer.SetTileset(*tileset)
 	m.propLayer = propLayer
-
-	m.layers = append(m.layers, m.groundLayer, m.propLayer)
+	m.layers = append(m.layers, m.propLayer)
 	return nil
 }
 

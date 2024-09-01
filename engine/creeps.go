@@ -13,6 +13,7 @@ type CreepManager interface {
 	Progress() hud.ProgressInfo
 	Round() int
 	SetProvider(c CreepProvider) error
+	IdleTimeout() Timeout
 }
 
 type BaseCreepManager struct {
@@ -122,7 +123,8 @@ func (c *BaseCreepManager) Progress() hud.ProgressInfo {
 	return hud.ProgressInfo{Min: 0, Max: c.activeWave.TotalCreepsToSpawn, Current: c.creepsSpawned, Label: label}
 }
 
-func (c *BaseCreepManager) Round() int { return c.activeWave.Round }
+func (c *BaseCreepManager) Round() int           { return c.activeWave.Round }
+func (c *BaseCreepManager) IdleTimeout() Timeout { return c.spawnIdleTimeout }
 func (c *BaseCreepManager) SetProvider(p CreepProvider) error {
 	c.creepProvider = p
 	return c.NextWave()
