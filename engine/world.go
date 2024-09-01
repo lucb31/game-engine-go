@@ -37,6 +37,7 @@ type GameWorld struct {
 	camera Camera
 
 	WorldMap WorldMap
+	FogOfWar FogOfWar
 	Width    int64
 	Height   int64
 	// Number of frames drawn. Used for animation
@@ -68,6 +69,7 @@ func (w *GameWorld) Draw(screen *ebiten.Image) {
 		// Determine visible objects
 		visibleObjectIds := []GameEntityId{}
 		for id, obj := range w.objects {
+			// TODO: Consider FoW here to improve performance
 			if w.camera.IsVisible(obj) {
 				visibleObjectIds = append(visibleObjectIds, id)
 			}
@@ -84,6 +86,21 @@ func (w *GameWorld) Draw(screen *ebiten.Image) {
 		}
 	}
 
+	// Render player
+	if w.player != nil {
+		if err := w.player.Draw(w.camera); err != nil {
+			log.Println("Error drawing player: ", err.Error())
+		}
+		ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Player pos: %s", w.player.shape.Body().Position()), 10, 90)
+	}
+
+	w.drawCombatLog()
+
+	// Render fog of war
+	if w.FogOfWar != nil {
+		w.FogOfWar.Draw(w.camera)
+	}
+
 	// Debugging options
 	if DEBUG_CAMERA_POS {
 		w.camera.DrawDebugInfo()
@@ -94,16 +111,6 @@ func (w *GameWorld) Draw(screen *ebiten.Image) {
 	if DEBUG_ENTITY_STATS {
 		w.drawEntityDebugInfo(screen)
 	}
-
-	// Render player
-	if w.player != nil {
-		if err := w.player.Draw(w.camera); err != nil {
-			log.Println("Error drawing player: ", err.Error())
-		}
-		ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Player pos: %s", w.player.shape.Body().Position()), 10, 90)
-	}
-
-	w.drawCombatLog()
 }
 
 func (w *GameWorld) Update() {

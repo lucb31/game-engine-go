@@ -19,7 +19,7 @@ const (
 type Player struct {
 	// Dependencies
 	id              GameEntityId
-	world           GameEntityManager
+	world           *GameWorld
 	controller      PlayerController
 	asset           *CharacterAsset
 	projectileAsset *ProjectileAsset
@@ -45,9 +45,13 @@ const (
 	playerHeight                   = 40
 	playerPickupRange              = 30.0
 	invulnerableForSecondsAfterHit = 0.5
+	// Everything in range of this radius will be fully visible (no fog)
+	maxVisibilityRadius = 100.0
+	// Everything outside of this radius will be fully foggy
+	minVisibilityRadius = 200.0
 )
 
-func NewPlayer(world GameEntityManager, asset *CharacterAsset, projectileAsset *ProjectileAsset) (*Player, error) {
+func NewPlayer(world *GameWorld, asset *CharacterAsset, projectileAsset *ProjectileAsset) (*Player, error) {
 	// Assigning static id -1 to player object
 	p := &Player{id: -1, world: world, asset: asset, projectileAsset: projectileAsset}
 	// Init player physics
@@ -323,4 +327,6 @@ func (p *Player) calculateVelocity(body *cp.Body, gravity cp.Vector, damping flo
 	// Update velocity based on inputs
 	velocity := p.controller.CalcVelocity(p.MovementSpeed())
 	body.SetVelocityVector(velocity)
+	// If we're moving, we need to update fog of war
+	p.world.FogOfWar.DiscoverWithRadius(body.Position(), maxVisibilityRadius, minVisibilityRadius)
 }

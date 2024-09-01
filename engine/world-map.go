@@ -60,3 +60,10 @@ func (w *MultiLayerWorldMap) AddCsvLayer(mapCsv []byte, tileset *Tileset) error 
 func SnapToGrid(v cp.Vector, gridX int, gridY int) cp.Vector {
 	return cp.Vector{X: float64(int(v.X/float64(gridX))*gridX) + float64(gridX)/2, Y: float64(int(v.Y/float64(gridY))*gridY) + float64(gridY/2)}
 }
+
+// Returns row, col of world position tile (rounded down)
+func WorldPosToGridPos(pos cp.Vector) (int, int) {
+	row := max(int(pos.Y/mapTileSize), 0)
+	col := max(int(pos.X/mapTileSize), 0)
+	return row, col
+}

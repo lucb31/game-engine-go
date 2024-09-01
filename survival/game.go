@@ -72,6 +72,11 @@ func (game *SurvivalGame) initialize() error {
 	game.world = gameWorld
 	am := gameWorld.AssetManager
 
+	// Init fog of war
+	if game.world.FogOfWar, err = engine.NewDiscoveryLayer(game.world.Width, game.world.Height); err != nil {
+		return fmt.Errorf("Error initializing fog of war: %e", err.Error())
+	}
+
 	// Init player
 	player, err := game.world.InitPlayer(am)
 	if err != nil {
@@ -97,6 +102,11 @@ func (game *SurvivalGame) initialize() error {
 	if err := game.initCastle(camera); err != nil {
 		return err
 	}
+	// Lift FoW around castle area
+	game.world.FogOfWar.DiscoverWithRadius(game.castle.Position(), 500, 800)
+	// Center camera on castle
+	// TODO: Calculate exact camera center position
+	camera.Body().SetPosition(cp.Vector{500, 800})
 
 	// Setup creep management (AFTER castle, so we can use it as target for npcs)
 	game.creepManager, err = engine.NewBaseCreepManager(gameWorld)
