@@ -5,6 +5,7 @@ import (
 	"image/color"
 	"log"
 	"slices"
+	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -57,6 +58,39 @@ type GameWorld struct {
 	damageModel damage.DamageModel
 }
 
+// Debug method to measure execution time of functions.
+// Very useful for rendering optimizations
+func ExeTime(name string) func() {
+	start := time.Now()
+	return func() {
+		fmt.Printf("%s execution time: %v\n", name, time.Since(start))
+	}
+}
+
+func (w *GameWorld) drawVisibleObjects() {
+	//defer ExeTime("Object draw")()
+	if w.gameOver {
+		return
+	}
+	// Determine visible objects
+	visibleObjectIds := []GameEntityId{}
+	for id, obj := range w.objects {
+		if w.EntityVisible(obj) {
+			visibleObjectIds = append(visibleObjectIds, id)
+		}
+	}
+	// Sort objects by id before drawing to ensure deterministic render order
+	slices.SortFunc(visibleObjectIds, func(a, b GameEntityId) int {
+		return int(a) - int(b)
+	})
+	for _, id := range visibleObjectIds {
+		obj := w.objects[id]
+		if err := obj.Draw(w.camera); err != nil {
+			log.Printf("Error drawing object %d: %s \n", obj.Id(), err.Error())
+		}
+	}
+}
+
 func (w *GameWorld) Draw(screen *ebiten.Image) {
 	if w.camera == nil {
 		panic("Camera missing!")
@@ -65,26 +99,7 @@ func (w *GameWorld) Draw(screen *ebiten.Image) {
 	w.WorldMap.Draw(w.camera)
 
 	// Render entities that are visible in the camera viewport
-	if !w.gameOver {
-		// Determine visible objects
-		visibleObjectIds := []GameEntityId{}
-		for id, obj := range w.objects {
-			// TODO: Consider FoW here to improve performance
-			if w.camera.IsVisible(obj) {
-				visibleObjectIds = append(visibleObjectIds, id)
-			}
-		}
-		// Sort objects by id before drawing to ensure deterministic render order
-		slices.SortFunc(visibleObjectIds, func(a, b GameEntityId) int {
-			return int(a) - int(b)
-		})
-		for _, id := range visibleObjectIds {
-			obj := w.objects[id]
-			if err := obj.Draw(w.camera); err != nil {
-				log.Printf("Error drawing object %d: %s \n", obj.Id(), err.Error())
-			}
-		}
-	}
+	w.drawVisibleObjects()
 
 	// Render player
 	if w.player != nil {
@@ -111,6 +126,21 @@ func (w *GameWorld) Draw(screen *ebiten.Image) {
 	if DEBUG_ENTITY_STATS {
 		w.drawEntityDebugInfo(screen)
 	}
+}
+
+func (w *GameWorld) EntityVisible(e GameEntity) bool {
+	// Skip rendering entities outside of camera viewport
+	if !w.camera.IsVisible(e) {
+		return false
+	}
+	// Skip rendering entities hidden in the fog of war
+	if w.FogOfWar.VectorVisible(TopLeftBBPosition(e.Shape())) ||
+		w.FogOfWar.VectorVisible(TopRightBBPosition(e.Shape())) ||
+		w.FogOfWar.VectorVisible(BottomLeftBBPosition(e.Shape())) ||
+		w.FogOfWar.VectorVisible(BottomRightBBPosition(e.Shape())) {
+		return true
+	}
+	return false
 }
 
 func (w *GameWorld) Update() {
@@ -269,7 +299,7 @@ func (w *GameWorld) drawEntityDebugInfo(screen *ebiten.Image) {
 	yPos := 400
 	visibleObjects := 0
 	for _, obj := range w.objects {
-		if w.camera.IsVisible(obj) {
+		if w.EntityVisible(obj) {
 			visibleObjects++
 		}
 	}

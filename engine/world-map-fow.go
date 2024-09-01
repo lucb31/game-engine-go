@@ -10,6 +10,7 @@ import (
 type FogOfWar interface {
 	Draw(camera Camera)
 	DiscoverWithRadius(pos cp.Vector, innerRadius, outerRadius float64)
+	VectorVisible(cp.Vector) bool
 }
 
 type DiscoveryLayer struct {
@@ -60,7 +61,7 @@ func (l *DiscoveryLayer) Draw(camera Camera) {
 	}
 }
 
-func (l *DiscoveryLayer) IsVisible(vec cp.Vector) bool {
+func (l *DiscoveryLayer) VectorVisible(vec cp.Vector) bool {
 	row, col := WorldPosToGridPos(vec)
 	return l.discovered[row][col] < fogMaxAlpha
 }
