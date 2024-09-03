@@ -231,6 +231,7 @@ func (l *DiscoveryLayer) Draw(camera Camera) {
 	image := ebiten.NewImage(width, height)
 	image.WritePixels(px)
 
+	// Scale & Translate pixel image to screen size
 	op := &ebiten.DrawImageOptions{}
 	// Scale by scaled map tile size
 	// FIX: Does not work correctly for zoom levels < 1
@@ -239,9 +240,9 @@ func (l *DiscoveryLayer) Draw(camera Camera) {
 	offsetX := calcFloatingOffset(topLeft.X)*-1 - mapTileSize
 	offsetY := calcFloatingOffset(topLeft.Y)*-1 - mapTileSize
 	op.GeoM.Translate(offsetX, offsetY)
-
-	screen := ebiten.NewImage(camera.Screen().Bounds().Dx(), camera.Screen().Bounds().Dy())
-	screen.DrawImage(image, op)
+	// Use linear filter to smoothen gradient
+	// NOTE: Further improvement could be achieved with a non-linear shader
+	op.Filter = ebiten.FilterLinear
 	// Draw
 	camera.Screen().DrawImage(image, op)
 }
