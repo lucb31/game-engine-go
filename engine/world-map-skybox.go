@@ -54,13 +54,12 @@ func (l *SkyboxLayer) TileAt(cp.Vector) (MapTile, error) {
 }
 
 func (l *SkyboxLayer) Draw(cam Camera) error {
+	camTopLeft, _ := cam.Viewport()
+	camPosWithParallaxFactor := camTopLeft.Mult(parallaxSpeed)
 	// +2 because we need an extra tile at start and beginning to account for fraction tiles
 	// NOTE: Using screen dimensions here,not viewport. We dont need to scale the skybox with zoom factor
 	for row := range int(cam.ScreenHeight()/mapTileSize) + 2 {
 		for col := range int(cam.ScreenWidth()/mapTileSize) + 2 {
-			camTopLeft, _ := cam.Viewport()
-			camPosWithParallaxFactor := camTopLeft.Mult(parallaxSpeed)
-
 			// Discrete offset: Figure out tile to use
 			tileCol := calcDiscreteOffset(col, camPosWithParallaxFactor.X, len(l.tileData[0]))
 			tileRow := calcDiscreteOffset(row, camPosWithParallaxFactor.Y, len(l.tileData))

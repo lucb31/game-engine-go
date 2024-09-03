@@ -5,7 +5,6 @@ import (
 	"image/color"
 	"log"
 	"slices"
-	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -58,17 +57,7 @@ type GameWorld struct {
 	damageModel damage.DamageModel
 }
 
-// Debug method to measure execution time of functions.
-// Very useful for rendering optimizations
-func ExeTime(name string) func() {
-	start := time.Now()
-	return func() {
-		fmt.Printf("%s execution time: %v\n", name, time.Since(start))
-	}
-}
-
 func (w *GameWorld) drawVisibleObjects() {
-	//defer ExeTime("Object draw")()
 	if w.gameOver {
 		return
 	}

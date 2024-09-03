@@ -41,6 +41,7 @@ type Camera interface {
 	Viewport() (cp.Vector, cp.Vector)
 	ScreenWidth() int
 	ScreenHeight() int
+	Zoom() float64
 }
 
 const (
@@ -161,6 +162,7 @@ func (c *BaseCamera) Viewport() (cp.Vector, cp.Vector) {
 }
 
 func (c *BaseCamera) SetScreen(screen *ebiten.Image) { c.screen = screen }
+func (c *BaseCamera) Zoom() float64                  { return c.ZoomFactor }
 
 func (c *BaseCamera) DrawDebugInfo() {
 	// Allow changing zoom with P-Up & P-Down

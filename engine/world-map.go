@@ -15,16 +15,19 @@ type WorldMap interface {
 type MultiLayerWorldMap struct {
 	layers        []MapLayer
 	width, height int64
+	debugger      *ExecutionDebugger
 }
 
 // Creates a new multi layer world map
 func NewMultiLayerWorldMap(width, height int64) (*MultiLayerWorldMap, error) {
 	m := &MultiLayerWorldMap{width: width, height: height}
+	m.debugger = NewExecutionDebugger("World Map")
 	return m, nil
 }
 
 // Draw all map layers
 func (w *MultiLayerWorldMap) Draw(camera Camera) {
+	defer w.debugger.AvgExeTime()()
 	if len(w.layers) == 0 {
 		log.Println("Empty world map. No layers defined")
 		return

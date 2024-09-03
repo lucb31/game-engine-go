@@ -6,11 +6,13 @@
 - Feedback for day is missing completely. Really hard to tell
 
 # Fog of war
-- Consider fow in object visibility check. This should reduce the number of rendered objects a lot
 - Smoothen fog of war tiles
 - Maximum density forest: Not random but fixed distance between trees
     - Hitbox of tree only on stump to create 2.5D effect
     - Render player behind trees
+
+# Performance improvements
+- Temporarily disable skybox now that we have Fog of war
 
 ## Bugs
 - Death animation not playing correctly when castle dies
