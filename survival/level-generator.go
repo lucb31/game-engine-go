@@ -51,7 +51,12 @@ var availableTrees = []string{"tree_a", "tree_b", "tree_small"}
 func (g *SurvivalLevelGenerator) GenerateTreesAroundCenter(center cp.Vector) ([]engine.GameEntity, error) {
 	treeCount := 800
 	treeRadius := 32.0
+	density := 0.5
 	treePositions := entityDonutDistribution(center, 500, 1200, treeCount, treeRadius)
+	treePositions = posRingDistribution(center, 500, treeRadius, density)
+	for i := 1; i < 10; i++ {
+		treePositions = append(treePositions, posRingDistribution(center, 500+75*float64(i), treeRadius, density)...)
+	}
 	res := []engine.GameEntity{}
 	for _, pos := range treePositions {
 		treeIdx := rand.Intn(len(availableTrees))
@@ -93,7 +98,6 @@ func (g *SurvivalLevelGenerator) GenerateForest() ([]engine.GameEntity, error) {
 
 func (g *SurvivalLevelGenerator) GenerateWorldMap() (engine.WorldMap, error) {
 	worldWidth, worldHeight := g.WorldDimensions()
-	screenWidth, screenHeight := g.ScreenDimensions()
 
 	// Base layer
 	baseTiles, err := g.am.Tileset("darkdimension")
@@ -104,9 +108,12 @@ func (g *SurvivalLevelGenerator) GenerateWorldMap() (engine.WorldMap, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := worldMap.AddSkyboxLayer(int64(screenWidth), int64(screenHeight), baseTiles); err != nil {
-		return nil, err
-	}
+	// Disable skybox. We dont need both fog of war and a skybox
+	// screenWidth, screenHeight := g.ScreenDimensions()
+	// if err := worldMap.AddSkyboxLayer(int64(screenWidth), int64(screenHeight), baseTiles); err != nil {
+	// 	return nil, err
+	// }
+
 	// if err := worldMap.AddCsvLayer(assets.MapDarkDarkGroundCSV, baseTiles); err != nil {
 	// 	return nil, err
 	// }
