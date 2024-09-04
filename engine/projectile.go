@@ -44,8 +44,8 @@ type Projectile struct {
 
 type ProjectileAsset struct {
 	Image          *ebiten.Image
-	currentFrame   *int64
-	animationSpeed int
+	animationSpeed float64
+	atp            AnimationTimeProvider
 }
 
 const defaultProjectileSpeed = float64(400.0)
@@ -55,9 +55,9 @@ func (a *ProjectileAsset) Draw(t RenderingTarget, position cp.Vector, angleInRad
 	// Offset by half asset size to center position
 	op.GeoM.Translate(-float64(a.Image.Bounds().Dx())/2, -float64(a.Image.Bounds().Dy())/2)
 	// Add rotating animation
-	if a.animationSpeed > 0 {
+	if a.animationSpeed > 0.0 {
 		animationFrameCount := 16
-		animationFrame := int(*a.currentFrame/int64(a.animationSpeed)) % animationFrameCount
+		animationFrame := int(a.atp.AnimationTime()/a.animationSpeed) % animationFrameCount
 		op.GeoM.Rotate(2 * math.Pi / float64(animationFrameCount) * float64(animationFrame))
 	} else {
 		op.GeoM.Rotate(angleInRad)

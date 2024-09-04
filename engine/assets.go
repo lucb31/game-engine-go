@@ -24,8 +24,7 @@ type AssetManagerImpl struct {
 	projectileAssets map[string]ProjectileAsset
 }
 
-// TODO: Deprecate frame count
-func NewAssetManager(atp AnimationTimeProvider, frameCount *int64) (*AssetManagerImpl, error) {
+func NewAssetManager(atp AnimationTimeProvider) (*AssetManagerImpl, error) {
 	am := &AssetManagerImpl{}
 	var err error
 
@@ -39,7 +38,7 @@ func NewAssetManager(atp AnimationTimeProvider, frameCount *int64) (*AssetManage
 		return nil, err
 	}
 
-	am.projectileAssets, err = loadProjectileAssets(frameCount)
+	am.projectileAssets, err = loadProjectileAssets(atp)
 	if err != nil {
 		return nil, err
 	}
@@ -318,7 +317,7 @@ func loadCharacterAssets(atp AnimationTimeProvider) (map[string]CharacterAsset, 
 	return characters, nil
 }
 
-func loadProjectileAssets(frameCount *int64) (map[string]ProjectileAsset, error) {
+func loadProjectileAssets(atp AnimationTimeProvider) (map[string]ProjectileAsset, error) {
 	projectiles := map[string]ProjectileAsset{}
 
 	// Load bone
@@ -336,8 +335,8 @@ func loadProjectileAssets(frameCount *int64) (map[string]ProjectileAsset, error)
 	// Add to asset map
 	projectiles["bone"] = ProjectileAsset{
 		Image:          scaledIm,
-		currentFrame:   frameCount,
-		animationSpeed: 2,
+		atp:            atp,
+		animationSpeed: 2.0,
 	}
 
 	// Load arrow
@@ -347,8 +346,8 @@ func loadProjectileAssets(frameCount *int64) (map[string]ProjectileAsset, error)
 	}
 	projectiles["arrow"] = ProjectileAsset{
 		Image:          ScaleImg(ebiten.NewImageFromImage(im), 0.3),
-		currentFrame:   frameCount,
-		animationSpeed: 0,
+		animationSpeed: 0.0,
+		atp:            atp,
 	}
 	return projectiles, nil
 }

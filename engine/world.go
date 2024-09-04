@@ -21,7 +21,7 @@ const (
 	DEBUG_CAMERA_POS             = true
 	DEBUG_DRAW_STATIC_BODY       = false
 	DEBUG_ENTITY_STATS           = true
-	DEBUG_RENDER_COLLISION_BOXES = true
+	DEBUG_RENDER_COLLISION_BOXES = false
 	SFX_VOLUME                   = 0.4
 )
 
@@ -40,9 +40,6 @@ type GameWorld struct {
 	FogOfWar FogOfWar
 	Width    int64
 	Height   int64
-	// Number of frames drawn. Used for animation
-	// TODO: Needs to be replaced by animationTime
-	FrameCount int64
 	// Integral of Physical time steps. Used for game sim
 	gameTime *float64
 
@@ -134,7 +131,6 @@ func (w *GameWorld) EntityVisible(e GameEntity) bool {
 
 func (w *GameWorld) Update() {
 	dt := w.GameSpeed / 60.0
-	w.FrameCount++
 	w.animationTime += dt
 	// Stop updating if game over
 	if w.gameOver {
@@ -338,7 +334,7 @@ func NewWorld(width int64, height int64) (*GameWorld, error) {
 	}
 
 	// Initialize assets
-	am, err := NewAssetManager(&w, &w.FrameCount)
+	am, err := NewAssetManager(&w)
 	if err != nil {
 		return nil, err
 	}
