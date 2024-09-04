@@ -10,6 +10,8 @@ type AnimationController interface {
 	Draw(RenderingTarget, *cp.Shape, Orientation) error
 	// Play the given animation once
 	Play(animation string) error
+	// Stop the currently playing animation and go back to loop
+	StopPlaying() error
 	Loop(animation string) error
 }
 
@@ -65,6 +67,12 @@ func (a *BaseAnimationManager) Loop(animationKey string) error {
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func (a *BaseAnimationManager) StopPlaying() error {
+	a.playingAnimation = nil
+	a.playingAnimationTimer.Stop()
 	return nil
 }
 

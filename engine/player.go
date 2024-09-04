@@ -237,7 +237,10 @@ func (p *Player) ItemPickup(item *ItemEntity) error {
 	return item.Destroy()
 }
 
-func (p *Player) SetAxe(axe HarvestingTool) { p.axe = axe }
+func (p *Player) SetAxe(axe HarvestingTool) {
+	p.axe = axe
+	p.axe.SetAnimationController(p.asset.AnimationController())
+}
 func (p *Player) Id() GameEntityId          { return p.id }
 func (p *Player) SetId(id GameEntityId)     { p.id = id }
 func (p *Player) Shape() *cp.Shape          { return p.shape }
@@ -292,7 +295,6 @@ func (p *Player) handleInteraction() bool {
 		}
 		// Stop movement
 		p.shape.Body().SetVelocity(0, 0)
-		p.asset.AnimationController().Loop("harvest")
 		return false
 	}
 	return false
@@ -301,6 +303,9 @@ func (p *Player) handleInteraction() bool {
 func (p *Player) calculateVelocity(body *cp.Body, gravity cp.Vector, damping float64, dt float64) {
 	// Read controller inputs
 	p.controller.Update()
+
+	// Update harvesting tools
+	p.axe.Update()
 
 	// Check for interaction inputs
 	if p.controller.Interacting() {
@@ -314,11 +319,6 @@ func (p *Player) calculateVelocity(body *cp.Body, gravity cp.Vector, damping flo
 		}
 	}
 
-	// Abort all prev interactions
-	if err := p.axe.Abort(); err != nil {
-		log.Println("Could not abort harvest", err.Error())
-	}
-
 	// Early exit: When inside a building: No player updates possible other than interaction
 	if p.Inside() {
 		return
@@ -326,6 +326,12 @@ func (p *Player) calculateVelocity(body *cp.Body, gravity cp.Vector, damping flo
 
 	// Update velocity based on inputs
 	velocity := p.controller.CalcVelocity(p.MovementSpeed())
+	// If moving, abort all prev interactions
+	if velocity.LengthSq() > 0.0 {
+		if err := p.axe.Abort(); err != nil {
+			log.Println("Could not abort harvest", err.Error())
+		}
+	}
 	body.SetVelocityVector(velocity)
 	// If we're moving, we need to update fog of war
 	p.world.FogOfWar.DiscoverWithRadius(body.Position(), maxVisibilityRadius, minVisibilityRadius)

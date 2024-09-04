@@ -161,7 +161,7 @@ var characterResources []characterResource = []characterResource{
 			"die":     {StartTile: 352, FrameCount: 18, Speed: defaultAnimationSpeed},
 			"dead":    {StartTile: 370, FrameCount: 1, Speed: defaultAnimationSpeed},
 			"shoot":   {StartTile: 242, FrameCount: 14, Speed: 0.05},
-			"harvest": {StartTile: 220, FrameCount: 10, Speed: defaultAnimationSpeed},
+			"harvest": {StartTile: 220, FrameCount: 10, Speed: 0.1},
 		},
 		-115,
 		-85,
