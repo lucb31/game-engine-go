@@ -55,9 +55,6 @@ type GameWorld struct {
 }
 
 func (w *GameWorld) drawVisibleObjects() {
-	if w.gameOver {
-		return
-	}
 	// Determine visible objects
 	visibleObjectIds := []GameEntityId{}
 	for id, obj := range w.objects {

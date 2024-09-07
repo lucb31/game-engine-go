@@ -127,7 +127,7 @@ func (p *Player) Draw(t RenderingTarget) error {
 	}
 	p.asset.DrawHealthbar(t, p.shape, p.health, p.maxHealth)
 	// Play death animation loop when dead
-	if p.health <= 0 {
+	if p.health <= 0 || p.world.gameOver {
 		err := p.asset.AnimationController().Loop("dead")
 		if err != nil {
 			log.Println("could not loop death animation", err.Error())

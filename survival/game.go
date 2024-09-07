@@ -139,7 +139,7 @@ func (game *SurvivalGame) initialize() error {
 func (game *SurvivalGame) initCastle(camera *engine.FollowingCamera) error {
 	var err error
 	// Init castle
-	game.castle, err = NewCastle(game.world, game.world.EndGame)
+	game.castle, err = NewCastle(game.world, game.EndGame)
 	if err != nil {
 		return err
 	}
@@ -226,5 +226,8 @@ func (g *SurvivalGame) CreepProgress() hud.ProgressInfo  { return g.creepManager
 
 func (g *SurvivalGame) EndGame() {
 	g.world.EndGame()
+	if err := g.world.Player().Destroy(); err != nil {
+		log.Println("Could not destroy player on game over", err.Error())
+	}
 	log.Println("Waiting for restart...")
 }

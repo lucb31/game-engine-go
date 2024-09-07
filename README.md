@@ -11,8 +11,6 @@
     - Render player behind trees
 
 ## Bugs
-- Death animation not playing correctly when castle dies
-
 - Improve sync of creep swing animation & se
 
 ## Upgrade system
