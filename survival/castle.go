@@ -42,7 +42,7 @@ func NewCastle(world engine.GameEntityManager, cb gameOverCallback) (*CastleEnti
 	body.UserData = c
 
 	// Collision model
-	c.shape = cp.NewCircle(body, 65.0, cp.Vector{})
+	c.shape = cp.NewBox(body, 225.0, 150.0, 1)
 	c.shape.SetFilter(engine.TowerCollisionFilter())
 	c.shape.SetCollisionType(engine.CastleCollision)
 
@@ -113,8 +113,7 @@ func (e *CastleEntity) OnCastleHit(arb *cp.Arbiter, space *cp.Space, userData in
 }
 
 func (e *CastleEntity) Destroy() error {
-	err := e.world.RemoveEntity(e)
-	if err != nil {
+	if err := e.asset.AnimationController().Loop("dead"); err != nil {
 		return err
 	}
 	e.gameOverCallback()

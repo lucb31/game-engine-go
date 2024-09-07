@@ -236,14 +236,18 @@ var characterResources []characterResource = []characterResource{
 	{
 		"castle",
 		assets.Castle,
-		192,
-		128,
+		320,
+		256,
 		map[string]GameAssetAnimation{
 			"idle": {StartTile: 0, FrameCount: 1},
+			"dead": {StartTile: 2, FrameCount: 1},
 		},
-		-96,
-		-64,
-		1.0,
+		// -80,
+		// -75,
+		// 0.5,
+		-120,
+		-108,
+		0.75,
 	},
 	{
 		"tree_a",
