@@ -34,7 +34,7 @@ type BaseCreepManager struct {
 	spawnIdleTimeout Timeout
 }
 
-const idleTimeAfterWaveFinished = 10.0
+const idleTimeAfterWaveFinished = 30.0
 
 type Wave struct {
 	Round              int

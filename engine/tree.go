@@ -44,7 +44,7 @@ func newTreeEntity(asset *CharacterAsset, width, height float64) (*TreeEntity, e
 }
 
 func NewTree(asset *CharacterAsset) (*TreeEntity, error) {
-	t, err := newTreeEntity(asset, 32.0, 64.0)
+	t, err := newTreeEntity(asset, 24.0, 24.0)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +55,7 @@ func NewTree(asset *CharacterAsset) (*TreeEntity, error) {
 }
 
 func NewBush(asset *CharacterAsset) (*TreeEntity, error) {
-	t, err := newTreeEntity(asset, 32.0, 32.0)
+	t, err := newTreeEntity(asset, 24.0, 24.0)
 	if err != nil {
 		return nil, err
 	}

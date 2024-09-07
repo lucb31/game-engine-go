@@ -20,6 +20,7 @@
 
 ### Harvesting
 - Add animation / effect to identify which object is being harvested
+- Add randomization in loot system / only drop wood from specific trees 
 
 ## Priority
 - Add tutorial HUD menu

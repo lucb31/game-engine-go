@@ -254,7 +254,7 @@ var characterResources []characterResource = []characterResource{
 			"idle": {StartTile: 0, FrameCount: 1},
 		},
 		-16,
-		-32,
+		-56,
 		2.0,
 	},
 	{
@@ -266,7 +266,7 @@ var characterResources []characterResource = []characterResource{
 			"idle": {StartTile: 0, FrameCount: 1},
 		},
 		-22.5,
-		-32,
+		-48,
 		1.0,
 	},
 	{

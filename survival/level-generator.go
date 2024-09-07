@@ -1,7 +1,6 @@
 package survival
 
 import (
-	"math/rand"
 	"slices"
 
 	"github.com/jakecoffman/cp"
@@ -46,11 +45,12 @@ func (g *SurvivalLevelGenerator) Generate(am engine.AssetManager) (*engine.Gener
 }
 
 var availableTrees = []string{"tree_a", "tree_b", "tree_small"}
+var treeProbabilities = []int{1, 1, 10}
 
 // Spawn a bunch of random trees around center position
 func (g *SurvivalLevelGenerator) GenerateTreesAroundCenter(center cp.Vector) ([]engine.GameEntity, error) {
 	treeCount := 800
-	treeRadius := 32.0
+	treeRadius := 24.0
 	density := 0.5
 	treePositions := entityDonutDistribution(center, 500, 1200, treeCount, treeRadius)
 	treePositions = posRingDistribution(center, 500, treeRadius, density)
@@ -58,8 +58,14 @@ func (g *SurvivalLevelGenerator) GenerateTreesAroundCenter(center cp.Vector) ([]
 		treePositions = append(treePositions, posRingDistribution(center, 500+75*float64(i), treeRadius, density)...)
 	}
 	res := []engine.GameEntity{}
-	for _, pos := range treePositions {
-		treeIdx := rand.Intn(len(availableTrees))
+
+	// Sample tree assets
+	treeSamples := engine.SampleWithRelativeProbabilities(treeProbabilities, len(treePositions))
+
+	// Combine tree positions & tree asset samples
+	for idx, pos := range treePositions {
+		// Select tree asset from samples
+		treeIdx := treeSamples[idx]
 		treeType := availableTrees[treeIdx]
 		asset, err := g.am.CharacterAsset(treeType)
 		if err != nil {

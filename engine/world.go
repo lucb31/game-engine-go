@@ -84,9 +84,6 @@ func (w *GameWorld) Draw(screen *ebiten.Image) {
 	w.camera.SetScreen(screen)
 	w.WorldMap.Draw(w.camera)
 
-	// Render entities that are visible in the camera viewport
-	w.drawVisibleObjects()
-
 	// Render player
 	if w.player != nil {
 		if err := w.player.Draw(w.camera); err != nil {
@@ -94,6 +91,9 @@ func (w *GameWorld) Draw(screen *ebiten.Image) {
 		}
 		ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Player pos: %s", w.player.shape.Body().Position()), 10, 90)
 	}
+
+	// Render entities that are visible in the camera viewport
+	w.drawVisibleObjects()
 
 	w.drawCombatLog()
 
