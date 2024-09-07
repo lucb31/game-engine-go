@@ -21,7 +21,16 @@ type NpcAggro struct {
 
 	swingTimer   Timeout
 	waypointInfo WaypointInfo
+
+	// SFX
+	player *audio.Player
+	// Used to sync swing SE with animation
+	sfxTimeout Timeout
 }
+
+const (
+	npcSwingSfxDelay = 0.8
+)
 
 func NewNpcAggro(target DefenderEntity, asset *CharacterAsset, opts NpcOpts) (*NpcAggro, error) {
 	if target == nil {
@@ -37,6 +46,9 @@ func NewNpcAggro(target DefenderEntity, asset *CharacterAsset, opts NpcOpts) (*N
 	npc.wayPoints = opts.WaypointInfo.waypoints
 
 	if npc.swingTimer, err = NewIngameTimeout(npc); err != nil {
+		return nil, err
+	}
+	if npc.sfxTimeout, err = NewIngameTimeout(npc); err != nil {
 		return nil, err
 	}
 	return npc, nil
@@ -56,6 +68,14 @@ func (n *NpcAggro) aggroMovementAI(body *cp.Body, gravity cp.Vector, damping flo
 	if n.attacking {
 		// Stop all movement
 		body.SetVelocity(0, 0)
+		// Check if we need to play SFX
+		if n.sfxTimeout.Done() {
+			if err := n.playAtkSE(); err != nil {
+				log.Printf("Could not play npc atk sound effect: %s\n", err.Error())
+			}
+			// Disable timeout until next swing
+			n.sfxTimeout.Stop()
+		}
 		// Wait for next swing timer
 		if !n.swingTimer.Done() {
 			return
@@ -73,14 +93,11 @@ func (n *NpcAggro) aggroMovementAI(body *cp.Body, gravity cp.Vector, damping flo
 			return
 		}
 
-		// Queue up next swing
+		// Queue up next swing, animation, sfx
 		if err := n.asset.AnimationController().Play("attack"); err != nil {
-			log.Println("Could not play attack animation: %e", err.Error())
+			log.Printf("Could not play attack animation: %s\n", err.Error())
 		}
-		// Play SE
-		if err := n.playAtkSE(); err != nil {
-			log.Println("Error playing attack SE: %e", err.Error())
-		}
+		n.sfxTimeout.Set(npcSwingSfxDelay)
 		n.swingTimer.Set(1 / n.AtkSpeed())
 		return
 	}
@@ -97,12 +114,9 @@ func (n *NpcAggro) aggroMovementAI(body *cp.Body, gravity cp.Vector, damping flo
 		if err := n.asset.AnimationController().Play("attack"); err != nil {
 			log.Println("Could not play attack animation: %e", err.Error())
 		}
-		// Play SE
-		if err := n.playAtkSE(); err != nil {
-			log.Println("Error playing attack SE: %e", err.Error())
-		}
 		// Set timer to apply swing damage
 		n.swingTimer.Set(1 / n.AtkSpeed())
+		n.sfxTimeout.Set(npcSwingSfxDelay)
 		return
 	}
 
@@ -122,17 +136,21 @@ func (n *NpcAggro) aggroMovementAI(body *cp.Body, gravity cp.Vector, damping flo
 }
 
 func (n *NpcAggro) playAtkSE() error {
-	reader := bytes.NewReader(assets.PunchNpcOGG)
-	stream, err := vorbis.DecodeWithoutResampling(reader)
-	if err != nil {
+	if n.player == nil {
+		reader := bytes.NewReader(assets.PunchNpcOGG)
+		stream, err := vorbis.DecodeWithoutResampling(reader)
+		if err != nil {
+			return err
+		}
+		n.player, err = audio.CurrentContext().NewPlayer(stream)
+		if err != nil {
+			return err
+		}
+		n.player.SetVolume(SFX_VOLUME)
+	} else if err := n.player.Rewind(); err != nil {
 		return err
 	}
-	player, err := audio.CurrentContext().NewPlayer(stream)
-	if err != nil {
-		return err
-	}
-	player.SetVolume(SFX_VOLUME)
-	player.Play()
+	n.player.Play()
 	return nil
 }
 

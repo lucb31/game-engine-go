@@ -121,7 +121,6 @@ func (ht *WoodHarvestingTool) SetAnimationController(ac AnimationController) {
 func (ht *WoodHarvestingTool) PlayHarvestingSE() error {
 	// Init player first time, else rewind
 	if ht.player == nil {
-		log.Println("init audio player")
 		reader := bytes.NewReader(assets.PunchTreeOGG)
 		stream, err := vorbis.DecodeWithoutResampling(reader)
 		if err != nil {

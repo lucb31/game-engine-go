@@ -173,7 +173,7 @@ var characterResources []characterResource = []characterResource{
 		192,
 		192,
 		map[string]GameAssetAnimation{
-			"attack": {StartTile: 14, FrameCount: 6, Speed: defaultAnimationSpeed * 2},
+			"attack": {StartTile: 14, FrameCount: 6, Speed: defaultAnimationSpeed * 2.5},
 			"idle":   {StartTile: 0, FrameCount: 7, Speed: defaultAnimationSpeed},
 			"walk":   {StartTile: 7, FrameCount: 6, Speed: defaultAnimationSpeed},
 		},
