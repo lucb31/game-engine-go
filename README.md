@@ -1,19 +1,50 @@
-# LIVE
-[Try it out](https://lucb31.github.io/game-engine-go/)
+<div align="center">
+    <img alt="Gopher" src="https://github.com/golang-samples/gopher-vector/blob/master/gopher.png" height="250" />
+    <br />
+    <h3>Go Game Engine</h3>
+    <p align="center">
+        <a href="https://lucb31.github.io/game-engine-go/">Online Demo</a>
+    </p>
+</div>
 
-# Survival game
-- Add support for multi-layer hex segments 
-- Feedback for day is missing completely. Really hard to tell
+# About
+Summer project 2024. Goals
+ - Learn fundamentals of go
+ - Understand and solve common Game engines problems
+ - Apply game engine to survival / tower defense themed game
 
-# Fog of war
-- Maximum density forest: Not random but fixed distance between trees
-    - Hitbox of tree only on stump to create 2.5D effect
-    - Render player behind trees
+## Built with
+- [Ebit Engine](https://github.com/hajimehoshi/ebiten)
 
-## Bugs
-- Improve sync of creep swing animation & se
+## Demo
+### Windows
+Download & run latest `.exe` artifact from [release section](https://github.com/lucb31/game-engine-go/releases). 
 
-## Upgrade system
+### Browser version
+Although not optimized for browser support, the application can be run as a WebGL application available [here](https://lucb31.github.io/game-engine-go/). A stable frame rate cannot be guaranteed.
+
+
+# Feature coverage: Engine
+- [x] Camera movement & zoom
+- [x] Proceduaral level generation 
+- [x] Multi-layered tile map rendering
+- [x] Character control
+- [x] Animation management
+- [x] SFX management
+- [x] Shop, loot, resource management system
+- [x] Damage model
+- [x] Fog of war
+
+----
+
+# Backlog Survival game
+## Features
+
+### Damage model
+- Add some randomization to demonstrate damage model (might remove / disable later) 
+- More sophisticated armor model
+
+### Upgrade system
 - Piercing projectiles upgrade
 - Splitting projectiles upgrade
 - Upgrade tree hierarchy / path
@@ -22,7 +53,7 @@
 - Add animation / effect to identify which object is being harvested
 - Add randomization in loot system / only drop wood from specific trees 
 
-## Priority
+### UI
 - Add tutorial HUD menu
     - WASD to move
     - B to bring up shop
@@ -34,20 +65,17 @@
     - Debug settings
     - Game speed
 
-### Open points
-- Automatically open / close shop when entering / leaving castle
+## Bugs
+- Improve sync of creep swing animation & SFX
+- Improve visual feedback of day & night cycle
 
-# Engine
 
-## Damage model
+## Refactoring & improvement ideas
+### Damage model
 - Applying damage should be handled by engine, not damage model. Otherwise there will bo too many cross-dependencies
-- Add some randomization to demonstrate damage model (might remove / disable later) 
-- Better armor model
 
-## Projectiles
-### Fix
+### Projectiles
 - Put upper limit to nr of projectiles. Might cause problems otherwise
-
 
 # Useful commands
 Generating release notes 
